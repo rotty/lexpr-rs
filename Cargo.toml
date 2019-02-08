@@ -1,0 +1,19 @@
+[package]
+name = "lexpr"
+description = "A representation for Lisp data"
+version = "0.1.0"
+authors = ["Andreas Rottmann <mail@r0tty.org>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/rotty/lexpr-rs"
+readme = "README.md"
+documentation = "https://docs.rs/lexpr/"
+keywords = ["lisp", "s-expression", "sexp", "sexpr"]
+categories = ["encoding", "data-structures", "parser-implementations"]
+edition = "2018"
+
+[workspace]
+members = ["lexpr-macros"]
+
+[dependencies]
+proc-macro-hack = "0.5.4"
+lexpr-macros = { version = "0.1.0", path = "lexpr-macros" }
