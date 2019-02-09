@@ -5,27 +5,6 @@
 //! Lexpr provides a [`sexp!` macro][macro] to build `lexpr::Value`
 //! objects with very natural S-expression syntax.
 //!
-//! ```no_run
-//! use lexpr::sexp;
-//!
-//! fn main() {
-//!     // The type of `john` is `lexpr::Value`
-//!     let john = sexp!((
-//!         (name . "John Doe")
-//!         (age . 43)
-//!         (phones "+44 1234567" "+44 2345678")
-//!     ));
-//!
-//!     println!("first phone number: {}", john["phones"][1]);
-//!
-//!     // Convert to a string of JSON and print it out
-//!     println!("{}", john.to_string());
-//! }
-//! ```
-//!
-//! The `Value::to_string()` function converts a `lexpr::Value` into a
-//! `String` of S-expression text.
-//!
 //! One neat thing about the `sexp!` macro is that variables and
 //! expressions can be interpolated directly into the S-expression
 //! value as you are building it. The macro will check at compile time
@@ -58,40 +37,10 @@
 //! [`from_reader`][from_reader] for parsing from any `io::Read` like a File or
 //! a TCP stream.
 //!
-//! ```no_run
-//! use lexpr::{sexp, Value, Error};
-//!
-//! fn untyped_example() -> Result<(), Error> {
-//!     // Some S-expression input data as a &str. Maybe this comes from the user.
-//!     let data = r#"(
-//!             (name . "John Doe"),
-//!             (age . 43),
-//!             (phones . (
-//!                 "+44 1234567",
-//!                 "+44 2345678"
-//!             ))
-//!         )"#;
-//!
-//!     // Parse the string of data into lexpr::Value.
-//!     let v: Value = lexpr::from_str(data)?;
-//!
-//!     // Access parts of the data by indexing with square brackets.
-//!     println!("Please call {} at the number {}", v["name"].tail(), v["phones"][1]);
-//!
-//!     Ok(())
-//! }
-//! #
-//! # fn main() {
-//! #     untyped_example().unwrap();
-//! # }
-//! ```
-//!
 //! [macro]: macro.sexp.html
 //! [from_str]: fn.from_str.html
 //! [from_slice]: fn.from_slice.html
 //! [from_reader]: fn.from_reader.html
-
-use std::fmt;
 
 use crate::atom::Atom;
 
@@ -173,27 +122,6 @@ impl Value {
 
     /// If the `Value` is a String, returns the associated str. Returns `None`
     /// otherwise.
-    ///
-    /// ```no_run
-    /// # use lexpr::sexp;
-    /// #
-    /// let v = sexp!(((a "some string") (b #f)));
-    ///
-    /// assert_eq!(v["a"][1].as_str(), Some("some string"));
-    ///
-    /// // The boolean `false` is not a string.
-    /// assert_eq!(v["b"][1].as_str(), None);
-    ///
-    /// // S-expression values are printed in S-expression
-    /// // representation, so strings are in quotes.
-    /// //    The value is: "some string"
-    /// println!("The value is: {}", v["a"][1]);
-    ///
-    /// // Rust strings are printed without quotes.
-    /// //
-    /// //    The value is: some string
-    /// println!("The value is: {}", v["a"][1].as_str().unwrap());
-    /// ```
     pub fn as_str(&self) -> Option<&str> {
         self.as_atom().and_then(Atom::as_str)
     }
@@ -510,34 +438,6 @@ macro_rules! impl_from_atom {
 }
 
 impl_from_atom!(u8, u16, u32, u64, i8, i16, i32, f32, f64, bool, &str, String);
-
-impl fmt::Display for Value {
-    /// Display a JSON value as a string.
-    ///
-    /// ```no_run
-    /// # use lexpr::sexp;
-    /// #
-    /// let value = sexp!(((city "London") (street "10 Downing Street")));
-    ///
-    /// // Compact format:
-    /// //
-    /// // ((city "London") (street "10 Downing Street"))
-    /// let compact = format!("{}", value);
-    /// assert_eq!(compact,
-    ///     r#"((city "London") (street "10 Downing Street"))"#);
-    ///
-    /// // Pretty format:
-    /// //
-    /// // ((city "London")
-    /// //  (street "10 Downing Street"))
-    /// let pretty = format!("{:#}", value);
-    /// assert_eq!(pretty,
-    ///     r#"((city "London")\n (street "10 Downing Street"))\n"#);
-    /// ```
-    fn fmt(&self, _f: &mut fmt::Formatter) -> fmt::Result {
-        unimplemented!()
-    }
-}
 
 mod index;
 mod partial_eq;

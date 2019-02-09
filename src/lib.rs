@@ -160,14 +160,10 @@ use proc_macro_hack::proc_macro_hack;
 pub use lexpr_macros::sexp;
 
 mod error;
-mod parse;
 pub mod value;
 
 pub mod number;
 pub mod atom;
-
-#[doc(inline)]
-pub use self::parse::{from_reader, from_slice, from_str};
 
 #[doc(inline)]
 pub use value::Value;
