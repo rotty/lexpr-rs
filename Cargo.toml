@@ -14,9 +14,20 @@ edition = "2018"
 [workspace]
 members = ["lexpr-macros"]
 
+[features]
+default = ["fast-float-parsing"]
+fast-float-parsing = []
+
 [dependencies]
+itoa = "0.4.3"
+ryu = "0.2.7"
 proc-macro-hack = "0.5.4"
 lexpr-macros = { version = "0.1.1", path = "lexpr-macros" }
+
+[dev-dependencies]
+quickcheck = "0.8.2"
+quickcheck_macros = "0.8.0"
+rand = "0.6.5"
 
 [badges]
 travis-ci = { repository = "rotty/lexpr-rs" }
