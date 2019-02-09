@@ -230,7 +230,9 @@ impl_from_signed!(i8, i16, i32, i64);
 impl From<f32> for Number {
     #[inline]
     fn from(n: f32) -> Self {
-        Number { n: N::Float(f64::from(n)) }
+        Number {
+            n: N::Float(f64::from(n)),
+        }
     }
 }
 

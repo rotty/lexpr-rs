@@ -1,4 +1,4 @@
-use crate::value::{Value, Atom};
+use crate::value::{Atom, Value};
 
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
@@ -27,27 +27,25 @@ impl ToTokens for Value {
             Value::List(elements) => {
                 quote! { ::lexpr::Value::List(vec![#(#elements),*]) }
             }
-            Value::ImproperList(elements, rest) => {
-                match rest {
-                    Atom::Unquoted(tt) => quote! {{
-                        let value = ::lexpr::Value::from(#tt);
-                        match value {
-                            ::lexpr::Value::Atom(atom) => ::lexpr::Value::ImproperList(vec![#(#elements),*], atom),
-                            ::lexpr::Value::ImproperList(rest_elements, rest) => {
-                                let mut elements = vec![#(#elements),*];
-                                elements.extend(rest_elements);
-                                ::lexpr::Value::ImproperList(elements, rest)
-                            }
-                            ::lexpr::Value::List(rest_elements) => {
-                                let mut elements = vec![#(#elements),*];
-                                elements.extend(rest_elements);
-                                ::lexpr::Value::List(elements)
-                            }
+            Value::ImproperList(elements, rest) => match rest {
+                Atom::Unquoted(tt) => quote! {{
+                    let value = ::lexpr::Value::from(#tt);
+                    match value {
+                        ::lexpr::Value::Atom(atom) => ::lexpr::Value::ImproperList(vec![#(#elements),*], atom),
+                        ::lexpr::Value::ImproperList(rest_elements, rest) => {
+                            let mut elements = vec![#(#elements),*];
+                            elements.extend(rest_elements);
+                            ::lexpr::Value::ImproperList(elements, rest)
                         }
-                    }},
-                    _ => quote! { ::lexpr::Value::ImproperList(vec![#(#elements),*], #rest) }
-                }
-            }
+                        ::lexpr::Value::List(rest_elements) => {
+                            let mut elements = vec![#(#elements),*];
+                            elements.extend(rest_elements);
+                            ::lexpr::Value::List(elements)
+                        }
+                    }
+                }},
+                _ => quote! { ::lexpr::Value::ImproperList(vec![#(#elements),*], #rest) },
+            },
         };
         tokens.extend(expanded);
     }

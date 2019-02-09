@@ -124,14 +124,14 @@ fn parse_list(tokens: TokenStream) -> Result<Value, ParseError> {
                         }
                         parser.eat_token();
                         tail = Some(parser.parse()?);
-                        continue
+                        continue;
                     }
                     _ => {}
                 }
             }
             elements.push(parser.parse()?);
         } else {
-            break
+            break;
         }
     }
     match tail {

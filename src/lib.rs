@@ -162,8 +162,8 @@ pub use lexpr_macros::sexp;
 mod error;
 pub mod value;
 
-pub mod number;
 pub mod atom;
+pub mod number;
 
 #[doc(inline)]
 pub use value::Value;

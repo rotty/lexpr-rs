@@ -1,12 +1,12 @@
 //! Internal crate implementing macros exposed by the `lexpr` crate.
 
-#![recursion_limit="128"]
+#![recursion_limit = "128"]
 
 extern crate proc_macro;
 
-mod value;
 mod generator;
 mod parser;
+mod value;
 
 use proc_macro2::TokenStream;
 use proc_macro_hack::proc_macro_hack;
