@@ -7,41 +7,40 @@ already out there, you might wonder about the justificiation for
 `lexpr`'s existence. The goals of this crate are:
 
 - [x] Provide a data type that can represent a decent subset of the
-      various S-expression formats in common use. Put in another way,
-      it aims to model a large subset of the union of S-expression
-      formats out there, covering:
+  various S-expression formats in common use. Put in another way, it
+  aims to model a large subset of the union of S-expression formats
+  out there, covering:
 
-      - Keywords
-      - Symbols
-      - Strings
-      - Integers (excluding bignums, at least initially)
-      - Floats
-      - Proper lists
-      - Improper lists (excluding circular lists)
+  - Keywords
+  - Symbols
+  - Strings
+  - Integers (excluding bignums, at least initially)
+  - Floats
+  - Proper lists
+  - Improper lists (excluding circular lists)
 
 - [x] Provide a Rust macro that can be used to embed S-expressions
-      into Rust code in a natural way, staying as close to
-      "traditional" S-expression representation as possible within the
-      syntactic constraints imposed by Rust's macro system.
+  into Rust code in a natural way, staying as close to "traditional"
+  S-expression representation as possible within the syntactic
+  constraints imposed by Rust's macro system.
 
 - [ ] Implement a parser, serializer, and pretty-printer for the
-      S-expression value type. This one will not be based on Serde,
-      see below why this is not possible while covering the complete
-      universe of S-expression values.
+  S-expression value type. This one will not be based on Serde, see
+  below why this is not possible while covering the complete universe
+  of S-expression values.
 
-      The goal for the parser and serializer goal is to also cover the
-      notational differences between the S-expression formats, for
-      example allowing for both Guile/Racket keyword notation
-      (`#:foo`) and Emacs Lisp notation (`:foo`) by providing parser
-      (or serializer) options.
+  The goal for the parser and serializer goal is to also cover the
+  notational differences between the S-expression formats, for example
+  allowing for both Guile/Racket keyword notation (`#:foo`) and Emacs
+  Lisp notation (`:foo`) by providing parser (or serializer) options.
 
 - [ ] Provide, probably in a companion crate, a
-      [Serde](https://serde.rs/) serialization and deserialization
-      implementation. Due to the partial misalignment between Serde's
-      data model and the S-expression data model, this will probably
-      come with syntactic restrictions, but should still allow
-      serializing and deserializing arbitrary Rust data types to and
-      from S-expression syntax.
+  [Serde](https://serde.rs/) serialization and deserialization
+  implementation. Due to the partial misalignment between Serde's data
+  model and the S-expression data model, this will probably come with
+  syntactic restrictions, but should still allow serializing and
+  deserializing arbitrary Rust data types to and from S-expression
+  syntax.
 
 ## Survey of other crates
 
