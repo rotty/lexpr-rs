@@ -179,3 +179,9 @@ impl From<bool> for Atom {
         Atom::Bool(v)
     }
 }
+
+impl From<Number> for Atom {
+    fn from(n: Number) -> Self {
+        Atom::Number(n)
+    }
+}

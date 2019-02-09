@@ -43,6 +43,7 @@
 //! [from_reader]: fn.from_reader.html
 
 use crate::atom::Atom;
+use crate::number::Number;
 
 pub use self::index::Index;
 
@@ -437,7 +438,13 @@ macro_rules! impl_from_atom {
     };
 }
 
-impl_from_atom!(u8, u16, u32, u64, i8, i16, i32, f32, f64, bool, &str, String);
+impl_from_atom!(u8, u16, u32, u64, i8, i16, i32, f32, f64, bool, &str, String, Number);
+
+impl From<Vec<Value>> for Value {
+    fn from(elements: Vec<Value>) -> Self {
+        Value::List(elements)
+    }
+}
 
 mod index;
 mod partial_eq;
