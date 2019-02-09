@@ -1,0 +1,31 @@
+language: rust
+rust:
+
+matrix:
+  include:
+    - rust: stable
+    - rust: beta
+    - rust: nightly
+
+    # Catch code formatting issues
+    - env: RUSTFMT
+      rust: stable
+      install:
+        - rustup component add rustfmt
+      script:
+        - cargo fmt -- --check
+
+    # Make sure there are no clippy warnings
+    - env: CLIPPY
+      rust: stable
+      install:
+        - rustup component add clippy
+      script:
+        - cargo clippy -- -D warnings
+
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+
+cache:
+  cargo: true

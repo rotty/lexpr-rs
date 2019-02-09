@@ -17,3 +17,6 @@ members = ["lexpr-macros"]
 [dependencies]
 proc-macro-hack = "0.5.4"
 lexpr-macros = { version = "0.1.0", path = "lexpr-macros" }
+
+[badges]
+travis-ci = { repository = "rotty/lexpr-rs" }
