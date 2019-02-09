@@ -199,10 +199,24 @@ use proc_macro_hack::proc_macro_hack;
 pub use lexpr_macros::sexp;
 
 mod error;
-pub mod value;
+mod iter;
+mod read;
+mod style;
 
 pub mod atom;
 pub mod number;
+pub mod parse;
+pub mod print;
+pub mod value;
+
+#[doc(inline)]
+pub use self::parse::{
+    from_reader, from_reader_custom, from_slice, from_slice_custom, from_str, from_str_custom,
+    Parser,
+};
+
+#[doc(inline)]
+pub use self::print::{to_string, to_vec, to_writer, Printer};
 
 #[doc(inline)]
 pub use value::Value;
@@ -215,3 +229,6 @@ pub use number::Number;
 
 #[doc(inline)]
 pub use error::{Error, Result};
+
+#[cfg(test)]
+mod tests;

@@ -1,7 +1,10 @@
 //! Dynamically typed number type.
 
+use std::fmt::{self, Debug, Display};
+use std::io;
+
 /// Represents an S-expression number, whether integer or floating point.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct Number {
     n: N,
 }
@@ -187,6 +190,23 @@ impl Number {
             None
         }
     }
+
+    /// Writes the number value to the specified writer.
+    #[inline]
+    pub(crate) fn write<W: ?Sized>(&self, writer: &mut W) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        match self.n {
+            N::PosInt(n) => itoa::write(writer, n).map(drop),
+            N::NegInt(n) => itoa::write(writer, n).map(drop),
+            N::Float(n) => {
+                let mut buffer = ryu::Buffer::new();
+                let s = buffer.format(n);
+                writer.write_all(s.as_bytes())
+            }
+        }
+    }
 }
 
 macro_rules! impl_from_unsigned {
@@ -240,5 +260,21 @@ impl From<f64> for Number {
     #[inline]
     fn from(n: f64) -> Self {
         Number { n: N::Float(n) }
+    }
+}
+
+impl Display for Number {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        match self.n {
+            N::PosInt(i) => Display::fmt(&i, formatter),
+            N::NegInt(i) => Display::fmt(&i, formatter),
+            N::Float(f) => Display::fmt(&f, formatter),
+        }
+    }
+}
+
+impl Debug for Number {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        Debug::fmt(&self.n, formatter)
     }
 }
