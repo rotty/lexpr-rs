@@ -1,3 +1,5 @@
+use std::error;
+use std::io;
 use std::fmt::{self, Debug, Display};
 use std::result;
 
@@ -40,11 +42,142 @@ impl Error {
     }
 }
 
-pub(crate) enum ErrorCode {}
+impl Error {
+    pub(crate) fn syntax(code: ErrorCode, line: usize, column: usize) -> Self {
+        Error {
+            err: Box::new(ErrorImpl { code, line, column }),
+        }
+    }
+
+    pub(crate) fn io(error: io::Error) -> Self {
+        Error {
+            err: Box::new(ErrorImpl {
+                code: ErrorCode::Io(error),
+                line: 0,
+                column: 0,
+            }),
+        }
+    }
+
+    pub(crate) fn fix_position<F>(self, f: F) -> Self
+    where
+        F: FnOnce(ErrorCode) -> Error,
+    {
+        if self.err.line == 0 {
+            f(self.err.code)
+        } else {
+            self
+        }
+    }
+}
+
+pub(crate) enum ErrorCode {
+    /// Some IO error occurred while serializing or deserializing.
+    Io(io::Error),
+
+    /// EOF while parsing a list.
+    EofWhileParsingList,
+
+    /// EOF while parsing a string.
+    EofWhileParsingString,
+
+    /// EOF while parsing a S-expression value.
+    EofWhileParsingValue,
+
+    /// Expected to parse either a `#t`, `#f`, or a `#nil`.
+    ExpectedSomeIdent,
+
+    /// Expected this character to start an S-expression value.
+    ExpectedSomeValue,
+
+    /// Invalid hex escape code.
+    InvalidEscape,
+
+    /// Invalid number.
+    InvalidNumber,
+
+    /// Number is bigger than the maximum value of its type.
+    NumberOutOfRange,
+
+    /// Invalid unicode code point.
+    InvalidUnicodeCodePoint,
+
+    /// Control character found while parsing a string.
+    ControlCharacterWhileParsingString,
+
+    /// Lone leading surrogate in hex escape.
+    LoneLeadingSurrogateInHexEscape,
+
+    /// S-expression has non-whitespace trailing characters after the value.
+    TrailingCharacters,
+
+    /// Unexpected end of hex excape.
+    UnexpectedEndOfHexEscape,
+
+    /// Encountered nesting of S-expression maps and arrays more than 128 layers deep.
+    RecursionLimitExceeded,
+}
 
 impl Display for ErrorCode {
-    fn fmt(&self, _f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {}
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ErrorCode::Io(ref err) => Display::fmt(err, f),
+            ErrorCode::EofWhileParsingList => f.write_str("EOF while parsing a list"),
+            ErrorCode::EofWhileParsingString => f.write_str("EOF while parsing a string"),
+            ErrorCode::EofWhileParsingValue => f.write_str("EOF while parsing a value"),
+            ErrorCode::ExpectedSomeIdent => f.write_str("expected ident"),
+            ErrorCode::ExpectedSomeValue => f.write_str("expected value"),
+            ErrorCode::InvalidEscape => f.write_str("invalid escape"),
+            ErrorCode::InvalidNumber => f.write_str("invalid number"),
+            ErrorCode::NumberOutOfRange => f.write_str("number out of range"),
+            ErrorCode::ControlCharacterWhileParsingString => f.write_str("control character while parsing string"),
+            ErrorCode::InvalidUnicodeCodePoint => f.write_str("invalid unicode code point"),
+            ErrorCode::LoneLeadingSurrogateInHexEscape => {
+                f.write_str("lone leading surrogate in hex escape")
+            }
+            ErrorCode::TrailingCharacters => f.write_str("trailing characters"),
+            ErrorCode::UnexpectedEndOfHexEscape => f.write_str("unexpected end of hex escape"),
+            ErrorCode::RecursionLimitExceeded => f.write_str("recursion limit exceeded"),
+        }
+    }
+}
+
+impl error::Error for Error {
+    fn description(&self) -> &str {
+        match self.err.code {
+            ErrorCode::Io(ref err) => error::Error::description(err),
+            _ => {
+                // If you want a better message, use Display::fmt or to_string().
+                "S-expression error"
+            }
+        }
+    }
+
+    fn cause(&self) -> Option<&error::Error> {
+        match self.err.code {
+            ErrorCode::Io(ref err) => Some(err),
+            _ => None,
+        }
+    }
+}
+
+impl Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        Display::fmt(&*self.err, f)
+    }
+}
+
+impl Display for ErrorImpl {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.line == 0 {
+            Display::fmt(&self.code, f)
+        } else {
+            write!(
+                f,
+                "{} at line {} column {}",
+                self.code, self.line, self.column
+            )
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-#![deny(missing_docs)]
+//#![deny(missing_docs)]
 
 //! This crate provides a data structure that can values as typically
 //! found in Lisp-like languages, as well as a macro for embedding
@@ -199,10 +199,21 @@ use proc_macro_hack::proc_macro_hack;
 pub use lexpr_macros::sexp;
 
 mod error;
-pub mod value;
+mod iter;
+mod parse;
+mod read;
 
 pub mod atom;
 pub mod number;
+pub mod value;
+pub mod print;
+pub mod style;
+
+#[doc(inline)]
+pub use self::parse::{Parser, from_reader, from_slice, from_str, };
+
+#[doc(inline)]
+pub use self::print::{Printer, to_writer, to_string, to_vec};
 
 #[doc(inline)]
 pub use value::Value;
@@ -215,3 +226,6 @@ pub use number::Number;
 
 #[doc(inline)]
 pub use error::{Error, Result};
+
+#[cfg(test)]
+mod tests;
