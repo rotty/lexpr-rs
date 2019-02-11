@@ -41,7 +41,7 @@ impl Atom {
 
     /// Create an atom representing a keyword.
     pub fn keyword(name: impl Into<String>) -> Self {
-        Atom::Symbol(name.into())
+        Atom::Keyword(name.into())
     }
 
     /// Check whether the atom is the special nil value.
@@ -61,10 +61,81 @@ impl Atom {
         }
     }
 
+    /// Check wether the atom represents a string.
+    #[inline]
+    pub fn is_string(&self) -> bool {
+        match self {
+            Atom::String(_) => true,
+            _ => false,
+        }
+    }
+
     /// If the atom represents a string, return it as `str`
     /// reference. Returns `None` otherwise.
     pub fn as_str(&self) -> Option<&str> {
         match self {
+            Atom::String(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// Check wether the atom represents a symbol.
+    #[inline]
+    pub fn is_symbol(&self) -> bool {
+        match self {
+            Atom::Symbol(_) => true,
+            _ => false,
+        }
+    }
+
+    /// If the atom represents a symbol, return it as `str`
+    /// reference. Returns `None` otherwise.
+    pub fn as_symbol(&self) -> Option<&str> {
+        match self {
+            Atom::Symbol(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// Check wether the atom represents a keyword.
+    #[inline]
+    pub fn is_keyword(&self) -> bool {
+        match self {
+            Atom::Keyword(_) => true,
+            _ => false,
+        }
+    }
+
+    /// If the atom represents a keyword, return it as `str`
+    /// reference. Returns `None` otherwise.
+    pub fn as_keyword(&self) -> Option<&str> {
+        match self {
+            Atom::Keyword(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// Check wether the atom represents a boolean value.
+    pub fn is_boolean(&self) -> bool {
+        match self {
+            Atom::Bool(_) => true,
+            _ => false,
+        }
+    }
+
+    /// If the atom is a boolean, return its value.
+    pub fn as_bool(&self) -> Option<bool> {
+        match self {
+            Atom::Bool(b) => Some(*b),
+            _ => None,
+        }
+    }
+
+    /// Get the name of a symbol or keyword, or the value of a string.
+    pub fn as_name(&self) -> Option<&str> {
+        match self {
+            Atom::Symbol(s) => Some(s),
+            Atom::Keyword(s) => Some(s),
             Atom::String(s) => Some(s),
             _ => None,
         }
@@ -122,24 +193,6 @@ impl Atom {
     pub fn as_number(&self) -> Option<&Number> {
         match self {
             Atom::Number(n) => Some(n),
-            _ => None,
-        }
-    }
-
-    /// If the atom is a boolean, return its value.
-    pub fn as_bool(&self) -> Option<bool> {
-        match self {
-            Atom::Bool(b) => Some(*b),
-            _ => None,
-        }
-    }
-
-    /// Get the name of a symbol or keyword, or the value of a string.
-    pub fn as_name(&self) -> Option<&str> {
-        match self {
-            Atom::Symbol(s) => Some(s),
-            Atom::Keyword(s) => Some(s),
-            Atom::String(s) => Some(s),
             _ => None,
         }
     }

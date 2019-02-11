@@ -92,7 +92,7 @@ pub enum Value {
 }
 
 impl Value {
-    /// Construct the nil value
+    /// Construct the nil value.
     pub fn nil() -> Self {
         Value::Atom(Atom::Nil)
     }
@@ -100,6 +100,18 @@ impl Value {
     /// Construct a symbol, given its name.
     pub fn symbol(name: impl Into<String>) -> Self {
         Value::Atom(Atom::Symbol(name.into()))
+    }
+
+    /// Construct a keyword, given its name.
+    ///
+    /// ```
+    /// # use lexpr::Value;
+    /// let value = Value::keyword("foo");
+    /// assert!(value.is_keyword());
+    /// assert_eq!(value.as_name().unwrap(), "foo");
+    /// ```
+    pub fn keyword(name: impl Into<String>) -> Self {
+        Value::Atom(Atom::Keyword(name.into()))
     }
 
     /// Returns true if the `Value` is a String. Returns false otherwise.
@@ -125,6 +137,40 @@ impl Value {
     /// otherwise.
     pub fn as_str(&self) -> Option<&str> {
         self.as_atom().and_then(Atom::as_str)
+    }
+
+    /// Returns true if the `Value` is a keyword. Returns false otherwise.
+    ///
+    /// For any Value on which `is_keyword` returns true, `as_keyword` is guaranteed
+    /// to return the string slice.
+    ///
+    /// ```
+    /// # use lexpr::sexp;
+    /// #
+    /// let v = sexp!((#:foo bar "baz"));
+    ///
+    /// assert!(v[0].is_keyword());
+    ///
+    /// // Strings and symbols are not keywords.
+    /// assert!(!v[1].is_keyword());
+    /// assert!(!v[2].is_keyword());
+    /// ```
+    pub fn is_keyword(&self) -> bool {
+        self.as_keyword().is_some()
+    }
+
+    /// If the `Value` is a keyword, returns the associated str. Returns `None`
+    /// otherwise.
+    ///
+    /// ```
+    /// # use lexpr::sexp;
+    /// #
+    /// let v = sexp!(#:foo);
+    ///
+    /// assert_eq!(v.as_keyword(), Some("foo"));
+    /// ```
+    pub fn as_keyword(&self) -> Option<&str> {
+        self.as_atom().and_then(Atom::as_keyword)
     }
 
     /// Get the name of a symbol or keyword, or the value of a string.
