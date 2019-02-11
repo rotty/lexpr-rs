@@ -5,6 +5,17 @@
 //! such values into Rust code, using a Lisp-like syntax, ususally
 //! refered to as S-expression syntax.
 //!
+//! Note that the representation chosen is intended for serialization
+//! and deserialization, not for manipulation with the same complexity
+//! guarantees as in a Lisp implementation. In particular, the
+//! representation of lists is based on Rust's `Vec` data type, which
+//! has quite different characteristics from the singly-linked lists
+//! used in Lisp. As long as you don't attempt to use the
+//! `lexpr::Value` type as the value representation of a "regular"
+//! Lisp implementation (which would also be made impossible by the
+//! fact that Lisp demands garbage collection), or rely on efficently
+//! forming suffixes of lists, this should be no issue.
+//!
 //! # What are S-expressions?
 //!
 //! S-expressions, as mentioned above, is the notation used by various
@@ -44,13 +55,23 @@
 //! [homoiconicity](https://en.wikipedia.org/wiki/Homoiconicity) of
 //! the Lisp language family.
 //!
+//!
+//! ```scheme
+//! this-is-a-symbol ; A single symbol, dashes are allowed
+//! another.symbol   ; Periods are allowed as well
+//! foo$bar!<_>?     ; As are quite a few other characters
+//! ```
+//!
 //! Another data type, present in some Lisp dialects, such as Emacs
 //! Lisp, Common Lisp, and several Scheme implementations, are
 //! keywords. These are also supported by `lexpr`. Keywords are very
-//! similiar to symbols, but use a different syntax and are used for
-//! different purposes in the language.
+//! similiar to symbols, but are typically prefixed by `:` or `#:` and
+//! are used for different purposes in the language.
 //!
-//!
+//! ```lisp
+//! #:foo ; A keyword named "foo", written in Guile/Racket notation
+//! :bar  ; A keyword named "bar", written in Emacs Lisp or Common Lisp notation
+//! ```
 //!
 //! ### Booleans
 //!
@@ -61,17 +82,26 @@
 //!
 //! ### The empty list and "nil"
 //!
-//! In traditional lisps, the end of list is represented as by a
-//! special atom referred to as "nil". In Scheme, the empty list is a
-//! separate atom written as `()`. Both values are present and
-//! distinguishable in `lexpr`, but the empty list s not considered an
-//! atom (see also below for more on list representation in `lexpr`).
+//! In traditional Lisps, the end of list is represented as by a
+//! special atom written as `nil`. In Scheme, the empty list is an
+//! atom written as `()`, and there is no special `nil` symbol. Both
+//! `nil` and the empty list are present and distinguishable in
+//! `lexpr`, but the empty list is not considered an atom (see also
+//! below for more on list representation in `lexpr`).
 //!
 //! ### Numbers
 //!
-//! Numbers are represented by the ['Number'] abstract data type. It
+//! Numbers are represented by the [`Number`] abstract data type. It
 //! can handle signed and unsigned integers, each up to 64 bit size,
 //! as well as floating point numbers.
+//!
+//! There is nothing surprising about the number syntax, extensions
+//! such as binary, octal and hexadecimal numbers are not yet
+//! implemented.
+//!
+//! ```scheme
+//! 1 -4 3.14 ; A postive, negative, and a floating point number
+//! ```
 //!
 //! ### Strings
 //!
@@ -81,25 +111,14 @@
 //!
 //! ## Lists
 //!
-//! Lists, which are a sequence of values (of either atoms or
-//! lists). In fact, Lisp does not have a "real" list data type, but
-//! instead lists are represented by chains of so-called cons cells",
-//! which form a singly-linked lists, terminated by the empty list. It
-//! is also possible for the terminator to not be the empty list, but
-//! an arbitrary primitive data type (i.e., an atom). In this case,
-//! the list is refered to as an "improper" or "dotted" list. Here are
-//! some examples
-//!
-//! Lists are not only used to represent sequences of values, but also
-//! associative arrays, also known as maps. A map is represented as a
-//! list containing sub-lists, where the first element of each
-//! sub-list is the key, and the remainder of the list is the
-//! associated value.
-//!
-//! In `lexpr`, lists are implemented not as singly-linked lists, but
-//! using vectors, which is more efficient generally. However, that
-//! choice precludes an efficient implementation of taking a suffix of
-//! an existing list.
+//! Lists are a sequence of values, of either atoms or lists. In fact,
+//! Lisp does not have a "real" list data type, but instead lists are
+//! represented by chains of so-called "cons cells", which are used to
+//! form a singly-linked list, terminated by the empty list (or `nil`
+//! in tradional Lisps). It is also possible for the terminator to not
+//! be the empty list, but instead be an arbitrary primitive data type
+//! (i.e., an atom). In this case, the list is refered to as an
+//! "improper" or "dotted" list. Here are some examples:
 //!
 //! ```scheme
 //! ("Hello" "World")   ; A regular list
@@ -108,10 +127,25 @@
 //! ("Hello" ("World"))
 //! (1 . 2) ; A cons cell, represented as an improper list by `lexpr`
 //! (1 2 . 3) ; A dotted (improper) list
+//! ```
+//!
+//! Lists are not only used to represent sequences of values, but also
+//! associative arrays, also known as maps. A map is represented as a
+//! list containing sub-lists, where the first element of each
+//! sub-list is the key, and the remainder of the list is the
+//! associated value.
+//!
+//! ```scheme
 //! ;; An association list with the symbols `a` and `b` as keys
 //! ((a . 42) (b . 43))
 //! ```
 //!
+//! In `lexpr`, lists are implemented not as singly-linked lists, but
+//! using vectors, which is more efficient generally. However, that
+//! choice precludes an efficient implementation of taking a suffix of
+//! an existing list.
+//!
+//! [`Number`]: struct.Number.html
 //! [`Value`]: enum.Value.html
 
 use proc_macro_hack::proc_macro_hack;
