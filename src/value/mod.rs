@@ -116,6 +116,35 @@ impl Value {
         Value::Atom(Atom::Keyword(name.into()))
     }
 
+    /// Create a list value from elements convertible into `Value`.
+    ///
+    /// ```
+    /// # use lexpr::{sexp, Value};
+    /// assert_eq!(Value::list(vec![1, 2, 3]), sexp!((1 2 3)));
+    /// ```
+    pub fn list<I>(elements: I) -> Self
+    where
+        I: IntoIterator,
+        I::Item: Into<Value>,
+    {
+        Value::List(elements.into_iter().map(Into::into).collect())
+    }
+
+    /// Create a list value from elements convertible into `Value`.
+    ///
+    /// ```
+    /// # use lexpr::{sexp, Value};
+    /// assert_eq!(Value::improper_list(vec![1u32, 2], 3), sexp!((1 2 . 3)));
+    /// ```
+    pub fn improper_list<I, T>(elements: I, tail: T) -> Self
+    where
+        I: IntoIterator,
+        I::Item: Into<Value>,
+        T: Into<Atom>,
+    {
+        Value::ImproperList(elements.into_iter().map(Into::into).collect(), tail.into())
+    }
+
     /// Returns true if the `Value` is a String. Returns false otherwise.
     ///
     /// For any Value on which `is_string` returns true, `as_str` is guaranteed
