@@ -174,8 +174,13 @@ use proc_macro_hack::proc_macro_hack;
 ///
 /// let sym = sexp!(symbol);
 /// let kw = sexp!(#:keyword);
+/// assert!(sym.is_symbol());
+/// assert!(kw.is_keyword());
+///
 /// let kebab_sym = sexp!(#"kebab-symbol");
-/// let kebab_kw = sexp!(#"kebab-keyword");
+/// let kebab_kw = sexp!(#:"kebab-keyword");
+/// assert!(kebab_sym.is_symbol());
+/// assert!(kebab_kw.is_keyword());
 /// ```
 /// # Lists
 ///

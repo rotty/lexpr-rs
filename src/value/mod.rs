@@ -139,6 +139,40 @@ impl Value {
         self.as_atom().and_then(Atom::as_str)
     }
 
+    /// Returns true if the `Value` is a symbol. Returns false otherwise.
+    ///
+    /// For any Value on which `is_symbol` returns true, `as_symbol` is guaranteed
+    /// to return the string slice.
+    ///
+    /// ```
+    /// # use lexpr::sexp;
+    /// #
+    /// let v = sexp!((#:foo bar "baz"));
+    ///
+    /// assert!(v[1].is_symbol());
+    ///
+    /// // Keywords and strings are not symbols.
+    /// assert!(!v[0].is_symbol());
+    /// assert!(!v[2].is_symbol());
+    /// ```
+    pub fn is_symbol(&self) -> bool {
+        self.as_symbol().is_some()
+    }
+
+    /// If the `Value` is a symbol, returns the associated str. Returns `None`
+    /// otherwise.
+    ///
+    /// ```
+    /// # use lexpr::sexp;
+    /// #
+    /// let v = sexp!(foo);
+    ///
+    /// assert_eq!(v.as_symbol(), Some("foo"));
+    /// ```
+    pub fn as_symbol(&self) -> Option<&str> {
+        self.as_atom().and_then(Atom::as_symbol)
+    }
+
     /// Returns true if the `Value` is a keyword. Returns false otherwise.
     ///
     /// For any Value on which `is_keyword` returns true, `as_keyword` is guaranteed
@@ -151,7 +185,7 @@ impl Value {
     ///
     /// assert!(v[0].is_keyword());
     ///
-    /// // Strings and symbols are not keywords.
+    /// // Symbols and strings are not keywords.
     /// assert!(!v[1].is_keyword());
     /// assert!(!v[2].is_keyword());
     /// ```
