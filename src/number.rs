@@ -167,8 +167,8 @@ impl Number {
         }
     }
 
-    /// Converts a finite `f64` to a `Number`. Infinite or NaN values are not JSON
-    /// numbers.
+    /// Converts a finite `f64` to a `Number`. Infinite or NaN values
+    /// are not S-expression numbers.
     ///
     /// ```
     /// # use std::f64;

@@ -2,7 +2,7 @@ use std::fmt::{self, Debug, Display};
 use std::result;
 
 /// This type represents all possible errors that can occur when serializing or
-/// deserializing JSON data.
+/// deserializing S-expression data.
 pub struct Error {
     /// This `Box` allows us to keep the size of `Error` as small as possible. A
     /// larger `Error` type was substantially slower due to all the functions
