@@ -1,5 +1,7 @@
 //! Non-compound S-expression value type.
 
+use std::borrow::Cow;
+
 pub use crate::number::Number;
 
 /// A Lisp atom.
@@ -216,18 +218,28 @@ macro_rules! impl_from_number {
 impl_from_number!(u8, u16, u32, u64, i8, i16, i32, i64, f32, f64);
 
 impl From<&str> for Atom {
+    #[inline]
     fn from(s: &str) -> Self {
         Atom::String(s.into())
     }
 }
 
+impl<'a> From<Cow<'a, str>> for Atom {
+    #[inline]
+    fn from(s: Cow<'a, str>) -> Self {
+        Atom::from(s.to_string())
+    }
+}
+
 impl From<String> for Atom {
+    #[inline]
     fn from(s: String) -> Self {
         Atom::String(s)
     }
 }
 
 impl From<bool> for Atom {
+    #[inline]
     fn from(v: bool) -> Self {
         Atom::Bool(v)
     }

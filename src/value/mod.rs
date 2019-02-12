@@ -42,6 +42,8 @@
 //! [from_slice]: fn.from_slice.html
 //! [from_reader]: fn.from_reader.html
 
+use std::borrow::Cow;
+
 use crate::atom::Atom;
 use crate::number::Number;
 
@@ -519,6 +521,13 @@ macro_rules! impl_from_atom {
 }
 
 impl_from_atom!(u8, u16, u32, u64, i8, i16, i32, f32, f64, bool, &str, String, Number);
+
+impl<'a> From<Cow<'a, str>> for Value {
+    #[inline]
+    fn from(s: Cow<'a, str>) -> Self {
+        Value::from(s.to_string())
+    }
+}
 
 impl From<Vec<Value>> for Value {
     fn from(elements: Vec<Value>) -> Self {
