@@ -242,10 +242,87 @@ pub struct CustomizedFormatter {
     options: Options,
 }
 
+/// This structure pretty prints a S-expression value to make it human readable.
+#[derive(Clone, Debug)]
+pub struct PrettyFormatter {
+    current_indent: usize,
+    has_value: bool,
+}
+
+impl PrettyFormatter {
+    /// Construct a pretty printer formatter that defaults to using two spaces for indentation.
+    pub fn new() -> Self {
+        PrettyFormatter {
+            current_indent: 0,
+            has_value: false,
+        }
+    }
+}
+
+impl Default for PrettyFormatter {
+    fn default() -> Self {
+        PrettyFormatter::new()
+    }
+}
+
+impl Formatter for PrettyFormatter {
+    #[inline]
+    fn begin_list<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        self.current_indent += 1;
+        self.has_value = false;
+        writer.write_all(b"(")
+    }
+
+    #[inline]
+    fn end_list<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        self.current_indent -= 1;
+
+        writer.write_all(b")")
+    }
+
+    #[inline]
+    fn begin_list_element<W: ?Sized>(&mut self, writer: &mut W, _first: bool) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        if self.has_value {
+            writer.write_all(b"\n")?;
+            indent(writer, self.current_indent)?;
+        }
+        Ok(())
+    }
+
+    #[inline]
+    fn end_list_element<W: ?Sized>(&mut self, _writer: &mut W) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        self.has_value = true;
+        Ok(())
+    }
+}
+
 #[derive(Debug)]
 pub struct Printer<W, F = DefaultFormatter> {
     writer: W,
     formatter: F,
+}
+
+impl<W> Printer<W, PrettyFormatter>
+where
+    W: io::Write,
+{
+    /// Creates a new S-expression pretty print serializer.
+    #[inline]
+    pub fn pretty(writer: W) -> Self {
+        Printer::with_formatter(writer, PrettyFormatter::new())
+    }
 }
 
 impl<W, F> Printer<W, F>
@@ -421,6 +498,20 @@ pub fn to_writer<W: io::Write>(writer: W, value: &Value) -> io::Result<()> {
     Ok(())
 }
 
+/// Serialize the given data structure as pretty-printed S-expression into the IO
+/// stream.
+///
+/// # Errors
+///
+/// Serialization can fail if `T`'s implementation of `Serialize` decides to
+/// fail, or if `T` contains a map with non-string keys.
+#[inline]
+pub fn to_writer_pretty<W: io::Write>(writer: W, value: &Value) -> io::Result<()> {
+    let mut printer = Printer::pretty(writer);
+    printer.print(value)?;
+    Ok(())
+}
+
 /// Serialize the given data structure as a S-expression byte vector.
 ///
 /// # Errors
@@ -431,6 +522,19 @@ pub fn to_writer<W: io::Write>(writer: W, value: &Value) -> io::Result<()> {
 pub fn to_vec(value: &Value) -> io::Result<Vec<u8>> {
     let mut writer = Vec::with_capacity(128);
     to_writer(&mut writer, value)?;
+    Ok(writer)
+}
+
+/// Serialize the given data structure as a pretty-printed S-expression byte vector.
+///
+/// # Errors
+///
+/// Serialization can fail if `T`'s implementation of `Serialize` decides to
+/// fail, or if `T` contains a map with non-string keys.
+#[inline]
+pub fn to_vec_pretty(value: &Value) -> io::Result<Vec<u8>> {
+    let mut writer = Vec::with_capacity(128);
+    to_writer_pretty(&mut writer, value)?;
     Ok(writer)
 }
 
@@ -448,4 +552,31 @@ pub fn to_string(value: &Value) -> io::Result<String> {
         String::from_utf8_unchecked(vec)
     };
     Ok(string)
+}
+
+/// Serialize the given data structure as a pretty-printed String of S-expression.
+///
+/// # Errors
+///
+/// Serialization can fail if `T`'s implementation of `Serialize` decides to
+/// fail, or if `T` contains a map with non-string keys.
+#[inline]
+pub fn to_string_pretty(value: &Value) -> io::Result<String> {
+    let vec = to_vec_pretty(value)?;
+    let string = unsafe {
+        // We do not emit invalid UTF-8.
+        String::from_utf8_unchecked(vec)
+    };
+    Ok(string)
+}
+
+fn indent<W: ?Sized>(wr: &mut W, n: usize) -> io::Result<()>
+where
+    W: io::Write,
+{
+    for _ in 0..n {
+        wr.write_all(b" ")?;
+    }
+
+    Ok(())
 }

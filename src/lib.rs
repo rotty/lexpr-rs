@@ -213,7 +213,7 @@ pub mod style;
 pub use self::parse::{Parser, from_reader, from_slice, from_str, };
 
 #[doc(inline)]
-pub use self::print::{Printer, to_writer, to_string, to_vec};
+pub use self::print::{Printer, to_writer, to_writer_pretty, to_string, to_string_pretty, to_vec, to_vec_pretty};
 
 #[doc(inline)]
 pub use value::Value;

@@ -676,10 +676,25 @@ impl fmt::Display for Value {
     /// let compact = format!("{}", value);
     /// assert_eq!(compact,
     ///     r#"((city "London") (street "10 Downing Street"))"#);
+    ///
+    /// // Pretty format:
+    /// //
+    /// // ((city "London")
+    /// //  (street "10 Downing Street"))
+    /// let pretty = format!("{:#}", value);
+    /// assert_eq!(pretty,
+    ///     "((city \"London\")\n (street \"10 Downing Street\"))\n");
     /// ```
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let alternate = f.alternate();
         let mut wr = WriterFormatter { inner: f };
-        crate::print::to_writer(&mut wr, self).map_err(|_| fmt::Error)
+        if alternate {
+            // {:#}
+            crate::print::to_writer_pretty(&mut wr, self).map_err(|_| fmt::Error)
+        } else {
+            // {}
+            crate::print::to_writer(&mut wr, self).map_err(|_| fmt::Error)
+        }
     }
 }
 
