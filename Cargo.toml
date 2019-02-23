@@ -3,4 +3,5 @@ members = [
     "lexpr",
     "lexpr-macros",
     "serde-lexpr",
+    "lexpr-cvt",
 ]

@@ -1,0 +1,10 @@
+[package]
+name = "lexpr-cvt"
+version = "0.1.0"
+authors = ["Andreas Rottmann <a.rottmann@gmx.at>"]
+edition = "2018"
+
+[dependencies]
+failure = "0.1.5"
+lexpr = { version = "0.1.3", path = "../lexpr" }
+structopt = "0.2.14"
