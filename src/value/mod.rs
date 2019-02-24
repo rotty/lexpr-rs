@@ -130,6 +130,16 @@ impl Value {
         Value::List(elements.into_iter().map(Into::into).collect())
     }
 
+    /// Create an empty list.
+    ///
+    /// ```
+    /// # use lexpr::{sexp, Value};
+    /// assert_eq!(Value::empty_list(), sexp!(()));
+    /// ```
+    pub fn empty_list() -> Self {
+        Value::List(vec![])
+    }
+
     /// Create a list value from elements convertible into `Value`.
     ///
     /// ```
@@ -241,6 +251,17 @@ impl Value {
     /// Get the name of a symbol or keyword, or the value of a string.
     pub fn as_name(&self) -> Option<&str> {
         self.as_atom().and_then(Atom::as_name)
+    }
+
+    /// Return `true` if the `Value` is a number.
+    pub fn is_number(&self) -> bool {
+        self.as_number().is_some()
+    }
+
+    /// For numbers, return a reference to them. For other values, return
+    /// `None`.
+    pub fn as_number(&self) -> Option<&Number> {
+        self.as_atom().and_then(Atom::as_number)
     }
 
     /// Lossless conversion to an `Atom`.
@@ -475,6 +496,22 @@ impl Value {
         self.as_atom().and_then(Atom::as_nil)
     }
 
+    /// Returns true if the `Value` is a (proper) list.
+    pub fn is_list(&self) -> bool {
+        match self {
+            Value::List(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true if the `Value` is an improper list.
+    pub fn is_improper_list(&self) -> bool {
+        match self {
+            Value::ImproperList(_, _) => true,
+            _ => false,
+        }
+    }
+
     /// Index into a S-expression list. A string or `Value` value can
     /// be used to access a value in an association list, and a usize
     /// index can be used to access the n-th element of a list.
@@ -534,6 +571,13 @@ impl Value {
     }
 }
 
+impl From<Atom> for Value {
+    #[inline]
+    fn from(atom: Atom) -> Self {
+        Value::Atom(atom)
+    }
+}
+
 macro_rules! impl_from_atom {
     (
         $($ty:ty),*
@@ -566,3 +610,6 @@ impl From<Vec<Value>> for Value {
 
 mod index;
 mod partial_eq;
+
+#[cfg(test)]
+mod tests;
