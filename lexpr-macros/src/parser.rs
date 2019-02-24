@@ -114,25 +114,18 @@ fn parse_list(tokens: TokenStream) -> Result<Value, ParseError> {
     let mut elements = vec![];
     let mut tail = None;
     let mut parser = Parser::new(tokens.into_iter().collect());
-    loop {
-        if let Some(token) = parser.peek() {
-            if let TokenTree::Punct(punct) = token {
-                match punct.as_char() {
-                    '.' => {
-                        if tail.is_some() {
-                            return Err(ParseError::UnexpectedChar('.'));
-                        }
-                        parser.eat_token();
-                        tail = Some(parser.parse()?);
-                        continue;
-                    }
-                    _ => {}
+    while let Some(token) = parser.peek() {
+        if let TokenTree::Punct(punct) = token {
+            if punct.as_char() == '.' {
+                if tail.is_some() {
+                    return Err(ParseError::UnexpectedChar('.'));
                 }
+                parser.eat_token();
+                tail = Some(parser.parse()?);
+                continue;
             }
-            elements.push(parser.parse()?);
-        } else {
-            break;
         }
+        elements.push(parser.parse()?);
     }
     match tail {
         Some(rest) => match rest {
