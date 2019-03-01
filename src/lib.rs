@@ -120,18 +120,19 @@
 //!
 //! In the following, the S-expression values that are modeled by
 //! `lexpr` are introduced, In general, S-expression values can be
-//! split into the two categories of "atoms" and lists.
+//! split into the two categories primitive types and compound types.
 //!
-//! ## Atoms
+//! ## Primitive types
 //!
-//! Atoms are primitive (i.e., non-compound) data type such as
-//! numbers, strings and booleans.
+//! Primitive, or non-compound types are those that can not
+//! recursively contain arbitrary other values, such as numbers,
+//! strings and booleans.
 //!
 //! ### Symbols and keywords
 //!
-//! Lisp also has a data type not commonly found in other languages,
-//! namely "symbols". A symbol is conceptually similar to identifiers
-//! in other languages, but allow for a much richer set of characters
+//! Lisp has a data type not commonly found in other languages, namely
+//! "symbols". A symbol is conceptually similar to identifiers in
+//! other languages, but allow for a much richer set of characters
 //! than allowed for identifiers in other languages. Also, identifiers
 //! in other languages can typically not be used in data; lisps expose
 //! them as a primitive data type, a result of the
@@ -167,10 +168,9 @@
 //!
 //! In traditional Lisps, the end of list is represented as by a
 //! special atom written as `nil`. In Scheme, the empty list is an
-//! atom written as `()`, and there is no special `nil` symbol. Both
-//! `nil` and the empty list are present and distinguishable in
-//! `lexpr`, but the empty list is not considered an atom (see also
-//! below for more on list representation in `lexpr`).
+//! atom written as `()`, and there `nil` is just a regular
+//! symbol. Both `nil` and the empty list are present and
+//! distinguishable in `lexpr`.
 //!
 //! ### Numbers
 //!
@@ -199,9 +199,9 @@
 //! represented by chains of so-called "cons cells", which are used to
 //! form a singly-linked list, terminated by the empty list (or `nil`
 //! in tradional Lisps). It is also possible for the terminator to not
-//! be the empty list, but instead be an arbitrary primitive data type
-//! (i.e., an atom). In this case, the list is refered to as an
-//! "improper" or "dotted" list. Here are some examples:
+//! be the empty list, but instead be af an arbitrary other data type.
+//! In this case, the list is refered to as an "improper" or "dotted"
+//! list. Here are some examples:
 //!
 //! ```scheme
 //! ("Hello" "World")   ; A regular list
@@ -222,11 +222,6 @@
 //! ;; An association list with the symbols `a` and `b` as keys
 //! ((a . 42) (b . 43))
 //! ```
-//!
-//! In `lexpr`, lists are implemented not as singly-linked lists, but
-//! using vectors, which is more efficient generally. However, that
-//! choice precludes an efficient implementation of taking a suffix of
-//! an existing list.
 //!
 //! [Serde]: https://crates.io/crates/serde
 //! [`Number`]: struct.Number.html
@@ -287,7 +282,7 @@ mod iter;
 mod read;
 mod style;
 
-pub mod atom;
+pub mod cons;
 pub mod number;
 pub mod parse;
 pub mod print;
@@ -308,7 +303,7 @@ pub use self::print::{
 pub use value::Value;
 
 #[doc(inline)]
-pub use atom::Atom;
+pub use cons::Cons;
 
 #[doc(inline)]
 pub use number::Number;

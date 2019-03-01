@@ -1,14 +1,14 @@
-use crate::{Atom, Number, Value};
+use crate::{Cons, Number, Value};
 
 type Predicate = fn(&Value) -> bool;
 
+// Type predicates for disjoint types
 static TYPE_PREDICATES: &[(&'static str, Predicate)] = &[
     ("string", Value::is_string),
     ("symbol", Value::is_symbol),
     ("keyword", Value::is_keyword),
     ("nil", Value::is_nil),
     ("number", Value::is_number),
-    ("improper-list", Value::is_improper_list),
     ("list", Value::is_list),
 ];
 
@@ -91,19 +91,21 @@ fn test_lists() {
     ] {
         let l = Value::list(elts.clone());
         check_type_predicates(&l, "list");
-        assert_eq!(l.rest(), None);
+        assert_eq!(l.to_vec(), Some(elts.clone()));
     }
 }
 
 #[test]
-fn test_improper_lists() {
+fn test_dotted_lists() {
     for (elts, rest) in &[
-        (vec![Value::from(1), Value::from(2)], Atom::from(3)),
-        (vec![Value::symbol("answer")], Atom::from(42)),
+        (vec![Value::from(1), Value::from(2)], Value::from(3)),
+        (vec![Value::symbol("answer")], Value::from(42)),
     ] {
-        let l = Value::improper_list(elts.clone(), rest.clone());
-        check_type_predicates(&l, "improper-list");
-        assert_eq!(l.rest(), Some(rest));
-        assert_eq!(l.tail(), Value::from(rest.clone()));
+        let l = Value::append(elts.clone(), rest.clone());
+        assert!(l.is_dotted_list());
+        assert_eq!(
+            l.as_cons().map(Cons::to_vec),
+            Some((elts.clone(), rest.clone()))
+        );
     }
 }

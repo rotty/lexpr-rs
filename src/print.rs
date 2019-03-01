@@ -10,7 +10,7 @@
 use std::io;
 
 pub use crate::style::KeywordStyle;
-use crate::{Atom, Number, Value};
+use crate::{Number, Value};
 
 /// Options for printing S-expressions.
 #[derive(Clone, Debug)]
@@ -140,6 +140,15 @@ pub trait Formatter {
         W: io::Write,
     {
         writer.write_all(b"#nil")
+    }
+
+    /// Writes a representation of the special nil value to the specified writer.
+    #[inline]
+    fn write_null<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        writer.write_all(b"()")
     }
 
     /// Writes a representation of a boolean value to the specified writer.
@@ -401,54 +410,40 @@ where
         self.writer
     }
 
-    fn print_atom(&mut self, atom: &Atom) -> io::Result<()> {
-        match atom {
-            Atom::Nil => self.formatter.write_nil(&mut self.writer),
-            Atom::Bool(b) => self.formatter.write_bool(&mut self.writer, *b),
-            Atom::Number(n) => self.formatter.write_number(&mut self.writer, &n),
-            Atom::Symbol(name) => self.formatter.write_symbol(&mut self.writer, &name),
-            Atom::Keyword(name) => self.formatter.write_keyword(&mut self.writer, &name),
-            Atom::String(s) => format_escaped_str(&mut self.writer, &mut self.formatter, &s),
-        }
-    }
-
     /// Output the representation of the specified value to the underlying
     /// writer.
     pub fn print(&mut self, value: &Value) -> io::Result<()> {
         match value {
-            Value::Atom(atom) => self.print_atom(atom)?,
-            Value::List(elements) => {
+            Value::Nil => self.formatter.write_nil(&mut self.writer),
+            Value::Null => self.formatter.write_null(&mut self.writer),
+            Value::Bool(b) => self.formatter.write_bool(&mut self.writer, *b),
+            Value::Number(n) => self.formatter.write_number(&mut self.writer, &n),
+            Value::Symbol(name) => self.formatter.write_symbol(&mut self.writer, &name),
+            Value::Keyword(name) => self.formatter.write_keyword(&mut self.writer, &name),
+            Value::String(s) => format_escaped_str(&mut self.writer, &mut self.formatter, &s),
+            Value::Cons(elements) => {
                 self.formatter.begin_list(&mut self.writer)?;
-                for (i, element) in elements.iter().enumerate() {
+                for (i, pair) in elements.iter().enumerate() {
                     self.formatter
                         .begin_list_element(&mut self.writer, i == 0)?;
-                    self.print(element)?;
+                    self.print(pair.car())?;
                     self.formatter.end_list_element(&mut self.writer)?;
+                    match pair.cdr() {
+                        Value::Null | Value::Cons(_) => {}
+                        _ => {
+                            self.formatter.begin_list_element(&mut self.writer, false)?;
+                            self.formatter.write_dot(&mut self.writer)?;
+                            self.formatter.end_list_element(&mut self.writer)?;
+                            self.formatter.begin_list_element(&mut self.writer, false)?;
+                            self.print(pair.cdr())?;
+                            self.formatter.end_list_element(&mut self.writer)?;
+                        }
+                    }
                 }
                 self.formatter.end_list(&mut self.writer)?;
-            }
-            Value::ImproperList(elements, tail) => {
-                if !elements.is_empty() {
-                    self.formatter.begin_list(&mut self.writer)?;
-                    for (i, element) in elements.iter().enumerate() {
-                        self.formatter
-                            .begin_list_element(&mut self.writer, i == 0)?;
-                        self.print(element)?;
-                        self.formatter.end_list_element(&mut self.writer)?;
-                    }
-                    self.formatter.begin_list_element(&mut self.writer, false)?;
-                    self.formatter.write_dot(&mut self.writer)?;
-                    self.formatter.end_list_element(&mut self.writer)?;
-                    self.formatter.begin_list_element(&mut self.writer, false)?;
-                    self.print_atom(tail)?;
-                    self.formatter.end_list_element(&mut self.writer)?;
-                    self.formatter.end_list(&mut self.writer)?;
-                } else {
-                    self.print_atom(tail)?;
-                }
+                Ok(())
             }
         }
-        Ok(())
     }
 }
 

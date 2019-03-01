@@ -1,50 +1,30 @@
-use crate::value::{Atom, Value};
+use crate::value::Value;
 
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 
-impl ToTokens for Atom {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        let expanded = match self {
-            Atom::Nil => quote! { ::lexpr::Atom::Nil },
-            Atom::Literal(lit) => quote! { ::lexpr::Atom::from(#lit) },
-            Atom::Negated(lit) => quote! { ::lexpr::Atom::from(-#lit) },
-            Atom::Bool(value) => quote! { ::lexpr::Atom::from(#value) },
-            Atom::Symbol(name) => quote! { ::lexpr::Atom::symbol(#name) },
-            Atom::Keyword(name) => quote! { ::lexpr::Atom::keyword(#name) },
-            Atom::Unquoted(tt) => quote! { ::lexpr::Atom::from(#tt) },
-        };
-        tokens.extend(expanded);
-    }
-}
-
 impl ToTokens for Value {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let expanded = match self {
-            Value::Atom(atom) => {
-                quote! { ::lexpr::Value::Atom(#atom) }
-            }
+            Value::Nil => quote! { ::lexpr::Value::Nil },
+            Value::Literal(lit) => quote! { ::lexpr::Value::from(#lit) },
+            Value::Negated(lit) => quote! { ::lexpr::Value::from(-#lit) },
+            Value::Bool(value) => quote! { ::lexpr::Value::from(#value) },
+            Value::Symbol(name) => quote! { ::lexpr::Value::symbol(#name) },
+            Value::Keyword(name) => quote! { ::lexpr::Value::keyword(#name) },
+            Value::Unquoted(tt) => quote! { ::lexpr::Value::from(#tt) },
             Value::List(elements) => {
-                quote! { ::lexpr::Value::List(vec![#(#elements),*]) }
+                if elements.is_empty() {
+                    quote! { ::lexpr::Value::Null }
+                } else {
+                    quote! { ::lexpr::Value::list(vec![#(#elements),*]) }
+                }
             }
-            Value::ImproperList(elements, rest) => match rest {
-                Atom::Unquoted(tt) => quote! {{
-                    let value = ::lexpr::Value::from(#tt);
-                    match value {
-                        ::lexpr::Value::Atom(atom) => ::lexpr::Value::ImproperList(vec![#(#elements),*], atom),
-                        ::lexpr::Value::ImproperList(rest_elements, rest) => {
-                            let mut elements = vec![#(#elements),*];
-                            elements.extend(rest_elements);
-                            ::lexpr::Value::ImproperList(elements, rest)
-                        }
-                        ::lexpr::Value::List(rest_elements) => {
-                            let mut elements = vec![#(#elements),*];
-                            elements.extend(rest_elements);
-                            ::lexpr::Value::List(elements)
-                        }
-                    }
+            Value::ImproperList(elements, rest) => match &**rest {
+                Value::Unquoted(tt) => quote! {{
+                    ::lexpr::Value::append(vec![#(#elements),*], ::lexpr::Value::from(#tt))
                 }},
-                _ => quote! { ::lexpr::Value::ImproperList(vec![#(#elements),*], #rest) },
+                _ => quote! { ::lexpr::Value::append(vec![#(#elements),*], #rest) },
             },
         };
         tokens.extend(expanded);

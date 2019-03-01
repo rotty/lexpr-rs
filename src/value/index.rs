@@ -1,7 +1,6 @@
 use std::ops;
 
-use crate::Atom;
-use crate::Value;
+use crate::{Cons, Value};
 
 /// A type that can be used to index into a `lexpr::Value`.
 ///
@@ -31,18 +30,14 @@ use crate::Value;
 /// let bar = &data["bar"];
 ///
 /// // Bar is a list so it can be indexed with an integer.
-/// let first = &bar[1];
+/// let second = &bar[1];
 ///
-/// assert_eq!(first, 1);
+/// assert_eq!(second, 2);
 /// ```
 pub trait Index: private::Sealed {
     /// Return None if the key is not already in the array or object.
     #[doc(hidden)]
     fn index_into<'v>(&self, v: &'v Value) -> Option<&'v Value>;
-
-    /// Return None if the key is not already in the array or object.
-    #[doc(hidden)]
-    fn index_into_mut<'v>(&self, v: &'v mut Value) -> Option<&'v mut Value>;
 }
 
 // Prevent users from implementing the Index trait.
@@ -57,41 +52,31 @@ mod private {
 
 impl Index for usize {
     fn index_into<'v>(&self, v: &'v Value) -> Option<&'v Value> {
-        match *v {
-            Value::List(ref vec) => vec.get(*self),
-            Value::ImproperList(ref vec, _) => vec.get(*self),
-            _ => None,
+        let mut head = v;
+        for _ in 0..*self {
+            match head {
+                Value::Cons(pair) => head = pair.cdr(),
+                _ => return None,
+            }
         }
-    }
-    fn index_into_mut<'v>(&self, v: &'v mut Value) -> Option<&'v mut Value> {
-        match *v {
-            Value::List(ref mut vec) => vec.get_mut(*self),
-            Value::ImproperList(ref mut vec, _) => vec.get_mut(*self),
+        match head {
+            Value::Cons(pair) => Some(pair.car()),
             _ => None,
         }
     }
 }
 
-fn match_pair_name(name: &str, pair: &Value) -> bool {
-    match pair {
-        Value::List(elements) => !elements.is_empty() && elements[0].as_name() == Some(name),
-        Value::ImproperList(elements, _) => {
-            !elements.is_empty() && elements[0].as_name() == Some(name)
-        }
-        _ => false,
+fn match_pair_name<'a>(name: &str, pair: &'a Cons) -> Option<&'a Value> {
+    match pair.car() {
+        Value::Cons(inner) if inner.car().as_name() == Some(name) => Some(inner.cdr()),
+        _ => None,
     }
 }
 
 impl Index for str {
     fn index_into<'v>(&self, v: &'v Value) -> Option<&'v Value> {
         match v {
-            Value::List(elements) => elements.iter().find(|e| match_pair_name(self, e)),
-            _ => None,
-        }
-    }
-    fn index_into_mut<'v>(&self, v: &'v mut Value) -> Option<&'v mut Value> {
-        match v {
-            Value::List(elements) => elements.iter_mut().find(|e| match_pair_name(self, e)),
+            Value::Cons(pair) => pair.iter().find_map(|e| match_pair_name(self, e)),
             _ => None,
         }
     }
@@ -100,9 +85,6 @@ impl Index for str {
 impl Index for String {
     fn index_into<'v>(&self, v: &'v Value) -> Option<&'v Value> {
         self[..].index_into(v)
-    }
-    fn index_into_mut<'v>(&self, v: &'v mut Value) -> Option<&'v mut Value> {
-        self[..].index_into_mut(v)
     }
 }
 
@@ -113,29 +95,19 @@ where
     fn index_into<'v>(&self, v: &'v Value) -> Option<&'v Value> {
         (**self).index_into(v)
     }
-    fn index_into_mut<'v>(&self, v: &'v mut Value) -> Option<&'v mut Value> {
-        (**self).index_into_mut(v)
-    }
 }
 
-fn match_pair_key(value: &Value, pair: &Value) -> bool {
-    match pair {
-        Value::List(elements) => !elements.is_empty() && &pair[0] == value,
-        Value::ImproperList(elements, _) => !elements.is_empty() && &pair[0] == value,
-        _ => false,
+fn match_pair_key<'a>(value: &Value, pair: &'a Cons) -> Option<&'a Value> {
+    match pair.car() {
+        Value::Cons(inner) if inner.car() == value => Some(inner.cdr()),
+        _ => None,
     }
 }
 
 impl Index for Value {
     fn index_into<'v>(&self, v: &'v Value) -> Option<&'v Value> {
         match v {
-            Value::List(elements) => elements.iter().find(|e| match_pair_key(self, e)),
-            _ => None,
-        }
-    }
-    fn index_into_mut<'v>(&self, v: &'v mut Value) -> Option<&'v mut Value> {
-        match v {
-            Value::List(elements) => elements.iter_mut().find(|e| match_pair_key(self, e)),
+            Value::Cons(pair) => pair.iter().find_map(|e| match_pair_key(self, e)),
             _ => None,
         }
     }
@@ -188,13 +160,13 @@ where
     /// #
     /// let data = sexp!(((a . 42) (x . (y (z zz)))));
     ///
-    /// assert_eq!(data["x"], sexp!((x . (y (z zz)))));
+    /// assert_eq!(data["x"], sexp!((y (z zz))));
     ///
-    /// assert_eq!(data["a"], sexp!((a . 42))); // returns nil for undefined values
+    /// assert_eq!(data["a"], sexp!(42)); // returns nil for undefined values
     /// assert_eq!(data["b"], sexp!(#nil)); // does not panic
     /// ```
     fn index(&self, index: I) -> &Value {
-        static NIL: Value = Value::Atom(Atom::Nil);
+        static NIL: Value = Value::Nil;
         index.index_into(self).unwrap_or(&NIL)
     }
 }

@@ -14,7 +14,7 @@ use std::u64;
 use crate::error::{Error, ErrorCode};
 use crate::read::{self, Reference};
 pub use crate::style::KeywordStyle;
-use crate::{Number, Result, Value};
+use crate::{Cons, Number, Result, Value};
 
 pub use read::{IoRead, Read, SliceRead, StrRead};
 
@@ -48,7 +48,7 @@ pub enum NilSymbol {
     ///
     /// In the parsed `Value`, the empty list, written as `()` and the
     /// empty list, written as `nil` are both represented by the
-    /// `Value::List` variant with zero elements.
+    /// `Value::Null` variant.
     EmptyList,
 
     /// Parse `nil` as a regular symbol. This is the behavior found in
@@ -57,10 +57,10 @@ pub enum NilSymbol {
     /// The parsed `Value` will be equal to `Value::symbol("nil")`.
     Default,
 
-    /// Parse `nil` as a special atom. This allows treating the `nil`
+    /// Parse `nil` as a special value. This allows treating the `nil`
     /// symbol specially when processing the parsed data.
     ///
-    /// The parsed `Value` will be equal to `Value::nil()`.
+    /// The parsed `Value` will be equal to `Value::Nil`.
     Special,
 }
 
@@ -350,7 +350,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                     Some(b'f') => Ok(Value::from(false)),
                     Some(b'n') => {
                         self.expect_ident(b"il")?;
-                        Ok(Value::nil())
+                        Ok(Value::Nil)
                     }
                     Some(b':') if self.options.keyword_style(KeywordStyle::Octothorpe) => {
                         Ok(Value::keyword(self.parse_symbol()?))
@@ -404,8 +404,8 @@ impl<'de, R: Read<'de>> Parser<R> {
                     Ok(Value::keyword(name))
                 } else if self.options.nil_symbol() != NilSymbol::Default && name == "nil" {
                     match self.options.nil_symbol() {
-                        NilSymbol::EmptyList => Ok(Value::empty_list()),
-                        NilSymbol::Special => Ok(Value::nil()),
+                        NilSymbol::EmptyList => Ok(Value::Null),
+                        NilSymbol::Special => Ok(Value::Nil),
                         NilSymbol::Default => unreachable!(),
                     }
                 } else if self.options.t_symbol() != TSymbol::Default && name == "t" {
@@ -457,35 +457,37 @@ impl<'de, R: Read<'de>> Parser<R> {
     }
 
     fn parse_list_elements(&mut self) -> Result<Value> {
-        fn form_list(mut list: Vec<Value>, tail: Value) -> Value {
-            match tail {
-                Value::Atom(atom) => Value::ImproperList(list, atom),
-                Value::List(rest_list) => {
-                    list.extend(rest_list);
-                    Value::List(list)
-                }
-                Value::ImproperList(rest_list, rest) => {
-                    list.extend(rest_list);
-                    Value::ImproperList(list, rest)
-                }
-            }
-        }
-        let mut list = Vec::new();
+        let mut list = Cons::new(Value::Nil, Value::Null);
+        let mut pair = &mut list;
+        let mut have_value = false;
         loop {
             match self.parse_whitespace() {
                 Err(e) => return Err(e),
                 Ok(Some(c)) => match c {
-                    b')' => return Ok(Value::List(list)),
+                    b')' => {
+                        if have_value {
+                            return Ok(Value::Cons(list));
+                        } else {
+                            return Ok(Value::Null);
+                        }
+                    }
                     b'.' => {
                         self.eat_char();
-                        let tail = self.parse_value()?;
+                        pair.set_cdr(self.parse_value()?);
                         match self.parse_whitespace()? {
-                            Some(b')') => return Ok(form_list(list, tail)),
+                            Some(b')') => return Ok(Value::Cons(list)),
                             Some(_) => return Err(self.peek_error(ErrorCode::TrailingCharacters)),
                             None => return Err(self.peek_error(ErrorCode::EofWhileParsingList)),
                         }
                     }
-                    _ => list.push(self.parse_value()?),
+                    _ => {
+                        if have_value {
+                            pair.set_cdr(Value::from((Value::Nil, Value::Null)));
+                            pair = pair.cdr_mut().as_cons_mut().unwrap();
+                        }
+                        pair.set_car(self.parse_value()?);
+                        have_value = true;
+                    }
                 },
                 Ok(None) => return Err(self.peek_error(ErrorCode::EofWhileParsingList)),
             }
@@ -892,7 +894,7 @@ pub fn from_str(s: &str) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Atom, Value};
+    use crate::Value;
 
     #[test]
     fn test_atoms_default() {
@@ -904,7 +906,7 @@ mod tests {
             Value::symbol("postfix-keyword:"),
             Value::from(true),
             Value::from(false),
-            Value::nil(),
+            Value::Nil,
             Value::from(100),
             Value::from(-42),
             Value::from(4.5),
@@ -941,7 +943,7 @@ mod tests {
 
     #[test]
     fn test_lists_default() {
-        assert_eq!(from_str("()").unwrap(), Value::from(vec![]));
+        assert_eq!(from_str("()").unwrap(), Value::Null);
         assert_eq!(
             from_str("(hello)").unwrap(),
             Value::list(vec![Value::symbol("hello")])
@@ -952,11 +954,11 @@ mod tests {
         );
         assert_eq!(
             from_str("(1 . 2)").unwrap(),
-            Value::improper_list(vec![Value::from(1)], Atom::from(2))
+            Value::append(vec![Value::from(1)], Value::from(2))
         );
         assert_eq!(
             from_str("(1 hello . 2)").unwrap(),
-            Value::improper_list(vec![Value::from(1), Value::symbol("hello")], Atom::from(2))
+            Value::append(vec![Value::from(1), Value::symbol("hello")], Value::from(2))
         );
     }
 
@@ -972,7 +974,7 @@ mod tests {
     fn test_list_nil_default() {
         assert_eq!(
             from_str("(1 . nil)").unwrap(),
-            Value::improper_list(vec![1], Atom::symbol("nil"))
+            Value::append(vec![1], Value::symbol("nil"))
         );
         assert_eq!(
             from_str("(nil)").unwrap(),
@@ -989,7 +991,7 @@ mod tests {
         );
         assert_eq!(
             from_str_custom("(nil)", elisp.clone()).unwrap(),
-            Value::list(vec![Value::empty_list()])
+            Value::list(vec![Value::Null])
         );
     }
 }
