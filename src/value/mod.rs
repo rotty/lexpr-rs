@@ -16,7 +16,7 @@
 //!         (phones "+44 1234567" "+44 2345678")
 //!     ));
 //!
-//!     println!("first phone number: {}", john["phones"][1]);
+//!     println!("first phone number: {}", john["phones"][0]);
 //!
 //!     // Convert to a string of S-expression data and print it out
 //!     println!("{}", john.to_string());
@@ -78,7 +78,7 @@
 //!     let v: Value = lexpr::from_str(data)?;
 //!
 //!     // Access parts of the data by indexing with square brackets.
-//!     println!("Please call {} at the number {}", v["name"].tail(), v["phones"][1]);
+//!     println!("Please call {} at the number {}", v["name"], v["phones"][0]);
 //!
 //!     Ok(())
 //! }
@@ -98,64 +98,74 @@ use std::fmt;
 use std::io;
 use std::str;
 
-use crate::atom::Atom;
+use crate::cons::Cons;
 use crate::number::Number;
 
 pub use self::index::Index;
 
 /// Represents an S-expression value.
+///
+/// See the [`lexpr::value`] module documentation for usage examples.
+///
+/// [`lexpr::value`]: value/index.html
 #[derive(Debug, PartialEq, Clone)]
 pub enum Value {
-    /// Represents a lisp atom (non-list).
+    /// The special "nil" value.
     ///
-    /// ```
-    /// # use lexpr::sexp;
-    /// #
-    /// let atoms = vec![
-    ///     sexp!(#nil),
-    ///     sexp!(5.0),
-    ///     sexp!("Hello"),
-    ///     sexp!(symbol),
-    ///     sexp!(#:keyword),
-    ///     sexp!(#:"kebab-keyword"),
-    /// ];
-    /// ```
-    Atom(Atom),
+    /// This is kind of oddball value. In traditional Lisps (e.g. Emacs Lisp)
+    /// the empty list can be written as the symbol `nil`, which in Scheme,
+    /// `nil` is just a regular symbol. Furthermore, traditional Lisps don't
+    /// have a separate boolean data type, and represent true and false by the
+    /// symbols `t` and `nil` instead. The `lexpr` parser can be instructed to
+    /// parse the `nil` symbol as the `Nil` value (see [`NilSymbol::Special`]),
+    /// allowing to choose its representation when converting to text again (see
+    /// [`NilStyle`]). Note that empty list, when written as `()` or implicitly
+    /// constructed as a list terminator is always parsed as [`Value::Null`],
+    /// not `Value::Nil`.
+    ///
+    /// In addition to being useful for conversions between S-expression
+    /// variants, this value is also potentially returned when using the square
+    /// bracket indexing operator on `Value`.
+    ///
+    /// [`NilSymbol::Special`]: parse/enum.NilSymbol.html#variant.Special
+    /// [`NilStyle`]: parse/enum.NilStyle.html
+    Nil,
 
-    /// Represents a proper Lisp list.
+    /// The empty list.
     ///
-    /// ```
+    /// This value terminates a chain of cons cells forming a proper list.
+    Null,
+
+    /// A boolean value.
+    Bool(bool),
+
+    /// A number.
+    Number(Number),
+
+    /// A string.
+    String(String),
+
+    /// A symbol.
+    Symbol(String),
+
+    /// A keyword.
+    Keyword(String),
+
+    /// Represents a Lisp "cons cell".
+    ///
+    /// Cons cells are often used to form singly-linked lists.
+    /// ```TODO
     /// # use lexpr::sexp;
     /// #
     /// let v = sexp!((a list 1 2 3));
     /// ```
-    List(Vec<Value>),
-
-    /// Represents an improper (aka dotted) Lisp list.
-    ///
-    /// Note that this may also represent a single atom, if the `Vec`
-    /// field has zero length. This degenerate case should never be
-    /// constructed by the `sexp` macro, but the API does not prevent
-    /// users from constructing such values. Use [`Value::as_atom`]
-    /// when you need to treat these two cases identically.
-    ///
-    /// ```
-    /// # use lexpr::sexp;
-    /// #
-    /// let v = sexp!((a dotted . list));
-    /// ```
-    ImproperList(Vec<Value>, Atom),
+    Cons(Cons),
 }
 
 impl Value {
-    /// Construct the nil value.
-    pub fn nil() -> Self {
-        Value::Atom(Atom::Nil)
-    }
-
     /// Construct a symbol, given its name.
     pub fn symbol(name: impl Into<String>) -> Self {
-        Value::Atom(Atom::Symbol(name.into()))
+        Value::Symbol(name.into())
     }
 
     /// Construct a keyword, given its name.
@@ -167,7 +177,7 @@ impl Value {
     /// assert_eq!(value.as_name().unwrap(), "foo");
     /// ```
     pub fn keyword(name: impl Into<String>) -> Self {
-        Value::Atom(Atom::Keyword(name.into()))
+        Value::Keyword(name.into())
     }
 
     /// Create a list value from elements convertible into `Value`.
@@ -181,35 +191,75 @@ impl Value {
         I: IntoIterator,
         I::Item: Into<Value>,
     {
-        Value::List(elements.into_iter().map(Into::into).collect())
+        Self::append(elements, Value::Null)
     }
 
-    /// Create an empty list.
+    /// Returns true if the value is a (proper) list.
+    pub fn is_list(&self) -> bool {
+        match self {
+            Value::Null => true,
+            Value::Cons(pair) => pair.iter().all(|p| match p.cdr() {
+                Value::Null | Value::Cons(_) => true,
+                _ => false,
+            }),
+            _ => false,
+        }
+    }
+
+    /// Returns true if the value is a dotted (improper) list.
+    ///
+    /// Note that all values that are not pairs are considered dotted lists.
     ///
     /// ```
     /// # use lexpr::{sexp, Value};
-    /// assert_eq!(Value::empty_list(), sexp!(()));
+    /// let list = sexp!((1 2 3));
+    /// assert!(!list.is_dotted_list());
+    /// let dotted = sexp!((1 2 . 3));
+    /// assert!(dotted.is_dotted_list());
     /// ```
-    pub fn empty_list() -> Self {
-        Value::List(vec![])
+    pub fn is_dotted_list(&self) -> bool {
+        match self {
+            Value::Null => false,
+            Value::Cons(pair) => pair.iter().all(|p| match p.cdr() {
+                Value::Null => false,
+                _ => true,
+            }),
+            _ => true,
+        }
     }
 
     /// Create a list value from elements convertible into `Value`.
     ///
     /// ```
     /// # use lexpr::{sexp, Value};
-    /// assert_eq!(Value::improper_list(vec![1u32, 2], 3), sexp!((1 2 . 3)));
+    /// assert_eq!(Value::append(vec![1u32, 2], 3), sexp!((1 2 . 3)));
     /// ```
-    pub fn improper_list<I, T>(elements: I, tail: T) -> Self
+    pub fn append<I, T>(elements: I, tail: T) -> Self
     where
         I: IntoIterator,
         I::Item: Into<Value>,
-        T: Into<Atom>,
+        T: Into<Value>,
     {
-        Value::ImproperList(elements.into_iter().map(Into::into).collect(), tail.into())
+        let mut list = Cons::new(Value::Nil, Value::Null);
+        let mut pair = &mut list;
+        let mut have_value = false;
+        for item in elements {
+            if have_value {
+                pair.set_cdr(Value::from((Value::Nil, Value::Null)));
+                pair = pair.cdr_mut().as_cons_mut().unwrap();
+            }
+            pair.set_car(item.into());
+            have_value = true;
+        }
+        if have_value {
+            pair.set_cdr(tail.into());
+            Value::Cons(list)
+        } else {
+            tail.into()
+        }
     }
 
-    /// Returns true if the `Value` is a String. Returns false otherwise.
+    /// Returns true if the value is a String. Returns false otherwise.
     ///
     /// For any Value on which `is_string` returns true, `as_str` is guaranteed
     /// to return the string slice.
@@ -217,45 +267,48 @@ impl Value {
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let v = sexp!(((a "some string") (b #f)));
+    /// let v = sexp!(((a . "some string") (b . #f)));
     ///
-    /// assert!(v["a"][1].is_string());
+    /// assert!(v["a"].is_string());
     ///
     /// // The boolean `false` is not a string.
-    /// assert!(!v["b"][1].is_string());
+    /// assert!(!v["b"].is_string());
     /// ```
     pub fn is_string(&self) -> bool {
         self.as_str().is_some()
     }
 
-    /// If the `Value` is a String, returns the associated str. Returns `None`
+    /// If the value is a String, returns the associated str. Returns `None`
     /// otherwise.
     ///
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let v = sexp!(((a "some string") (b #f)));
+    /// let v = sexp!(((a . "some string") (b . #f)));
     ///
-    /// assert_eq!(v["a"][1].as_str(), Some("some string"));
+    /// assert_eq!(v["a"].as_str(), Some("some string"));
     ///
     /// // The boolean `false` is not a string.
-    /// assert_eq!(v["b"][1].as_str(), None);
+    /// assert_eq!(v["b"].as_str(), None);
     ///
     /// // S-expression values are printed in S-expression
     /// // representation, so strings are in quotes.
     /// //    The value is: "some string"
-    /// println!("The value is: {}", v["a"][1]);
+    /// println!("The value is: {}", v["a"]);
     ///
     /// // Rust strings are printed without quotes.
     /// //
     /// //    The value is: some string
-    /// println!("The value is: {}", v["a"][1].as_str().unwrap());
+    /// println!("The value is: {}", v["a"].as_str().unwrap());
     /// ```
     pub fn as_str(&self) -> Option<&str> {
-        self.as_atom().and_then(Atom::as_str)
+        match self {
+            Value::String(s) => Some(s),
+            _ => None,
+        }
     }
 
-    /// Returns true if the `Value` is a symbol. Returns false otherwise.
+    /// Returns true if the value is a symbol. Returns false otherwise.
     ///
     /// For any Value on which `is_symbol` returns true, `as_symbol` is guaranteed
     /// to return the string slice.
@@ -275,7 +328,7 @@ impl Value {
         self.as_symbol().is_some()
     }
 
-    /// If the `Value` is a symbol, returns the associated str. Returns `None`
+    /// If the value is a symbol, returns the associated str. Returns `None`
     /// otherwise.
     ///
     /// ```
@@ -286,10 +339,13 @@ impl Value {
     /// assert_eq!(v.as_symbol(), Some("foo"));
     /// ```
     pub fn as_symbol(&self) -> Option<&str> {
-        self.as_atom().and_then(Atom::as_symbol)
+        match self {
+            Value::Symbol(s) => Some(s),
+            _ => None,
+        }
     }
 
-    /// Returns true if the `Value` is a keyword. Returns false otherwise.
+    /// Returns true if the value is a keyword. Returns false otherwise.
     ///
     /// For any Value on which `is_keyword` returns true, `as_keyword` is guaranteed
     /// to return the string slice.
@@ -309,7 +365,7 @@ impl Value {
         self.as_keyword().is_some()
     }
 
-    /// If the `Value` is a keyword, returns the associated str. Returns `None`
+    /// If the value is a keyword, returns the associated str. Returns `None`
     /// otherwise.
     ///
     /// ```
@@ -320,15 +376,23 @@ impl Value {
     /// assert_eq!(v.as_keyword(), Some("foo"));
     /// ```
     pub fn as_keyword(&self) -> Option<&str> {
-        self.as_atom().and_then(Atom::as_keyword)
+        match self {
+            Value::Keyword(s) => Some(s),
+            _ => None,
+        }
     }
 
     /// Get the name of a symbol or keyword, or the value of a string.
     pub fn as_name(&self) -> Option<&str> {
-        self.as_atom().and_then(Atom::as_name)
+        match self {
+            Value::Symbol(s) => Some(s),
+            Value::Keyword(s) => Some(s),
+            Value::String(s) => Some(s),
+            _ => None,
+        }
     }
 
-    /// Return `true` if the `Value` is a number.
+    /// Return `true` if the value is a number.
     pub fn is_number(&self) -> bool {
         self.as_number().is_some()
     }
@@ -336,44 +400,13 @@ impl Value {
     /// For numbers, return a reference to them. For other values, return
     /// `None`.
     pub fn as_number(&self) -> Option<&Number> {
-        self.as_atom().and_then(Atom::as_number)
-    }
-
-    /// Lossless conversion to an `Atom`.
-    ///
-    /// Returns the `Atom` directly corresponding to this value, or
-    /// `None`. This returns a `Some` only if the value itself is an
-    /// atom, or it is an improper list of zero length.
-    pub fn as_atom(&self) -> Option<&Atom> {
         match self {
-            Value::Atom(atom) => Some(atom),
-            Value::ImproperList(elements, atom) if elements.is_empty() => Some(atom),
+            Value::Number(n) => Some(n),
             _ => None,
         }
     }
 
-    /// For improper lists, return their non-list tail.
-    ///
-    /// For proper lists and atoms, this will return `None`.
-    pub fn rest(&self) -> Option<&Atom> {
-        match self {
-            Value::ImproperList(_, atom) => Some(atom),
-            _ => None,
-        }
-    }
-
-    /// Return the tail of an improper list as a value.
-    ///
-    /// This is the sloppy version of the `rest` method. It will, for
-    /// improper lists, return a value constructed from their non-list
-    /// tail, while for all other values, it will return the nil
-    /// value.
-    pub fn tail(&self) -> Value {
-        self.rest()
-            .map_or_else(Value::nil, |atom| Value::Atom(atom.clone()))
-    }
-
-    /// Returns true if the `Value` is an integer between `i64::MIN` and
+    /// Returns true if the value is an integer between `i64::MIN` and
     /// `i64::MAX`.
     ///
     /// For any Value on which `is_i64` returns true, `as_i64` is guaranteed to
@@ -383,24 +416,24 @@ impl Value {
     /// # use lexpr::sexp;
     /// #
     /// let big = i64::max_value() as u64 + 10;
-    /// let v = sexp!(((a 64) (b ,big) (c 256.0)));
+    /// let v = sexp!(((a . 64) (b . ,big) (c . 256.0)));
     ///
-    /// assert!(v["a"][1].is_i64());
+    /// assert!(v["a"].is_i64());
     ///
     /// // Greater than i64::MAX.
-    /// assert!(!v["b"][1].is_i64());
+    /// assert!(!v["b"].is_i64());
     ///
     /// // Numbers with a decimal point are not considered integers.
-    /// assert!(!v["c"][1].is_i64());
+    /// assert!(!v["c"].is_i64());
     /// ```
     pub fn is_i64(&self) -> bool {
-        match self.as_atom() {
-            Some(Atom::Number(n)) => n.is_i64(),
+        match self.as_number() {
+            Some(n) => n.is_i64(),
             _ => false,
         }
     }
 
-    /// Returns true if the `Value` is an integer between zero and `u64::MAX`.
+    /// Returns true if the value is an integer between zero and `u64::MAX`.
     ///
     /// For any Value on which `is_u64` returns true, `as_u64` is guaranteed to
     /// return the integer value.
@@ -408,24 +441,24 @@ impl Value {
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let v = sexp!(((a 64) (b -64) (c 256.0)));
+    /// let v = sexp!(((a . 64) (b . -64) (c . 256.0)));
     ///
-    /// assert!(v["a"][1].is_u64());
+    /// assert!(v["a"].is_u64());
     ///
     /// // Negative integer.
-    /// assert!(!v["b"][1].is_u64());
+    /// assert!(!v["b"].is_u64());
     ///
     /// // Numbers with a decimal point are not considered integers.
-    /// assert!(!v["c"][1].is_u64());
+    /// assert!(!v["c"].is_u64());
     /// ```
     pub fn is_u64(&self) -> bool {
-        match self.as_atom() {
-            Some(atom) => atom.is_u64(),
+        match self.as_number() {
+            Some(n) => n.is_u64(),
             _ => false,
         }
     }
 
-    /// Returns true if the `Value` is a number that can be represented by f64.
+    /// Returns true if the value is a number that can be represented by f64.
     ///
     /// For any Value on which `is_f64` returns true, `as_f64` is guaranteed to
     /// return the floating point value.
@@ -436,71 +469,73 @@ impl Value {
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let v = sexp!(((a 256.0) (b 64) (c -64)));
+    /// let v = sexp!(((a . 256.0) (b . 64) (c . -64)));
     ///
-    /// assert!(v["a"][1].is_f64());
+    /// assert!(v["a"].is_f64());
     ///
     /// // Integers.
-    /// assert!(!v["b"][1].is_f64());
-    /// assert!(!v["c"][1].is_f64());
+    /// assert!(!v["b"].is_f64());
+    /// assert!(!v["c"].is_f64());
     /// ```
+    #[inline]
     pub fn is_f64(&self) -> bool {
-        match self.as_atom() {
-            Some(atom) => atom.is_f64(),
+        match self.as_number() {
+            Some(n) => n.is_f64(),
             _ => false,
         }
     }
 
-    /// If the `Value` is an integer, represent it as i64 if possible. Returns
+    /// If the value is an integer, represent it as i64 if possible. Returns
     /// None otherwise.
     ///
     /// ```
     /// # use lexpr::sexp;
     /// #
     /// let big = i64::max_value() as u64 + 10;
-    /// let v = sexp!(((a 64) (b ,big) (c 256.0)));
+    /// let v = sexp!(((a . 64) (b . ,big) (c . 256.0)));
     ///
-    /// assert_eq!(v["a"][1].as_i64(), Some(64));
-    /// assert_eq!(v["b"][1].as_i64(), None);
-    /// assert_eq!(v["c"][1].as_i64(), None);
+    /// assert_eq!(v["a"].as_i64(), Some(64));
+    /// assert_eq!(v["b"].as_i64(), None);
+    /// assert_eq!(v["c"].as_i64(), None);
     /// ```
+    #[inline]
     pub fn as_i64(&self) -> Option<i64> {
-        self.as_atom().and_then(Atom::as_i64)
+        self.as_number().and_then(Number::as_i64)
     }
 
-    /// If the `Value` is an integer, represent it as u64 if possible. Returns
+    /// If the value is an integer, represent it as u64 if possible. Returns
     /// None otherwise.
     ///
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let v = sexp!(((a 64) (b -64) (c 256.0)));
+    /// let v = sexp!(((a . 64) (b . -64) (c . 256.0)));
     ///
-    /// assert_eq!(v["a"][1].as_u64(), Some(64));
-    /// assert_eq!(v["b"][1].as_u64(), None);
-    /// assert_eq!(v["c"][1].as_u64(), None);
+    /// assert_eq!(v["a"].as_u64(), Some(64));
+    /// assert_eq!(v["b"].as_u64(), None);
+    /// assert_eq!(v["c"].as_u64(), None);
     /// ```
     pub fn as_u64(&self) -> Option<u64> {
-        self.as_atom().and_then(Atom::as_u64)
+        self.as_number().and_then(Number::as_u64)
     }
 
-    /// If the `Value` is a number, represent it as f64 if possible. Returns
+    /// If the value is a number, represent it as f64 if possible. Returns
     /// None otherwise.
     ///
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let v = sexp!(((a 256.0) (b 64) (c -64)));
+    /// let v = sexp!(((a . 256.0) (b . 64) (c . -64)));
     ///
-    /// assert_eq!(v["a"][1].as_f64(), Some(256.0));
-    /// assert_eq!(v["b"][1].as_f64(), Some(64.0));
-    /// assert_eq!(v["c"][1].as_f64(), Some(-64.0));
+    /// assert_eq!(v["a"].as_f64(), Some(256.0));
+    /// assert_eq!(v["b"].as_f64(), Some(64.0));
+    /// assert_eq!(v["c"].as_f64(), Some(-64.0));
     /// ```
     pub fn as_f64(&self) -> Option<f64> {
-        self.as_atom().and_then(Atom::as_f64)
+        self.as_number().and_then(Number::as_f64)
     }
 
-    /// Returns true if the `Value` is a Boolean. Returns false otherwise.
+    /// Returns true if the value is a Boolean. Returns false otherwise.
     ///
     /// For any Value on which `is_boolean` returns true, `as_bool` is
     /// guaranteed to return the boolean value.
@@ -508,35 +543,38 @@ impl Value {
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let v = sexp!(((a #f) (b #nil)));
+    /// let v = sexp!(((a . #f) (b . #nil)));
     ///
-    /// assert!(v["a"][1].is_boolean());
+    /// assert!(v["a"].is_boolean());
     ///
     /// // The nil value is special, and not a boolean.
-    /// assert!(!v["b"][1].is_boolean());
+    /// assert!(!v["b"].is_boolean());
     /// ```
     pub fn is_boolean(&self) -> bool {
         self.as_bool().is_some()
     }
 
-    /// If the `Value` is a Boolean, returns the associated bool. Returns None
+    /// If the value is a `Boolean`, returns the associated bool. Returns None
     /// otherwise.
     ///
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let v = sexp!(((a #f) (b "false")));
+    /// let v = sexp!(((a . #f) (b . "false")));
     ///
-    /// assert_eq!(v["a"][1].as_bool(), Some(false));
+    /// assert_eq!(v["a"].as_bool(), Some(false));
     ///
     /// // The string `"false"` is a string, not a boolean.
-    /// assert_eq!(v["b"][1].as_bool(), None);
+    /// assert_eq!(v["b"].as_bool(), None);
     /// ```
     pub fn as_bool(&self) -> Option<bool> {
-        self.as_atom().and_then(Atom::as_bool)
+        match self {
+            Value::Bool(b) => Some(*b),
+            _ => None,
+        }
     }
 
-    /// Returns true if the `Value` is a Nil atom. Returns false otherwise.
+    /// Returns true if the value is `Nil`. Returns false otherwise.
     ///
     /// For any Value on which `is_nil` returns true, `as_nil` is guaranteed
     /// to return `Some(())`.
@@ -544,46 +582,147 @@ impl Value {
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let v = sexp!(((a #nil) (b #f)));
+    /// let v = sexp!(((a . #nil) (b . #f)));
     ///
-    /// assert!(v["a"][1].is_nil());
+    /// assert!(v["a"].is_nil());
     ///
     /// // The boolean `false` is not nil.
-    /// assert!(!v["b"][1].is_nil());
+    /// assert!(!v["b"].is_nil());
     /// ```
     pub fn is_nil(&self) -> bool {
         self.as_nil().is_some()
     }
 
-    /// If the `Value` is a Nil atom, returns `()`. Returns `None` otherwise.
+    /// If the value is `Nil`, returns `()`. Returns `None` otherwise.
     ///
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let v = sexp!(((a #nil) (b #f)));
+    /// let v = sexp!(((a . #nil) (b . #f) (c . ())));
     ///
-    /// assert_eq!(v["a"][1].as_nil(), Some(()));
+    /// assert_eq!(v["a"].as_nil(), Some(()));
     ///
     /// // The boolean `false` is not nil.
-    /// assert_eq!(v["b"][1].as_nil(), None);
+    /// assert_eq!(v["b"].as_nil(), None);
+    /// // Neither is the empty list.
+    /// assert_eq!(v["c"].as_nil(), None);
     /// ```
     pub fn as_nil(&self) -> Option<()> {
-        self.as_atom().and_then(Atom::as_nil)
+        match self {
+            Value::Nil => Some(()),
+            _ => None,
+        }
     }
 
-    /// Returns true if the `Value` is a (proper) list.
-    pub fn is_list(&self) -> bool {
+    /// Returns true if the value is `Null`. Returns false otherwise.
+    pub fn is_null(&self) -> bool {
+        self.as_null().is_some()
+    }
+
+    /// If the value is `Null`, returns `()`. Returns `None` otherwise.
+    pub fn as_null(&self) -> Option<()> {
         match self {
-            Value::List(_) => true,
+            Value::Null => Some(()),
+            _ => None,
+        }
+    }
+
+    /// Returns true if the value is a cons cell. Returns `False` otherwise.
+    pub fn is_cons(&self) -> bool {
+        match self {
+            Value::Cons(_) => true,
             _ => false,
         }
     }
 
-    /// Returns true if the `Value` is an improper list.
-    pub fn is_improper_list(&self) -> bool {
+    /// If the value is a cons cell, returns a reference to it. Returns `None`
+    /// otherwise.
+    pub fn as_cons(&self) -> Option<&Cons> {
         match self {
-            Value::ImproperList(_, _) => true,
-            _ => false,
+            Value::Cons(pair) => Some(pair),
+            _ => None,
+        }
+    }
+
+    /// If the value is a cons cell, returns a mutable reference to it. Returns
+    /// `None` otherwise.
+    pub fn as_cons_mut(&mut self) -> Option<&mut Cons> {
+        match self {
+            Value::Cons(pair) => Some(pair),
+            _ => None,
+        }
+    }
+
+    /// If the value is a cons cell, return references to its `car` and `cdr`
+    /// fields.
+    ///
+    /// ```
+    /// # use lexpr::sexp;
+    /// let cell = sexp!((foo . bar));
+    /// assert_eq!(cell.as_pair(), Some((&sexp!(foo), &sexp!(bar))));
+    /// assert_eq!(sexp!("not-a-pair").as_pair(), None);
+    /// ```
+    pub fn as_pair(&self) -> Option<(&Value, &Value)> {
+        self.as_cons().map(Cons::as_pair)
+    }
+
+    /// Attempts conversion to a vector, cloning the values.
+    ///
+    /// For proper lists (including `Value::Null`), this returns a vector of
+    /// values. If you want to handle improper list in a similar way, combine
+    /// [`as_cons`] and the [`Cons::to_vec`] method.
+    ///
+    /// ```
+    /// # use lexpr::{sexp, Value};
+    /// assert_eq!(sexp!((1 2 3)).to_vec(), Some(vec![sexp!(1), sexp!(2), sexp!(3)]));
+    /// assert_eq!(sexp!(()).to_vec(), Some(vec![]));
+    /// assert_eq!(sexp!((1 2 . 3)).to_vec(), None);
+    /// ```
+    ///
+    /// [`as_cons`]: struct.Value.html#method.as_cons
+    /// [`Cons::to_vec`]: struct.Cons.html#method.to_vec
+    pub fn to_vec(&self) -> Option<Vec<Value>> {
+        match self {
+            Value::Null => Some(Vec::new()),
+            Value::Cons(pair) => {
+                let (vec, rest) = pair.to_ref_vec();
+                if rest.is_null() {
+                    Some(vec.into_iter().cloned().collect())
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
+    }
+
+    /// Attempts conversion to a vector, taking references to the values.
+    ///
+    /// For proper lists (including `Value::Null`), this returns a vector of
+    /// value references. If you want to handle improper list in a similar way,
+    /// combine [`as_cons`] and the [`Cons::to_ref_vec`] method.
+    ///
+    /// ```
+    /// # use lexpr::{sexp, Value};
+    /// assert_eq!(sexp!((1 2 3)).to_vec(), Some(vec![sexp!(1), sexp!(2), sexp!(3)]));
+    /// assert_eq!(sexp!(()).to_vec(), Some(vec![]));
+    /// assert_eq!(sexp!((1 2 . 3)).to_vec(), None);
+    /// ```
+    ///
+    /// [`as_cons`]: struct.Value.html#method.as_cons
+    /// [`Cons::to_vec`]: struct.Cons.html#method.to_vec
+    pub fn to_ref_vec(&self) -> Option<Vec<&Value>> {
+        match self {
+            Value::Null => Some(Vec::new()),
+            Value::Cons(pair) => {
+                let (vec, rest) = pair.to_ref_vec();
+                if rest.is_null() {
+                    Some(vec)
+                } else {
+                    None
+                }
+            }
+            _ => None,
         }
     }
 
@@ -602,18 +741,18 @@ impl Value {
     /// is also considered out-of-bounds.
     ///
     /// In Scheme terms, this method can be thought of a combination
-    /// of `assoc` and `list-ref`, depending on the argument type. If
+    /// of `assoc-ref` and `list-ref`, depending on the argument type. If
     /// you want to look up a number in an association list, use an
     /// `Value` value containing that number.
     ///
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let alist = sexp!((("A" . 65) (B . 66) (#:C 67) (42 . "The answer")));
-    /// assert_eq!(*alist.get("A").unwrap(), sexp!(("A" . 65)));
-    /// assert_eq!(*alist.get("B").unwrap(), sexp!((B . 66)));
-    /// assert_eq!(*alist.get("C").unwrap(), sexp!((#:C 67)));
-    /// assert_eq!(*alist.get(sexp!(42)).unwrap(), sexp!((42 . "The answer")));
+    /// let alist = sexp!((("A" . 65) (B . 66) (#:C . 67) (42 . "The answer")));
+    /// assert_eq!(alist.get("A").unwrap(), &sexp!(65));
+    /// assert_eq!(alist.get("B").unwrap(), &sexp!(66));
+    /// assert_eq!(alist.get("C").unwrap(), &sexp!(67));
+    /// assert_eq!(alist.get(sexp!(42)).unwrap(), &sexp!("The answer"));
     ///
     /// let list = sexp!(("A" "B" "C"));
     /// assert_eq!(*list.get(2).unwrap(), sexp!("C"));
@@ -633,8 +772,8 @@ impl Value {
     ///     ("B" . ((b . 42) (c . 23)))
     ///     ("C" . ("c" "ć" "ć̣" "ḉ"))
     /// ));
-    /// assert_eq!(alist["B"][1], sexp!((b . 42)));
-    /// assert_eq!(alist["C"][2], sexp!("ć"));
+    /// assert_eq!(alist["B"][0], sexp!((b . 42)));
+    /// assert_eq!(alist["C"][1], sexp!("ć"));
     ///
     /// assert_eq!(alist["D"], sexp!(#nil));
     /// assert_eq!(alist[0]["x"]["y"]["z"], sexp!(#nil));
@@ -646,14 +785,7 @@ impl Value {
     }
 }
 
-impl From<Atom> for Value {
-    #[inline]
-    fn from(atom: Atom) -> Self {
-        Value::Atom(atom)
-    }
-}
-
-macro_rules! impl_from_atom {
+macro_rules! impl_from_number {
     (
         $($ty:ty),*
     ) => {
@@ -661,14 +793,21 @@ macro_rules! impl_from_atom {
             impl From<$ty> for Value {
                 #[inline]
                 fn from(n: $ty) -> Self {
-                    Value::Atom(Atom::from(n))
+                    Value::Number(Number::from(n))
                 }
             }
         )*
     };
 }
 
-impl_from_atom!(u8, u16, u32, u64, i8, i16, i32, f32, f64, bool, &str, String, Number);
+impl_from_number!(u8, u16, u32, u64, i8, i16, i32, i64, f32, f64);
+
+impl From<&str> for Value {
+    #[inline]
+    fn from(s: &str) -> Self {
+        Value::String(s.into())
+    }
+}
 
 impl<'a> From<Cow<'a, str>> for Value {
     #[inline]
@@ -677,9 +816,39 @@ impl<'a> From<Cow<'a, str>> for Value {
     }
 }
 
-impl From<Vec<Value>> for Value {
-    fn from(elements: Vec<Value>) -> Self {
-        Value::List(elements)
+impl From<String> for Value {
+    #[inline]
+    fn from(s: String) -> Self {
+        Value::String(s)
+    }
+}
+
+impl From<bool> for Value {
+    #[inline]
+    fn from(v: bool) -> Self {
+        Value::Bool(v)
+    }
+}
+
+impl From<Number> for Value {
+    fn from(n: Number) -> Self {
+        Value::Number(n)
+    }
+}
+
+impl<T, U> From<(T, U)> for Value
+where
+    T: Into<Value>,
+    U: Into<Value>,
+{
+    fn from((car, cdr): (T, U)) -> Self {
+        Value::Cons(Cons::new(car, cdr))
+    }
+}
+
+impl From<Cons> for Value {
+    fn from(pair: Cons) -> Self {
+        Value::Cons(pair)
     }
 }
 

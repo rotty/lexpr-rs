@@ -7,34 +7,44 @@ use std::str;
 
 use crate as lexpr;
 
-use lexpr::{Atom, Number, Value};
+use lexpr::{Number, Value};
 
 enum ValueKind {
-    Atom,
-    List,
-    ImproperList,
+    Nil,
+    Null,
+    Bool,
+    Number,
+    String,
+    Symbol,
+    Keyword,
+    Cons,
 }
 
 fn gen_value<G: Gen>(g: &mut G, depth: usize) -> Value {
     use ValueKind::*;
     let choices = if depth >= g.size() {
-        &[Atom] as &[ValueKind]
+        &[Nil, Null, Bool, Number, String, Symbol, Keyword] as &[ValueKind]
     } else {
-        &[Atom, List, ImproperList]
+        &[Nil, Null, Bool, Number, String, Symbol, Keyword, Cons]
     };
     match choices.choose(g).unwrap() {
-        Atom => Value::Atom(Arbitrary::arbitrary(g)),
-        List => Value::List((0..g.size()).map(|_| gen_value(g, depth + 1)).collect()),
-        ImproperList => {
-            let size = {
-                let s = g.size();
-                g.gen_range(1, s)
-            };
-            Value::ImproperList(
-                (0..size).map(|_| gen_value(g, depth + 1)).collect(),
-                Arbitrary::arbitrary(g),
-            )
+        Nil => Value::Nil,
+        Null => Value::Null,
+        Bool => Value::Bool(g.gen()),
+        Number => Value::Number(Arbitrary::arbitrary(g)),
+        String => {
+            let choices = ["", "foo", "\"", "\t"];
+            Value::String(choices.choose(g).unwrap().to_string())
         }
+        Symbol => {
+            let choices = ["foo", "a-symbol", "$?:!"];
+            Value::Symbol(choices.choose(g).unwrap().to_string())
+        }
+        Keyword => {
+            let choices = ["foo", "a-keyword", "$?:!"];
+            Value::Keyword(choices.choose(g).unwrap().to_string())
+        }
+        Cons => Value::from((gen_value(g, depth + 1), gen_value(g, depth + 1))),
     }
 }
 
@@ -43,55 +53,9 @@ impl Arbitrary for Value {
         gen_value(g, 0)
     }
     fn shrink(&self) -> Box<Iterator<Item = Value>> {
-        use Value::*;
         let nothing = || Box::new(None.into_iter());
-        match self {
-            List(elements) => Box::new(elements.clone().shrink().map(List)),
-            ImproperList(elements, tail) => {
-                let tail = tail.clone();
-                Box::new(
-                    elements
-                        .clone()
-                        .shrink()
-                        .filter(|elts| !elts.is_empty())
-                        .map(move |elts| ImproperList(elts, tail.clone())),
-                )
-            }
-            _ => nothing(),
-        }
-    }
-}
-
-enum AtomKind {
-    Nil,
-    Bool,
-    Number,
-    String,
-    Symbol,
-    Keyword,
-}
-
-impl Arbitrary for Atom {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
-        use AtomKind::*;
-        let choices = [Nil, Bool, Number, String, Symbol, Keyword];
-        match choices.choose(g).unwrap() {
-            Nil => Atom::Nil,
-            Bool => Atom::Bool(g.gen()),
-            Number => Atom::Number(Arbitrary::arbitrary(g)),
-            String => {
-                let choices = ["", "foo", "\"", "\t"];
-                Atom::String(choices.choose(g).unwrap().to_string())
-            }
-            Symbol => {
-                let choices = ["foo", "a-symbol", "$?:!"];
-                Atom::Symbol(choices.choose(g).unwrap().to_string())
-            }
-            Keyword => {
-                let choices = ["foo", "a-keyword", "$?:!"];
-                Atom::Keyword(choices.choose(g).unwrap().to_string())
-            }
-        }
+        // TODO
+        nothing()
     }
 }
 
@@ -156,4 +120,20 @@ fn print_parse_roundtrip_default() {
         .max_tests(2000)
         .gen(StdGen::new(::rand::thread_rng(), 4))
         .quickcheck(prop as fn(Value) -> bool);
+}
+
+#[test]
+fn test_list_index() {
+    let list = Value::list(vec![23, 24, 25]);
+    assert_eq!(list[0], Value::from(23));
+    assert_eq!(list[1], Value::from(24));
+    assert_eq!(list[2], Value::from(25));
+}
+
+#[test]
+fn test_alist_index() {
+    let alist = Value::list(vec![("foo", 42), ("bar", 23), ("baz", 127)]);
+    assert_eq!(alist["foo"], Value::from(42));
+    assert_eq!(alist["bar"], Value::from(23));
+    assert_eq!(alist["baz"], Value::from(127));
 }

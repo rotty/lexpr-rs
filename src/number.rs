@@ -27,15 +27,15 @@ impl Number {
     /// # use lexpr::sexp;
     /// #
     /// let big = i64::max_value() as u64 + 10;
-    /// let v = sexp!(((a 64) (b ,big) (c 256.0)));
+    /// let v = sexp!(((a . 64) (b . ,big) (c . 256.0)));
     ///
-    /// assert!(v["a"][1].is_i64());
+    /// assert!(v["a"].is_i64());
     ///
     /// // Greater than i64::MAX.
-    /// assert!(!v["b"][1].is_i64());
+    /// assert!(!v["b"].is_i64());
     ///
     /// // Numbers with a decimal point are not considered integers.
-    /// assert!(!v["c"][1].is_i64());
+    /// assert!(!v["c"].is_i64());
     /// ```
     #[inline]
     pub fn is_i64(&self) -> bool {
@@ -54,15 +54,15 @@ impl Number {
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let v = sexp!(((a 64) (b -64) (c 256.0)));
+    /// let v = sexp!(((a . 64) (b . -64) (c . 256.0)));
     ///
-    /// assert!(v["a"][1].is_u64());
+    /// assert!(v["a"].is_u64());
     ///
     /// // Negative integer.
-    /// assert!(!v["b"][1].is_u64());
+    /// assert!(!v["b"].is_u64());
     ///
     /// // Numbers with a decimal point are not considered integers.
-    /// assert!(!v["c"][1].is_u64());
+    /// assert!(!v["c"].is_u64());
     /// ```
     #[inline]
     pub fn is_u64(&self) -> bool {
@@ -83,13 +83,12 @@ impl Number {
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let v = sexp!(((a 256.0) (b 64) (c -64)));
-    ///
-    /// assert!(v["a"][1].is_f64());
+    /// let v = sexp!(((a . 256.0) (b . 64) (c . -64)));
+    /// assert!(v["a"].is_f64());
     ///
     /// // Integers.
-    /// assert!(!v["b"][1].is_f64());
-    /// assert!(!v["c"][1].is_f64());
+    /// assert!(!v["b"].is_f64());
+    /// assert!(!v["c"].is_f64());
     /// ```
     #[inline]
     pub fn is_f64(&self) -> bool {
@@ -106,11 +105,11 @@ impl Number {
     /// # use lexpr::sexp;
     /// #
     /// let big = i64::max_value() as u64 + 10;
-    /// let v = sexp!(((a 64) (b ,big) (c 256.0)));
+    /// let v = sexp!(((a . 64) (b . ,big) (c . 256.0)));
     ///
-    /// assert_eq!(v["a"][1].as_i64(), Some(64));
-    /// assert_eq!(v["b"][1].as_i64(), None);
-    /// assert_eq!(v["c"][1].as_i64(), None);
+    /// assert_eq!(v["a"].as_i64(), Some(64));
+    /// assert_eq!(v["b"].as_i64(), None);
+    /// assert_eq!(v["c"].as_i64(), None);
     /// ```
     #[inline]
     pub fn as_i64(&self) -> Option<i64> {
@@ -133,11 +132,11 @@ impl Number {
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let v = sexp!(((a 64) (b -64) (c 256.0)));
+    /// let v = sexp!(((a . 64) (b . -64) (c . 256.0)));
     ///
-    /// assert_eq!(v["a"][1].as_u64(), Some(64));
-    /// assert_eq!(v["b"][1].as_u64(), None);
-    /// assert_eq!(v["c"][1].as_u64(), None);
+    /// assert_eq!(v["a"].as_u64(), Some(64));
+    /// assert_eq!(v["b"].as_u64(), None);
+    /// assert_eq!(v["c"].as_u64(), None);
     /// ```
     #[inline]
     pub fn as_u64(&self) -> Option<u64> {
@@ -155,11 +154,11 @@ impl Number {
     /// ```
     /// # use lexpr::sexp;
     /// #
-    /// let v = sexp!(((a 256.0) (b 64) (c -64)));
+    /// let v = sexp!(((a . 256.0) (b . 64) (c . -64)));
     ///
-    /// assert_eq!(v["a"][1].as_f64(), Some(256.0));
-    /// assert_eq!(v["b"][1].as_f64(), Some(64.0));
-    /// assert_eq!(v["c"][1].as_f64(), Some(-64.0));
+    /// assert_eq!(v["a"].as_f64(), Some(256.0));
+    /// assert_eq!(v["b"].as_f64(), Some(64.0));
+    /// assert_eq!(v["c"].as_f64(), Some(-64.0));
     /// ```
     #[inline]
     pub fn as_f64(&self) -> Option<f64> {

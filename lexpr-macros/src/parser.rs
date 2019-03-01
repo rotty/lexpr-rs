@@ -1,4 +1,4 @@
-use crate::value::{Atom, Value};
+use crate::value::Value;
 
 use proc_macro2::{Delimiter, Literal, TokenStream, TokenTree};
 
@@ -51,12 +51,12 @@ impl Parser {
         match self.token()? {
             TokenTree::Punct(punct) => match punct.as_char() {
                 '#' => self.parse_octothorpe(),
-                ',' => Ok(Value::Atom(Atom::Unquoted(self.token()?.clone()))),
-                '-' => Ok(Value::Atom(Atom::Negated(self.parse_literal()?))),
+                ',' => Ok(Value::Unquoted(self.token()?.clone())),
+                '-' => Ok(Value::Negated(self.parse_literal()?)),
                 c => Err(ParseError::UnexpectedChar(c)),
             },
-            TokenTree::Literal(literal) => Ok(Value::Atom(Atom::Literal(literal.clone()))),
-            TokenTree::Ident(ident) => Ok(Value::Atom(Atom::Symbol(ident.to_string()))),
+            TokenTree::Literal(literal) => Ok(Value::Literal(literal.clone())),
+            TokenTree::Ident(ident) => Ok(Value::Symbol(ident.to_string())),
             TokenTree::Group(group) => match group.delimiter() {
                 Delimiter::Parenthesis => parse_list(group.stream()),
                 delim => Err(ParseError::UnexpectedDelimiter(delim)),
@@ -83,16 +83,16 @@ impl Parser {
         let token = self.token()?;
         match token {
             TokenTree::Punct(punct) => match punct.as_char() {
-                ':' => Ok(Value::Atom(Atom::Keyword(self.parse_symbol()?))),
+                ':' => Ok(Value::Keyword(self.parse_symbol()?)),
                 c => Err(ParseError::UnexpectedChar(c)),
             },
-            TokenTree::Literal(lit) => Ok(Value::Atom(Atom::Symbol(string_literal(lit)?))),
+            TokenTree::Literal(lit) => Ok(Value::Symbol(string_literal(lit)?)),
             TokenTree::Ident(ident) => {
                 let name = ident.to_string();
                 match name.as_str() {
-                    "t" => Ok(Value::Atom(Atom::Bool(true))),
-                    "f" => Ok(Value::Atom(Atom::Bool(false))),
-                    "nil" => Ok(Value::Atom(Atom::Nil)),
+                    "t" => Ok(Value::Bool(true)),
+                    "f" => Ok(Value::Bool(false)),
+                    "nil" => Ok(Value::Nil),
                     _ => Err(ParseError::UnexpectedToken(token.clone())),
                 }
             }
@@ -129,7 +129,6 @@ fn parse_list(tokens: TokenStream) -> Result<Value, ParseError> {
     }
     match tail {
         Some(rest) => match rest {
-            Value::Atom(atom) => Ok(Value::ImproperList(elements, atom)),
             Value::List(rest_list) => {
                 elements.extend(rest_list);
                 Ok(Value::List(elements))
@@ -138,6 +137,7 @@ fn parse_list(tokens: TokenStream) -> Result<Value, ParseError> {
                 elements.extend(rest_list);
                 Ok(Value::ImproperList(elements, rest))
             }
+            _ => Ok(Value::ImproperList(elements, Box::new(rest))),
         },
         None => Ok(Value::List(elements)),
     }
