@@ -53,7 +53,7 @@ impl Arbitrary for Value {
                     elements
                         .clone()
                         .shrink()
-                        .filter(|elts| elts.len() > 0)
+                        .filter(|elts| !elts.is_empty())
                         .map(move |elts| ImproperList(elts, tail.clone())),
                 )
             }
