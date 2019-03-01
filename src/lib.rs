@@ -1,9 +1,91 @@
 #![deny(missing_docs)]
 
-//! This crate provides a data structure that can values as typically
-//! found in Lisp-like languages, as well as a macro for embedding
-//! such values into Rust code, using a Lisp-like syntax, ususally
-//! refered to as S-expression syntax.
+//! This crate provides facilities for parsing, printing and
+//! manipulating S-expression data. S-expressions are the format used
+//! to represent code and data in the Lisp language family.
+//!
+//! ```scheme
+//! ((name . "John Doe")
+//!  (age . 43)
+//!  (address
+//!   (street "10 Downing Street")
+//!   (city "London"))
+//!  (phones "+44 1234567" "+44 2345678"))
+//! ```
+//!
+//! `lexpr` also supports more complex types; including keywords and
+//! configurable tokens for `true`, `false` and `nil`, by default
+//! using Scheme syntax:
+//!
+//! ```scheme
+//! (define-class rectangle ()
+//!  (width
+//!    #:init-value #nil ;; Nil value
+//!    #:settable #t     ;; true
+//!    #:guard (> width 10)
+//!  )
+//!  (height
+//!    #:init-value 10
+//!    #:writable #f ;; false
+//!   ))
+//! ```
+//!
+//! Note that keywords, and the corresponding `#:` notation, is not
+//! part of standard Scheme, but is supported by `lexpr`'s default
+//! parser settings.
+//!
+//! There are three common ways that you might find yourself needing
+//! to work with JSON data in Rust:
+//!
+//! - **As text data**. An unprocessed string of S-expression data
+//!   that you receive from a Lisp program, read from a file, or
+//!   prepare to send to a Lisp program.
+//!
+//! - **As an dynamically typed representation**. Maybe you want to
+//!   check that some JSON data is valid before passing it on, but
+//!   without knowing the structure of what it contains. Or you want
+//!   to handle arbirarily structured data, like Lisp code.
+//!
+//! - **As a statically typed Rust data structure**. When you expect all
+//!   or most of your data to conform to a particular structure and
+//!   want to get real work done without the dynamically typed nature
+//!   of S-expressions tripping you up.
+//!
+//! Currently, `lexpr` only handles the first two items of this list;
+//! the last item, also known as [Serde] support, is the next
+//! big item the agenda.
+//!
+//! # Operating on dynamically typed S-expression data
+//!
+//! Any valid S-expression can be manipulated using the [`Value`] data
+//! structure.
+//!
+//! # Constructing S-expression values
+//!
+//! ```
+//!  use lexpr::{Value, Error};
+//!
+//!  fn example() -> Result<(), Error> {
+//!      // Some s-expressions a &str.
+//!      let data = r#"((name . "John Doe")
+//!                     (age . 43)
+//!                     (phones "+44 1234567" "+44 2345678"))"#;
+//!
+//!      // Parse the string of data into sexpr::Sexp.
+//!      let v: Value = lexpr::from_str(data)?;
+//!
+//!      // Access parts of the data by indexing with square brackets.
+//!      println!("Please call {} at the number {}", v["name"], v["phones"][1]);
+//!
+//!      Ok(())
+//!  }
+//!  #
+//!  # fn main() {
+//!  #     example().unwrap();
+//!  # }
+//! ```
+//!
+//! # More about S-expressions and their representation
 //!
 //! Note that the representation chosen is intended for serialization
 //! and deserialization, not for manipulation with the same complexity
@@ -30,10 +112,11 @@
 //! in [Guile](https://www.gnu.org/software/guile/) Scheme
 //! implementation.
 //!
-//! While `lexpr` does not implemented a textual parser and serializer
-//! yet, the intention is that it will be able to parse and generate a
-//! S-expression data in various "dialects" in use by different Lisp
-//! variants.
+//! The parser and serializer implementation in `lexpr` can be
+//! tailored to parse and generate S-expression data in various
+//! "dialects" in use by different Lisp variants; the aim is to cover
+//! large parts of R6RS and R7RS Scheme with some Guile and Racket
+//! extensions, as well as Emacs Lisp.
 //!
 //! In the following, the S-expression values that are modeled by
 //! `lexpr` are introduced, In general, S-expression values can be
@@ -145,6 +228,7 @@
 //! choice precludes an efficient implementation of taking a suffix of
 //! an existing list.
 //!
+//! [Serde]: https://crates.io/crates/serde
 //! [`Number`]: struct.Number.html
 //! [`Value`]: enum.Value.html
 
@@ -216,7 +300,9 @@ pub use self::parse::{
 };
 
 #[doc(inline)]
-pub use self::print::{to_string, to_vec, to_writer, Printer};
+pub use self::print::{
+    to_string, to_string_custom, to_vec, to_vec_custom, to_writer, to_writer_custom, Printer,
+};
 
 #[doc(inline)]
 pub use value::Value;

@@ -1,4 +1,10 @@
 //! S-expression parser and options.
+//!
+//! # Terminology
+//!
+//! The process of converting S-expressions from their textual representation to
+//! values is referred to "reading" in Lisp. To avoid confusion with Rust's
+//! `Write` trait, `lexpr` uses "parsing" instead.
 
 use std::borrow::Borrow;
 use std::io;
@@ -239,9 +245,9 @@ macro_rules! overflow {
 }
 
 impl<'de, R: Read<'de>> Parser<R> {
-    /// The `Parser::end` method should be called after a value has been fully deserialized.
-    /// This allows the `Parser` to validate that the input stream is at the end or that it
-    /// only has trailing whitespace.
+    /// The `Parser::end` method should be called after a value has been fully
+    /// parsed.  This allows the `Parser` to validate that the input stream is
+    /// at the end or that it only has trailing whitespace.
     pub fn end(&mut self) -> Result<()> {
         match self.parse_whitespace()? {
             Some(_) => Err(self.peek_error(ErrorCode::TrailingCharacters)),

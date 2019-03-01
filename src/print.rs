@@ -1,5 +1,7 @@
 //! Converting S-expression values into text.
 //!
+//! # Terminology
+//!
 //! The process of serializing S-expressions to their textual
 //! representation is referred to "writing" in Lisp. To avoid
 //! confusion with Rust's `Write` trait, `lexpr` uses "printing"
@@ -393,7 +395,7 @@ where
         Printer { writer, formatter }
     }
 
-    /// Unwrap the `Writer` from the `Serializer`.
+    /// Unwrap the `Writer` from the `Printer`.
     #[inline]
     pub fn into_inner(self) -> W {
         self.writer
@@ -559,7 +561,8 @@ static ESCAPE: [u8; 256] = [
     __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // F
 ];
 
-/// Serialize the given value value as S-expression text into the IO stream.
+/// Serialize the given value value as S-expression text into the IO stream,
+/// using the default printer options.
 #[inline]
 pub fn to_writer<W: io::Write>(writer: W, value: &Value) -> io::Result<()> {
     let mut printer = Printer::new(writer);
@@ -579,7 +582,8 @@ pub fn to_writer_custom<W: io::Write>(
     Ok(())
 }
 
-/// Serialize the given value as byte vector containing S-expression text.
+/// Serialize the given value as byte vector containing S-expression text, using
+/// the default printer options.
 #[inline]
 pub fn to_vec(value: &Value) -> io::Result<Vec<u8>> {
     let mut writer = Vec::with_capacity(128);
@@ -595,7 +599,8 @@ pub fn to_vec_custom(value: &Value, options: Options) -> io::Result<Vec<u8>> {
     Ok(writer)
 }
 
-/// Serialize the given value an S-expression string.
+/// Serialize the given value an S-expression string,
+/// using the default printer options.
 #[inline]
 pub fn to_string(value: &Value) -> io::Result<String> {
     let vec = to_vec(value)?;

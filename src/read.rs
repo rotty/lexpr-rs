@@ -4,12 +4,14 @@ use std::{char, cmp, io, str, u32};
 use crate::error::{Error, ErrorCode, Result};
 use crate::iter::LineColIterator;
 
-/// Trait used by the deserializer for iterating over input. This is manually
-/// "specialized" for iterating over &[u8]. Once feature(specialization) is
-/// stable we can use actual specialization.
+/// Trait used by the parser for iterating over input.
+///
+/// This trait is manually "specialized" for iterating over
+/// `&[u8]`. Once feature(specialization) is stable we can use actual
+/// specialization.
 ///
 /// This trait is sealed and cannot be implemented for types outside of
-/// `serde_json`.
+/// `lexpr`.
 pub trait Read<'de>: private::Sealed {
     #[doc(hidden)]
     fn next(&mut self) -> Result<Option<u8>>;

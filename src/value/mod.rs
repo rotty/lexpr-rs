@@ -55,8 +55,10 @@
 //! A string of S-expression data can be parsed into a `lexpr::Value` by the
 //! [`lexpr::from_str`][from_str] function. There is also
 //! [`from_slice`][from_slice] for parsing from a byte slice `&[u8]` and
-//! [`from_reader`][from_reader] for parsing from any `io::Read` like a File or
-//! a TCP stream.
+//! [`from_reader`][from_reader] for parsing from any `io::Read` like a file or
+//! a TCP stream. For all these functions there also is a `_custom` variant
+//! which allows for specifying parser options, in case the input deviates from
+//! the `lexpr` default behavior.
 //!
 //! ```
 //! use lexpr::{sexp, Value, Error};
