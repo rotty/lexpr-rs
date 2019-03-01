@@ -5,18 +5,16 @@ use crate::Value;
 
 /// A type that can be used to index into a `lexpr::Value`.
 ///
-/// The [`get`] and [`get_mut`] methods of `Value` accept any type
-/// that implements `Index`, as does the [square-bracket indexing
-/// operator]. This trait is implemented for strings and `Value`, both
-/// of which can be used to index into the index into association
-/// lists, and for `usize` which is used to index into to lists by
-/// element index.
+/// The [`get`] method of `Value` accept any type that implements
+/// `Index`, as does the [square-bracket indexing operator]. This
+/// trait is implemented for strings and `Value`, both of which can be
+/// used to index into association lists, and for `usize` which is
+/// used to index into to lists by element index.
 ///
 /// Note that improper lists are only indexable by `usize`, not by
 /// strings.
 ///
 /// [`get`]: ../enum.Value.html#method.get
-/// [`get_mut`]: ../enum.Value.html#method.get_mut
 /// [square-bracket indexing operator]: ../enum.Value.html#impl-Index%3CI%3E
 ///
 /// This trait is sealed and cannot be implemented for types outside

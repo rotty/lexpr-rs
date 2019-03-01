@@ -22,10 +22,10 @@ already out there, you might wonder about the justificiation for
   S-expression representation as possible within the syntactic
   constraints imposed by Rust's macro system.
 
-- [ ] Implement a parser, serializer, and pretty-printer for the
-  S-expression value type. This one will not be based on Serde, see
-  below why this is not possible while covering the complete universe
-  of S-expression values.
+- [X] Implement a parser and printer for the S-expression value
+  type. This one will not be based on Serde, see below why this is not
+  possible while covering the complete universe of S-expression
+  values.
 
   The goal for the parser and serializer goal is to also cover the
   notational differences between the S-expression formats, for example
