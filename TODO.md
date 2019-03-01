@@ -1,7 +1,5 @@
 # Missing features
 
-- [ ] Text parser
-- [ ] Text serialization
 - [ ] Comments (both line and R6RS multi-line comments)
 - [ ] Proper string escape syntax, instead of using JSON's rules
 - [ ] Serde support

@@ -1,7 +1,7 @@
 [package]
 name = "lexpr"
 description = "A representation for Lisp data"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Andreas Rottmann <mail@r0tty.org>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rotty/lexpr-rs"
@@ -22,7 +22,7 @@ fast-float-parsing = []
 itoa = "0.4.3"
 ryu = "0.2.7"
 proc-macro-hack = "0.5.4"
-lexpr-macros = { version = "0.1.1", path = "lexpr-macros" }
+lexpr-macros = { version = "0.1.2", path = "lexpr-macros" }
 
 [dev-dependencies]
 quickcheck = "0.8.2"

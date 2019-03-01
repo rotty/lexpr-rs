@@ -9,7 +9,7 @@
 
 ```toml
 [dependencies]
-lexpr = "0.1.2"
+lexpr = "0.1.3"
 ```
 
 You may be looking for:
@@ -42,10 +42,7 @@ family of languages. `lexpr` aims to provide the tools to:
   ```
 
 - Parse and serialize S-expression data from and to its textual
-  representation. This is, as of version 0.1.2, not yet implemented,
-  but should be coming soon, the feature is already available for
-  preview on the master branch; note that API changes may still occur
-  before release.
+  representation.
 
 To get a better idea of the direction `lexpr` is headed, you may want
 to take at the [TODO](./TODO.md) or the ["why"](./docs/why.md)
