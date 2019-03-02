@@ -11,6 +11,10 @@ This repositories hosts the following crates:
   for S-expressions. Please refer to crate's
   [`README`](./lexpr/README.md) for more information.
 
+- [`serde-lexpr`](./serde-lexpr), integrating `lexpr` with Serde,
+  allowing to serialize and deserialize Rust data structures to and
+  from S-expressions.
+
 - [`lexpr-macros`](./lexpr-macros), an internal crate actually
   implementing the `sexp` macro. This crate should be considered an
   implementation detail, and not be used directly, only via the

@@ -51,9 +51,9 @@
 //!   want to get real work done without the dynamically typed nature
 //!   of S-expressions tripping you up.
 //!
-//! Currently, `lexpr` only handles the first two items of this list;
-//! the last item, also known as [Serde] support, is the next
-//! big item the agenda.
+//! Only the first two items of this list are handled by `lexpr`; for conversion
+//! from and to statically typed Rust data structures see the [`serde-lexpr`]
+//! crate.
 //!
 //! # Operating on dynamically typed S-expression data
 //!
@@ -213,6 +213,7 @@
 //! [Serde]: https://crates.io/crates/serde
 //! [`Number`]: struct.Number.html
 //! [`Value`]: enum.Value.html
+//! [`serde-lexpr`]: https://docs.rs/serde-lexpr
 
 use proc_macro_hack::proc_macro_hack;
 
