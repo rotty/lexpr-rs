@@ -1,25 +1,31 @@
-#![feature(test)]
-
-extern crate test;
-
-use test::{black_box, Bencher};
+use criterion::*;
 
 use lexpr::{from_str, from_str_custom, parse};
 
-#[bench]
-fn bench_float_parsing(b: &mut Bencher) {
-    b.iter(|| black_box(from_str("-1.360438755021694e308")));
+fn bench_float_parsing(c: &mut Criterion) {
+    c.bench_function("float parsing", |b| {
+        b.iter(|| black_box(from_str("-1.360438755021694e308")))
+    });
 }
 
-#[bench]
-fn bench_parsing_keyword_default(b: &mut Bencher) {
-    b.iter(|| black_box(from_str("#:some-keyword")))
+fn bench_parsing_keyword_default(c: &mut Criterion) {
+    c.bench_function("keyword parsing (default settings)", |b| {
+        b.iter(|| black_box(from_str("#:some-keyword")))
+    });
 }
 
-#[bench]
-fn bench_parsing_keyword_all_styles(b: &mut Bencher) {
+fn bench_parsing_keyword_all_styles(c: &mut Criterion) {
     use parse::KeywordStyle::*;
-    let options =
-        parse::Options::default().with_keyword_styles(&[ColonPrefix, ColonPostfix, Octothorpe]);
-    b.iter(|| black_box(from_str_custom("#:octo :prefix postfix:", options.clone())));
+    c.bench_function("keyword parsing (all styles)", |b| {
+        let options =
+            parse::Options::default().with_keyword_styles(&[ColonPrefix, ColonPostfix, Octothorpe]);
+        b.iter(|| black_box(from_str_custom("#:octo :prefix postfix:", options.clone())))
+    });
 }
+
+criterion_group! {
+    name = benches;
+    config = Criterion::default();
+    targets = bench_float_parsing, bench_parsing_keyword_default, bench_parsing_keyword_all_styles
+}
+criterion_main!(benches);

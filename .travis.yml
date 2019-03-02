@@ -16,7 +16,7 @@ matrix:
 
     # Make sure there are no clippy warnings
     - env: CLIPPY
-      rust: nightly
+      rust: stable
       install:
         - rustup component add clippy
       script:
