@@ -137,6 +137,7 @@ fn write_parse_number(input: Number) -> bool {
 #[test]
 fn write_number() {
     let mut bytes = Vec::new();
+    #[allow(clippy::unreadable_literal)]
     Number::from(-11.287888289184039)
         .write(&mut bytes)
         .expect("conversion to bytes failed");
