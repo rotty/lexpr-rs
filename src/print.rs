@@ -9,8 +9,9 @@
 
 use std::io;
 
+use crate::number::{self, Number};
 pub use crate::style::KeywordStyle;
-use crate::{Number, Value};
+use crate::Value;
 
 /// Options for printing S-expressions.
 #[derive(Clone, Debug)]
@@ -169,7 +170,25 @@ pub trait Formatter {
     where
         W: io::Write,
     {
-        value.write(writer)
+        struct Write<'a, W: io::Write + ?Sized> {
+            writer: &'a mut W,
+        }
+        impl<'a, W: io::Write + ?Sized> number::Visitor for Write<'a, W> {
+            type Output = io::Result<()>;
+
+            fn visit_u64(self, n: u64) -> io::Result<()> {
+                itoa::write(self.writer, n).map(drop)
+            }
+            fn visit_i64(self, n: i64) -> io::Result<()> {
+                itoa::write(self.writer, n).map(drop)
+            }
+            fn visit_f64(self, n: f64) -> io::Result<()> {
+                let mut buffer = ryu::Buffer::new();
+                let s = buffer.format(n);
+                self.writer.write_all(s.as_bytes())
+            }
+        }
+        value.visit(Write { writer })
     }
 
     /// Called before each series of `write_string_fragment` and

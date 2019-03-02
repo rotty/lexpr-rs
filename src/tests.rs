@@ -91,8 +91,7 @@ impl Arbitrary for Number {
 
 #[quickcheck]
 fn write_parse_number(input: Number) -> bool {
-    let mut bytes = Vec::new();
-    input.write(&mut bytes).expect("conversion to bytes failed");
+    let bytes = lexpr::to_vec(&Value::from(input.clone())).expect("conversion to bytes failed");
     let parsed = lexpr::from_slice(&bytes).expect("parsing failed");
     let output = parsed.as_number().expect("parsed as a non-number");
     input == *output
@@ -100,11 +99,9 @@ fn write_parse_number(input: Number) -> bool {
 
 #[test]
 fn write_number() {
-    let mut bytes = Vec::new();
     #[allow(clippy::unreadable_literal)]
-    Number::from(-11.287888289184039)
-        .write(&mut bytes)
-        .expect("conversion to bytes failed");
+    let value = Value::from(Number::from(-11.287888289184039));
+    let bytes = lexpr::to_vec(&value).expect("conversion to bytes failed");
     assert_eq!(str::from_utf8(&bytes).unwrap(), "-11.287888289184039");
 }
 
