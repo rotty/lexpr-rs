@@ -1,7 +1,6 @@
 //! Dynamically typed number type.
 
 use std::fmt::{self, Debug, Display};
-use std::io;
 
 /// Represents an S-expression number, whether integer or floating point.
 #[derive(PartialEq, Clone)]
@@ -190,22 +189,41 @@ impl Number {
         }
     }
 
-    /// Writes the number value to the specified writer.
-    #[inline]
-    pub(crate) fn write<W: ?Sized>(&self, writer: &mut W) -> io::Result<()>
+    /// Dispatch based on the type of the contained value.
+    ///
+    /// Depending on the stored value, one of the functions of the
+    /// supplied visitor will be called.
+    pub fn visit<V>(&self, visitor: V) -> V::Output
     where
-        W: io::Write,
+        V: Visitor,
     {
         match self.n {
-            N::PosInt(n) => itoa::write(writer, n).map(drop),
-            N::NegInt(n) => itoa::write(writer, n).map(drop),
-            N::Float(n) => {
-                let mut buffer = ryu::Buffer::new();
-                let s = buffer.format(n);
-                writer.write_all(s.as_bytes())
-            }
+            N::PosInt(n) => visitor.visit_u64(n),
+            N::NegInt(n) => visitor.visit_i64(n),
+            N::Float(n) => visitor.visit_f64(n),
         }
     }
+}
+
+/// Trait to access the value stored in `Number`.
+///
+/// The `Number` type does not directly expose its internal
+/// structure to allow future changes without breaking the API.
+///
+/// Instead, you can implement this trait and pass your implementation
+/// to `Number::visit`.
+///
+/// [`Number::visit`]: struct.Number.html#method.visit
+pub trait Visitor {
+    /// The return type of the visitors' methods.
+    type Output;
+
+    /// The stored value is a `u64`.
+    fn visit_u64(self, n: u64) -> Self::Output;
+    /// The stored value is an `i64`.
+    fn visit_i64(self, n: i64) -> Self::Output;
+    /// The stored value is `f64`.
+    fn visit_f64(self, n: f64) -> Self::Output;
 }
 
 macro_rules! impl_from_unsigned {
