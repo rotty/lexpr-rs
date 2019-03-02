@@ -29,14 +29,21 @@ impl From<&str> for Value {
 impl<'a> From<Cow<'a, str>> for Value {
     #[inline]
     fn from(s: Cow<'a, str>) -> Self {
-        Value::from(s.to_string())
+        Value::from(s.as_ref())
+    }
+}
+
+impl From<Box<str>> for Value {
+    #[inline]
+    fn from(s: Box<str>) -> Self {
+        Value::String(s)
     }
 }
 
 impl From<String> for Value {
     #[inline]
     fn from(s: String) -> Self {
-        Value::String(s)
+        Value::String(s.into_boxed_str())
     }
 }
 

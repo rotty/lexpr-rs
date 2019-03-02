@@ -64,11 +64,13 @@ impl ser::Serializer for Serializer {
     }
 
     fn serialize_char(self, value: char) -> Result<Value> {
-        Ok(Value::String(value.to_string()))
+        // TODO: Add char type
+        use std::iter::FromIterator;
+        Ok(Value::String(String::from_iter(&[value]).into_boxed_str()))
     }
 
     fn serialize_str(self, value: &str) -> Result<Value> {
-        Ok(Value::String(value.to_owned()))
+        Ok(Value::String(value.into()))
     }
 
     fn serialize_bytes(self, _value: &[u8]) -> Result<Value> {

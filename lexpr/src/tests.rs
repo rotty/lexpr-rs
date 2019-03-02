@@ -34,15 +34,15 @@ fn gen_value<G: Gen>(g: &mut G, depth: usize) -> Value {
         Number => Value::Number(Arbitrary::arbitrary(g)),
         String => {
             let choices = ["", "foo", "\"", "\t"];
-            Value::String(choices.choose(g).unwrap().to_string())
+            Value::string(*choices.choose(g).unwrap())
         }
         Symbol => {
             let choices = ["foo", "a-symbol", "$?:!"];
-            Value::Symbol(choices.choose(g).unwrap().to_string())
+            Value::symbol(*choices.choose(g).unwrap())
         }
         Keyword => {
             let choices = ["foo", "a-keyword", "$?:!"];
-            Value::Keyword(choices.choose(g).unwrap().to_string())
+            Value::keyword(*choices.choose(g).unwrap())
         }
         Cons => Value::from((gen_value(g, depth + 1), gen_value(g, depth + 1))),
     }
