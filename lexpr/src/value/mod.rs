@@ -142,13 +142,13 @@ pub enum Value {
     Number(Number),
 
     /// A string.
-    String(String),
+    String(Box<str>),
 
     /// A symbol.
-    Symbol(String),
+    Symbol(Box<str>),
 
     /// A keyword.
-    Keyword(String),
+    Keyword(Box<str>),
 
     /// Represents a Lisp "cons cell".
     ///
@@ -163,7 +163,7 @@ pub enum Value {
 
 impl Value {
     /// Construct a symbol, given its name.
-    pub fn symbol(name: impl Into<String>) -> Self {
+    pub fn symbol(name: impl Into<Box<str>>) -> Self {
         Value::Symbol(name.into())
     }
 
@@ -175,7 +175,7 @@ impl Value {
     /// assert!(value.is_keyword());
     /// assert_eq!(value.as_name().unwrap(), "foo");
     /// ```
-    pub fn keyword(name: impl Into<String>) -> Self {
+    pub fn keyword(name: impl Into<Box<str>>) -> Self {
         Value::Keyword(name.into())
     }
 
@@ -187,7 +187,7 @@ impl Value {
     /// assert!(value.is_string());
     /// assert_eq!(value.as_str().unwrap(), "foo");
     /// ```
-    pub fn string(s: impl Into<String>) -> Self {
+    pub fn string(s: impl Into<Box<str>>) -> Self {
         Value::String(s.into())
     }
 
