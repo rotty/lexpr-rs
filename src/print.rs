@@ -174,8 +174,12 @@ pub trait Formatter {
             writer: &'a mut W,
         }
         impl<'a, W: io::Write + ?Sized> number::Visitor for Write<'a, W> {
-            type Output = io::Result<()>;
+            type Value = ();
+            type Error = io::Error;
 
+            fn error<T: Into<String>>(msg: T) -> io::Error {
+                io::Error::new(io::ErrorKind::Other, msg.into())
+            }
             fn visit_u64(self, n: u64) -> io::Result<()> {
                 itoa::write(self.writer, n).map(drop)
             }

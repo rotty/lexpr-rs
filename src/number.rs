@@ -193,7 +193,7 @@ impl Number {
     ///
     /// Depending on the stored value, one of the functions of the
     /// supplied visitor will be called.
-    pub fn visit<V>(&self, visitor: V) -> V::Output
+    pub fn visit<V>(&self, visitor: V) -> Result<V::Value, V::Error>
     where
         V: Visitor,
     {
@@ -215,15 +215,22 @@ impl Number {
 ///
 /// [`Number::visit`]: struct.Number.html#method.visit
 pub trait Visitor {
-    /// The return type of the visitors' methods.
-    type Output;
+    /// The return type of the visitor methods.
+    type Value;
+    /// The error type of the visitor methods.
+    type Error;
+
+    /// Construct an error given a message.
+    ///
+    /// This method is used by trait default implementations.
+    fn error<T: Into<String>>(msg: T) -> Self::Error;
 
     /// The stored value is a `u64`.
-    fn visit_u64(self, n: u64) -> Self::Output;
+    fn visit_u64(self, n: u64) -> Result<Self::Value, Self::Error>;
     /// The stored value is an `i64`.
-    fn visit_i64(self, n: i64) -> Self::Output;
+    fn visit_i64(self, n: i64) -> Result<Self::Value, Self::Error>;
     /// The stored value is `f64`.
-    fn visit_f64(self, n: f64) -> Self::Output;
+    fn visit_f64(self, n: f64) -> Result<Self::Value, Self::Error>;
 }
 
 macro_rules! impl_from_unsigned {
