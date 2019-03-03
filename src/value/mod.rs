@@ -179,6 +179,44 @@ impl Value {
         Value::Keyword(name.into())
     }
 
+    /// Construct a string.
+    ///
+    /// ```
+    /// # use lexpr::Value;
+    /// let value = Value::string("foo");
+    /// assert!(value.is_string());
+    /// assert_eq!(value.as_str().unwrap(), "foo");
+    /// ```
+    pub fn string(s: impl Into<String>) -> Self {
+        Value::String(s.into())
+    }
+
+    /// Create a cons cell given its `car` and `cdr` fields.
+    ///
+    /// ```
+    /// # use lexpr::Value;
+    /// let value = Value::cons(1, Value::Null);
+    /// assert!(value.is_cons());
+    /// assert_eq!(value.as_pair().unwrap(), (&Value::from(1), &Value::Null));
+    /// ```
+    ///
+    /// Note that you can also construct a cons cell from a Rust pair via the
+    /// `From` trait:
+    ///
+    /// ```
+    /// # use lexpr::Value;
+    /// let value = Value::from((42, "answer"));
+    /// assert!(value.is_cons());
+    /// assert_eq!(value.as_pair().unwrap(), (&Value::from(42), &Value::string("answer")));
+    /// ```
+    pub fn cons<T, U>(car: T, cdr: U) -> Self
+    where
+        T: Into<Value>,
+        U: Into<Value>,
+    {
+        Value::Cons(Cons::new(car, cdr))
+    }
+
     /// Create a list value from elements convertible into `Value`.
     ///
     /// ```
