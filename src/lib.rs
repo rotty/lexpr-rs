@@ -60,7 +60,7 @@
 //! Any valid S-expression can be manipulated using the [`Value`] data
 //! structure.
 //!
-//! # Constructing S-expression values
+//! ## Constructing S-expression values
 //!
 //! ```
 //!  use lexpr::{Value, Error};
@@ -71,8 +71,8 @@
 //!                     (age . 43)
 //!                     (phones "+44 1234567" "+44 2345678"))"#;
 //!
-//!      // Parse the string of data into sexpr::Sexp.
-//!      let v: Value = lexpr::from_str(data)?;
+//!      // Parse the string of data into lexpr::Value.
+//!      let v = lexpr::from_str(data)?;
 //!
 //!      // Access parts of the data by indexing with square brackets.
 //!      println!("Please call {} at the number {}", v["name"], v["phones"][1]);
@@ -84,19 +84,6 @@
 //!  #     example().unwrap();
 //!  # }
 //! ```
-//!
-//! # More about S-expressions and their representation
-//!
-//! Note that the representation chosen is intended for serialization
-//! and deserialization, not for manipulation with the same complexity
-//! guarantees as in a Lisp implementation. In particular, the
-//! representation of lists is based on Rust's `Vec` data type, which
-//! has quite different characteristics from the singly-linked lists
-//! used in Lisp. As long as you don't attempt to use the
-//! `lexpr::Value` type as the value representation of a "regular"
-//! Lisp implementation (which would also be made impossible by the
-//! fact that Lisp demands garbage collection), or rely on efficently
-//! forming suffixes of lists, this should be no issue.
 //!
 //! # What are S-expressions?
 //!
