@@ -139,7 +139,7 @@ impl<R> IoRead<R>
 where
     R: io::Read,
 {
-    /// Create a JSON input source to read from a std::io input stream.
+    /// Create a S-expression input source to read from a std::io input stream.
     pub fn new(reader: R) -> Self {
         IoRead {
             iter: LineColIterator::new(reader.bytes()),
@@ -318,7 +318,7 @@ where
 //////////////////////////////////////////////////////////////////////////////
 
 impl<'a> SliceRead<'a> {
-    /// Create a JSON input source to read from a slice of bytes.
+    /// Create a S-expression input source to read from a slice of bytes.
     pub fn new(slice: &'a [u8]) -> Self {
         SliceRead { slice, index: 0 }
     }
@@ -355,7 +355,7 @@ impl<'a> SliceRead<'a> {
             match self.peek_byte() {
                 None | Some(b' ') | Some(b'\n') | Some(b'\t') | Some(b'\r') | Some(b')') => {
                     if scratch.is_empty() {
-                        // Fast path: return a slice of the raw JSON without any
+                        // Fast path: return a slice of the raw S-expression without any
                         // copying.
                         let borrowed = &self.slice[start..self.index];
                         return result(self, borrowed).map(Reference::Borrowed);
@@ -380,8 +380,8 @@ impl<'a> SliceRead<'a> {
     }
 
     /// The big optimization here over IoRead is that if the string contains no
-    /// backslash escape sequences, the returned &str is a slice of the raw JSON
-    /// data so we avoid copying into the scratch space.
+    /// backslash escape sequences, the returned &str is a slice of the raw
+    /// S-expression data so we avoid copying into the scratch space.
     fn parse_str_bytes<'s, T: ?Sized, F>(
         &'s mut self,
         scratch: &'s mut Vec<u8>,
@@ -405,7 +405,7 @@ impl<'a> SliceRead<'a> {
             match self.slice[self.index] {
                 b'"' => {
                     if scratch.is_empty() {
-                        // Fast path: return a slice of the raw JSON without any
+                        // Fast path: return a slice of the raw S-expression without any
                         // copying.
                         let borrowed = &self.slice[start..self.index];
                         self.index += 1;
@@ -542,7 +542,7 @@ impl<'a> Read<'a> for SliceRead<'a> {
 //////////////////////////////////////////////////////////////////////////////
 
 impl<'a> StrRead<'a> {
-    /// Create a JSON input source to read from a UTF-8 string.
+    /// Create a S-expression input source to read from a UTF-8 string.
     pub fn new(s: &'a str) -> Self {
         StrRead {
             delegate: SliceRead::new(s.as_bytes()),
@@ -658,8 +658,8 @@ fn as_str<'de, 's, R: Read<'de>>(read: &R, slice: &'s [u8]) -> Result<&'s str> {
     str::from_utf8(slice).or_else(|_| error(read, ErrorCode::InvalidUnicodeCodePoint))
 }
 
-/// Parses a JSON escape sequence and appends it into the scratch space. Assumes
-/// the previous byte read was a backslash.
+/// Parses a S-expression escape sequence and appends it into the scratch
+/// space. Assumes the previous byte read was a backslash.
 fn parse_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> Result<()> {
     let ch = next_or_eof(read)?;
 
@@ -722,7 +722,7 @@ fn parse_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> Resul
     Ok(())
 }
 
-/// Parses a JSON escape sequence and discards the value. Assumes the previous
+/// Parses a S-expression escape sequence and discards the value. Assumes the previous
 /// byte read was a backslash.
 fn ignore_escape<'de, R: ?Sized + Read<'de>>(read: &mut R) -> Result<()> {
     let ch = next_or_eof(read)?;

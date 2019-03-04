@@ -35,16 +35,16 @@
 //! parser settings.
 //!
 //! There are three common ways that you might find yourself needing
-//! to work with JSON data in Rust:
+//! to work with S-expression data in Rust:
 //!
 //! - **As text data**. An unprocessed string of S-expression data
 //!   that you receive from a Lisp program, read from a file, or
 //!   prepare to send to a Lisp program.
 //!
-//! - **As an dynamically typed representation**. Maybe you want to
-//!   check that some JSON data is valid before passing it on, but
-//!   without knowing the structure of what it contains. Or you want
-//!   to handle arbirarily structured data, like Lisp code.
+//! - **As an dynamically typed representation**. Maybe you want to check that
+//!   some S-expression data is valid before passing it on, but without knowing
+//!   the structure of what it contains. Or you want to handle arbirarily
+//!   structured data, like Lisp code.
 //!
 //! - **As a statically typed Rust data structure**. When you expect all
 //!   or most of your data to conform to a particular structure and
