@@ -119,13 +119,13 @@ impl Index for Value {
 // have different use cases than Value. If you are working with a Vec, you know
 // that you are working with a Vec and you can get the len of the Vec and make
 // sure your indices are within bounds. The Value use cases are more
-// loosey-goosey. You got some JSON from an endpoint and you want to pull values
-// out of it. Outside of this Index impl, you already have the option of using
-// value.as_array() and working with the Vec directly, or matching on
-// Value::Array and getting the Vec directly. The Index impl means you can skip
-// that and index directly into the thing using a concise syntax. You don't have
-// to check the type, you don't have to check the len, it is all about what you
-// expect the Value to look like.
+// loosey-goosey. You got some S-expression from an endpoint and you want to
+// pull values out of it. Outside of this Index impl, you already have the
+// option of using value.as_array() and working with the Vec directly, or
+// matching on Value::Array and getting the Vec directly. The Index impl means
+// you can skip that and index directly into the thing using a concise
+// syntax. You don't have to check the type, you don't have to check the len, it
+// is all about what you expect the Value to look like.
 //
 // Basically the use cases that would be well served by panicking here are
 // better served by using one of the other approaches: get and get_mut,
