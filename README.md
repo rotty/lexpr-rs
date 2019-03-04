@@ -1,56 +1,24 @@
-# lexpr: S-expressions for Rust [![Build Status]][travis] [![Latest Version]][crates.io] [![Rustc Version 1.32+]][rustc]
+# lexpr: S-expressions for Rust [![Build Status]][travis]
 
 [Build Status]: https://api.travis-ci.org/rotty/lexpr-rs.svg?branch=master
 [travis]: https://travis-ci.org/rotty/lexpr-rs
-[Latest Version]: https://img.shields.io/crates/v/lexpr.svg
-[crates.io]: https://crates.io/crates/lexpr
-[Rustc Version 1.32+]: https://img.shields.io/badge/rustc-1.32+-lightgray.svg
-[rustc]: https://blog.rust-lang.org/2019/01/17/Rust-1.32.0.html
 
-```toml
-[dependencies]
-lexpr = "0.1.3"
-```
+This repositories hosts the following crates:
 
-You may be looking for:
+- [`lexpr`](./lexpr), providing the `lexpr::Value` type for
+  representing S-expression data, the `sexp` macro to embed
+  S-expression values into Rust code, as well as a parser and printer
+  for S-expressions. Please refer to crate's
+  [`README`](./lexpr/README.md) for more information.
 
-- [API Documentation](https://docs.rs/crate/lexpr/)
-- [TODO](./TODO.md)
-- [Goals and a survey of other S-expression crates](./docs/why.md)
-- [Release Notes](./NEWS.md)
-
-[S-expressions](https://en.wikipedia.org/wiki/S-expression) are the
-human-readable, textual representation of code and data in the Lisp
-family of languages. `lexpr` aims to provide the tools to:
-
-- Embed S-expression data into Rust programs using the `sexp` macro:
-
-  ```rust
-  use lexpr::sexp;
-
-  let address = sexp!(((name . "Jane Doe") (street . "4026 Poe Lane")));
-  ```
-
-- Construct and destructure S-expression data using a full-featured
-  API:
-
-  ```rust
-  use lexpr::Value;
-
-  let names = Value::list(vec!["Alice", "Bob", "Mallory"]);
-  println!("The bad guy is {}", names[2].as_str().unwrap());
-  ```
-
-- Parse and serialize S-expression data from and to its textual
-  representation.
-
-To get a better idea of the direction `lexpr` is headed, you may want
-to take at the [TODO](./TODO.md) or the ["why"](./docs/why.md)
-document.
+- [`lexpr-macros`](./lexpr-macros), an internal crate actually
+  implementing the `sexp` macro. This crate should be considered an
+  implementation detail, and not be used directly, only via the
+  `lexpr` crate.
 
 ## Licensing
 
-The code and documentation in the `lexpr` git repository is [free
+The code and documentation in the `lexpr-rs` git repository is [free
 software](https://www.gnu.org/philosophy/free-sw.html), dual-licensed
 under the [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE)
 license, at your choosing.

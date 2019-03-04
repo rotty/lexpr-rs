@@ -21,7 +21,6 @@ matrix:
         - rustup component add clippy
       script:
         - cargo clippy --all-features --all-targets -- -D warnings
-        - cd lexpr-macros && cargo clippy --all-features --all-targets -- -D warnings
 
   allow_failures:
     - rust: nightly
