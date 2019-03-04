@@ -120,6 +120,22 @@ fn print_parse_roundtrip_default() {
 }
 
 #[test]
+fn print_parse_roundtrip_io_default() {
+    use std::io::Cursor;
+    fn prop(input: Value) -> bool {
+        let mut vec = Vec::new();
+        lexpr::to_writer(Cursor::new(&mut vec), &input).expect("conversion to string failed");
+        let output = lexpr::from_reader(Cursor::new(&vec)).expect("parsing failed");
+        input == output
+    }
+    QuickCheck::new()
+        .tests(1000)
+        .max_tests(2000)
+        .gen(StdGen::new(::rand::thread_rng(), 4))
+        .quickcheck(prop as fn(Value) -> bool);
+}
+
+#[test]
 fn test_list_index() {
     let list = Value::list(vec![23, 24, 25]);
     assert_eq!(list[0], Value::from(23));
