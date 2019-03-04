@@ -63,7 +63,7 @@
 //! ## Constructing S-expression values
 //!
 //! ```
-//!  use lexpr::{Value, Error};
+//!  use lexpr::{Value, parse::Error};
 //!
 //!  fn example() -> Result<(), Error> {
 //!      // Some s-expressions a &str.
@@ -264,9 +264,6 @@ use proc_macro_hack::proc_macro_hack;
 #[proc_macro_hack]
 pub use lexpr_macros::sexp;
 
-mod error;
-mod iter;
-mod read;
 mod style;
 
 pub mod cons;
@@ -294,9 +291,6 @@ pub use cons::Cons;
 
 #[doc(inline)]
 pub use number::Number;
-
-#[doc(inline)]
-pub use error::{Error, Result};
 
 #[cfg(test)]
 mod tests;
