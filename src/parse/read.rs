@@ -1,8 +1,8 @@
 use std::ops::Deref;
 use std::{char, cmp, io, str, u32};
 
-use crate::error::{Error, ErrorCode, Result};
-use crate::iter::LineColIterator;
+use super::error::{Error, ErrorCode, Result};
+use super::iter::LineColIterator;
 
 /// Trait used by the parser for iterating over input.
 ///

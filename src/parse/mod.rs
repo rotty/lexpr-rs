@@ -11,12 +11,17 @@ use std::io;
 use std::str;
 use std::u64;
 
-use crate::error::{Error, ErrorCode};
-use crate::read::{self, Reference};
+use error::ErrorCode;
+use read::Reference;
+
+use crate::{Cons, Number, Value};
+
 pub use crate::style::KeywordStyle;
-use crate::{Cons, Number, Result, Value};
 
 pub use read::{IoRead, Read, SliceRead, StrRead};
+
+#[doc(inline)]
+pub use error::{Error, Result};
 
 /// Parser for the S-expression text representation.
 ///
@@ -890,6 +895,10 @@ pub fn from_str_custom(s: &str, options: Options) -> Result<Value> {
 pub fn from_str(s: &str) -> Result<Value> {
     from_str_custom(s, Options::default())
 }
+
+mod error;
+mod iter;
+mod read;
 
 #[cfg(test)]
 mod tests {

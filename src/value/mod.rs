@@ -61,7 +61,7 @@
 //! the `lexpr` default behavior.
 //!
 //! ```
-//! use lexpr::{sexp, Value, Error};
+//! use lexpr::{sexp, parse::Error, Value};
 //!
 //! fn example() -> Result<(), Error> {
 //!     // Some S-expression input data as a &str. Maybe this comes from the user.
