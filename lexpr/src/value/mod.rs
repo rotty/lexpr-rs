@@ -88,10 +88,10 @@
 //! # }
 //! ```
 //!
-//! [macro]: macro.sexp.html
-//! [from_str]: fn.from_str.html
-//! [from_slice]: fn.from_slice.html
-//! [from_reader]: fn.from_reader.html
+//! [macro]: ../macro.sexp.html
+//! [from_str]: ../parse/fn.from_str.html
+//! [from_slice]: ../parse/fn.from_slice.html
+//! [from_reader]: ../parse/fn.from_reader.html
 
 use std::fmt;
 use std::io;
@@ -106,7 +106,7 @@ pub use self::index::Index;
 ///
 /// See the [`lexpr::value`] module documentation for usage examples.
 ///
-/// [`lexpr::value`]: value/index.html
+/// [`lexpr::value`]: index.html
 #[derive(Debug, PartialEq, Clone)]
 pub enum Value {
     /// The special "nil" value.
@@ -126,8 +126,8 @@ pub enum Value {
     /// variants, this value is also potentially returned when using the square
     /// bracket indexing operator on `Value`.
     ///
-    /// [`NilSymbol::Special`]: parse/enum.NilSymbol.html#variant.Special
-    /// [`NilStyle`]: parse/enum.NilStyle.html
+    /// [`NilSymbol::Special`]: crate::parse::NilSymbol::Special
+    /// [`NilStyle`]: ../print/enum.NilStyle.html
     Nil,
 
     /// The empty list.
@@ -715,9 +715,7 @@ impl Value {
     /// assert_eq!(sexp!(()).to_vec(), Some(vec![]));
     /// assert_eq!(sexp!((1 2 . 3)).to_vec(), None);
     /// ```
-    ///
-    /// [`as_cons`]: struct.Value.html#method.as_cons
-    /// [`Cons::to_vec`]: struct.Cons.html#method.to_vec
+    /// [`as_cons`]: Value::as_cons
     pub fn to_vec(&self) -> Option<Vec<Value>> {
         match self {
             Value::Null => Some(Vec::new()),
@@ -746,8 +744,7 @@ impl Value {
     /// assert_eq!(sexp!((1 2 . 3)).to_ref_vec(), None);
     /// ```
     ///
-    /// [`as_cons`]: struct.Value.html#method.as_cons
-    /// [`Cons::to_vec`]: struct.Cons.html#method.to_vec
+    /// [`as_cons`]: Value::as_cons
     pub fn to_ref_vec(&self) -> Option<Vec<&Value>> {
         match self {
             Value::Null => Some(Vec::new()),
@@ -816,7 +813,7 @@ impl Value {
     /// assert_eq!(alist[0]["x"]["y"]["z"], sexp!(#nil));
     /// ```
     ///
-    /// [`Index`]: value/trait.Index.html
+    /// [`Index`]: trait.Index.html
     pub fn get<I: Index>(&self, index: I) -> Option<&Value> {
         index.index_into(self)
     }

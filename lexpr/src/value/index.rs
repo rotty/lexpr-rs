@@ -13,8 +13,8 @@ use crate::{Cons, Value};
 /// Note that improper lists are only indexable by `usize`, not by
 /// strings.
 ///
-/// [`get`]: ../enum.Value.html#method.get
-/// [square-bracket indexing operator]: ../enum.Value.html#impl-Index%3CI%3E
+/// [`get`]: enum.Value.html#method.get
+/// [square-bracket indexing operator]: enum.Value.html#impl-Index%3CI%3E
 ///
 /// This trait is sealed and cannot be implemented for types outside
 /// of `lexpr`.

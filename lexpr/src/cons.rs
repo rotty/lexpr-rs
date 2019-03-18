@@ -214,8 +214,6 @@ impl<'a> IntoIterator for &'a Cons {
 /// An iterator over a chain of cons cells.
 ///
 /// This is returned by the [`Cons::iter`] method.
-///
-/// [`Cons::iter`]: struct.Cons.html#method.iter
 pub struct Iter<'a> {
     cursor: Option<&'a Cons>,
 }

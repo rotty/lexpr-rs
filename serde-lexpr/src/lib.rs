@@ -9,7 +9,9 @@
 //! [`lexpr::Value`]: https://docs.rs/lexpr/*/lexpr/enum.Value.html
 
 pub use error::{Error, Result};
-pub use value::{from_value, to_value, Value};
+pub use value::{from_value, to_value, Cons, Value};
+
+pub use lexpr::parse;
 
 pub mod error;
 pub mod value;

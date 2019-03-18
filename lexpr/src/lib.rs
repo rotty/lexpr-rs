@@ -211,8 +211,6 @@
 //! ```
 //!
 //! [Serde]: https://crates.io/crates/serde
-//! [`Number`]: struct.Number.html
-//! [`Value`]: enum.Value.html
 //! [`serde-lexpr`]: https://docs.rs/serde-lexpr
 
 use proc_macro_hack::proc_macro_hack;
@@ -289,6 +287,9 @@ pub use value::Value;
 
 #[doc(inline)]
 pub use cons::Cons;
+
+#[doc(inline)]
+pub use value::Index;
 
 #[doc(inline)]
 pub use number::Number;
