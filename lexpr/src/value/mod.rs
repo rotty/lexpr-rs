@@ -741,9 +741,9 @@ impl Value {
     ///
     /// ```
     /// # use lexpr::{sexp, Value};
-    /// assert_eq!(sexp!((1 2 3)).to_vec(), Some(vec![sexp!(1), sexp!(2), sexp!(3)]));
-    /// assert_eq!(sexp!(()).to_vec(), Some(vec![]));
-    /// assert_eq!(sexp!((1 2 . 3)).to_vec(), None);
+    /// assert_eq!(sexp!((1 2 3)).to_ref_vec(), Some(vec![&sexp!(1), &sexp!(2), &sexp!(3)]));
+    /// assert_eq!(sexp!(()).to_ref_vec(), Some(vec![]));
+    /// assert_eq!(sexp!((1 2 . 3)).to_ref_vec(), None);
     /// ```
     ///
     /// [`as_cons`]: struct.Value.html#method.as_cons
