@@ -73,8 +73,8 @@ impl ser::Serializer for Serializer {
         Ok(Value::String(value.into()))
     }
 
-    fn serialize_bytes(self, _value: &[u8]) -> Result<Value> {
-        unimplemented!()
+    fn serialize_bytes(self, value: &[u8]) -> Result<Value> {
+        Ok(Value::Bytes(value.into()))
     }
 
     fn serialize_unit(self) -> Result<Value> {

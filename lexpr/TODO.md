@@ -6,7 +6,7 @@
 - [ ] Syntactic sugar for quote, quasiquote, unquote and unquote-splicing
 - [ ] Support for characters
 - [X] Support for vectors
-- [ ] Support for byte vectors
+- [X] Support for byte vectors
 - [ ] Pretty-printing
 
 ## The `sexp` Macro

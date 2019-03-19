@@ -220,6 +220,16 @@
 //! #(1 2 "three") ; A vector in Scheme notation
 //! ```
 //!
+//! ## Byte vectors
+//!
+//! Byte vectors are similar to regular vectors, but are uniform: each element
+//! only holds a single byte, i.e. an exact integer in the range of 0 to 255,
+//! inclusive.
+//!
+//! ```scheme
+//! #u8(41 42 43) ; A byte vector
+//! ```
+//!
 //! [Serde]: https://crates.io/crates/serde
 //! [`serde-lexpr`]: https://docs.rs/serde-lexpr
 

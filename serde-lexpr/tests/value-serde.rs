@@ -24,6 +24,15 @@ fn test_int() {
 }
 
 #[test]
+fn test_bytes() {
+    let bytes = b"abc";
+    test_serde(
+        &serde_bytes::ByteBuf::from(bytes.as_ref()),
+        &Value::from(&bytes[..]),
+    );
+}
+
+#[test]
 fn test_vec() {
     let empty: Vec<u32> = vec![];
     test_serde(&empty, &sexp!(()));

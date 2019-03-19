@@ -54,6 +54,27 @@ impl From<bool> for Value {
     }
 }
 
+impl From<&[u8]> for Value {
+    #[inline]
+    fn from(bytes: &[u8]) -> Self {
+        Value::Bytes(bytes.into())
+    }
+}
+
+impl From<Box<[u8]>> for Value {
+    #[inline]
+    fn from(bytes: Box<[u8]>) -> Self {
+        Value::Bytes(bytes)
+    }
+}
+
+impl From<Vec<u8>> for Value {
+    #[inline]
+    fn from(bytes: Vec<u8>) -> Self {
+        Value::Bytes(bytes.into_boxed_slice())
+    }
+}
+
 impl From<Number> for Value {
     fn from(n: Number) -> Self {
         Value::Number(n)

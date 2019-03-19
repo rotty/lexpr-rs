@@ -96,6 +96,12 @@ pub(crate) enum ErrorCode {
     /// Expected this character to start an S-expression value.
     ExpectedSomeValue,
 
+    /// Expected a vector.
+    ExpectedVector,
+
+    /// Expected an octet (integer in range 0-255).
+    ExpectedOctet,
+
     /// Invalid hex escape code.
     InvalidEscape,
 
@@ -125,6 +131,8 @@ impl Display for ErrorCode {
             ErrorCode::EofWhileParsingValue => f.write_str("EOF while parsing a value"),
             ErrorCode::ExpectedSomeIdent => f.write_str("expected ident"),
             ErrorCode::ExpectedSomeValue => f.write_str("expected value"),
+            ErrorCode::ExpectedVector => f.write_str("expected vector"),
+            ErrorCode::ExpectedOctet => f.write_str("expected octet"),
             ErrorCode::InvalidEscape => f.write_str("invalid escape"),
             ErrorCode::InvalidNumber => f.write_str("invalid number"),
             ErrorCode::MismatchedParenthesis => f.write_str("mismatched parenthesis"),

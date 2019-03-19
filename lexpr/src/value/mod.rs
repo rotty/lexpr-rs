@@ -150,6 +150,9 @@ pub enum Value {
     /// A keyword.
     Keyword(Box<str>),
 
+    /// A byte vector.
+    Bytes(Box<[u8]>),
+
     /// Represents a Lisp "cons cell".
     ///
     /// Cons cells are often used to form singly-linked lists.

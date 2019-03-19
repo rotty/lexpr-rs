@@ -69,6 +69,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             Value::Number(n) => visit_number(n, visitor),
             Value::String(s) => visitor.visit_borrowed_str(s),
             Value::Vector(elts) => visitor.visit_seq(VecAccess::new(elts)),
+            Value::Bytes(bytes) => visitor.visit_borrowed_bytes(bytes),
         }
     }
 
@@ -118,11 +119,14 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         self.deserialize_str(visitor)
     }
 
-    fn deserialize_bytes<V>(self, _visitor: V) -> Result<V::Value>
+    fn deserialize_bytes<V>(self, visitor: V) -> Result<V::Value>
     where
         V: de::Visitor<'de>,
     {
-        unimplemented!()
+        match self.input {
+            Value::Bytes(bytes) => visitor.visit_borrowed_bytes(bytes),
+            _ => Err(invalid_value(self.input, "byte vector")),
+        }
     }
 
     fn deserialize_byte_buf<V>(self, visitor: V) -> Result<V::Value>
@@ -302,6 +306,7 @@ fn invalid_value(value: &Value, expected: &'static str) -> Error {
         Value::Symbol(_) => de::Unexpected::Other("symbol"),
         Value::Keyword(_) => de::Unexpected::Other("keyword"),
         Value::Bool(b) => de::Unexpected::Bool(*b),
+        Value::Bytes(_) => de::Unexpected::Other("byte string"),
         Value::Cons(_) => de::Unexpected::Other("cons cell"),
         Value::Number(_) => de::Unexpected::Other("number"), // FIXME: implement properly
         Value::Vector(_) => de::Unexpected::Other("vector"),
