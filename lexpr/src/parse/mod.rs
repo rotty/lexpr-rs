@@ -431,6 +431,14 @@ impl<'de, R: Read<'de>> Parser<R> {
                     Some(b':') if self.options.keyword_style(KeywordStyle::Octothorpe) => {
                         Ok(Value::keyword(self.parse_symbol()?))
                     }
+                    Some(b'v') => {
+                        self.expect_ident(b"u8")?;
+                        Ok(Value::Bytes(self.parse_byte_list()?.into_boxed_slice()))
+                    }
+                    Some(b'u') => {
+                        self.expect_ident(b"8")?;
+                        Ok(Value::Bytes(self.parse_byte_list()?.into_boxed_slice()))
+                    }
                     Some(_) => Err(self.peek_error(ErrorCode::ExpectedSomeIdent)),
                     None => Err(self.peek_error(ErrorCode::EofWhileParsingValue)),
                 }
@@ -564,6 +572,39 @@ impl<'de, R: Read<'de>> Parser<R> {
         }
 
         Ok(())
+    }
+
+    fn parse_byte_list(&mut self) -> Result<Vec<u8>> {
+        match self.parse_whitespace() {
+            Err(e) => return Err(e),
+            Ok(Some(b'(')) => self.eat_char(),
+            Ok(Some(_)) => return Err(self.peek_error(ErrorCode::ExpectedVector)),
+            Ok(None) => return Err(self.peek_error(ErrorCode::EofWhileParsingList)),
+        }
+        let mut bytes = Vec::new();
+        loop {
+            match self.parse_whitespace() {
+                Err(e) => return Err(e),
+                Ok(Some(c)) => match c {
+                    b')' => {
+                        self.eat_char();
+                        break;
+                    }
+                    _ => {
+                        let n = self
+                            .parse_integer(true)?
+                            .as_u64()
+                            .ok_or_else(|| self.peek_error(ErrorCode::ExpectedOctet))?;
+                        if n > 255 {
+                            return Err(self.peek_error(ErrorCode::ExpectedOctet));
+                        }
+                        bytes.push(n as u8);
+                    }
+                },
+                Ok(None) => return Err(self.peek_error(ErrorCode::EofWhileParsingList)),
+            }
+        }
+        Ok(bytes)
     }
 
     fn parse_list_elements(&mut self, terminator: u8) -> Result<Value> {

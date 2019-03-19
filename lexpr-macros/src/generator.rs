@@ -27,7 +27,7 @@ impl ToTokens for Value {
                 _ => quote! { ::lexpr::Value::append(vec![#(#elements),*], #rest) },
             },
             Value::Vector(elements) => quote! {
-                ::lexpr::Value::from(vec![#(#elements),*])
+                ::lexpr::Value::Vector(vec![#(#elements),*].into())
             },
         };
         tokens.extend(expanded);

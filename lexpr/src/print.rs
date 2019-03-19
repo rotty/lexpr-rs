@@ -20,6 +20,7 @@ pub struct Options {
     nil_style: NilStyle,
     bool_style: BoolStyle,
     vector_style: VectorStyle,
+    bytes_style: BytesStyle,
 }
 
 impl Options {
@@ -34,6 +35,7 @@ impl Options {
             nil_style: NilStyle::Symbol,
             bool_style: BoolStyle::Symbol,
             vector_style: VectorStyle::Brackets,
+            bytes_style: BytesStyle::Elisp,
         }
     }
 
@@ -49,7 +51,7 @@ impl Options {
         self
     }
 
-    /// Set the style to print boolean values.
+    /// Set the style to use to print boolean values.
     pub fn with_bool_style(mut self, style: BoolStyle) -> Self {
         self.bool_style = style;
         self
@@ -58,6 +60,12 @@ impl Options {
     /// Set the style for printing vectors.
     pub fn with_vector_style(mut self, style: VectorStyle) -> Self {
         self.vector_style = style;
+        self
+    }
+
+    /// Set the style to use for printing byte vectors.
+    pub fn with_bytes_style(mut self, style: BytesStyle) -> Self {
+        self.bytes_style = style;
         self
     }
 }
@@ -69,6 +77,7 @@ impl Default for Options {
             nil_style: NilStyle::Token,
             bool_style: BoolStyle::Token,
             vector_style: VectorStyle::Octothorpe,
+            bytes_style: BytesStyle::R7RS,
         }
     }
 }
@@ -102,6 +111,17 @@ pub enum VectorStyle {
     Octothorpe,
     /// Use brackets, as used in Emacs Lisp.
     Brackets,
+}
+
+/// How to print byte vectors.
+#[derive(Debug, Clone, Copy)]
+pub enum BytesStyle {
+    /// Use R6RS byte vector syntax, e.g. `#vu8(1 2 3)`.
+    R6RS,
+    /// Use R7RS byte vector syntax, e.g. `#u8(1 2 3)`.
+    R7RS,
+    /// Use Emacs Lisp unibyte string syntax, e.g. `"\001\002\003"`.
+    Elisp,
 }
 
 /// Represents a character escape code in a type-safe manner.
@@ -309,6 +329,17 @@ pub trait Formatter {
         writer.write_all(name.as_bytes())
     }
 
+    /// Writes a byte vector to the specified writer.
+    #[inline]
+    fn write_bytes<W: ?Sized>(&mut self, writer: &mut W, bytes: &[u8]) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        write_scheme_vector(self, writer, VectorType::Byte, bytes, |writer, &octet| {
+            itoa::write(writer, octet).map(|_| ())
+        })
+    }
+
     /// Called before any list elements.  Writes a `(` to the specified
     /// writer.
     #[inline]
@@ -462,6 +493,35 @@ impl Formatter for CustomizedFormatter {
             VectorStyle::Octothorpe => writer.write_all(b")"),
         }
     }
+
+    fn write_bytes<W: ?Sized>(&mut self, writer: &mut W, bytes: &[u8]) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        match self.options.bytes_style {
+            BytesStyle::R6RS | BytesStyle::R7RS => {
+                write_scheme_vector(self, writer, VectorType::Byte, bytes, |writer, &octet| {
+                    itoa::write(writer, octet).map(|_| ())
+                })
+            }
+            BytesStyle::Elisp => {
+                static OCTAL_CHARS: &[u8] = b"012345678";
+                writer.write_all(b"\"")?;
+                for octet in bytes {
+                    writer.write_all(b"\\")?;
+                    for &triplet in &[
+                        (octet >> 6) & 0b111u8,
+                        (octet >> 3) & 0b111u8,
+                        octet & 0b111u8,
+                    ] {
+                        let index = triplet as usize;
+                        writer.write_all(&OCTAL_CHARS[index..=index])?;
+                    }
+                }
+                writer.write_all(b"\"")
+            }
+        }
+    }
 }
 
 /// A printer for S-expression values.
@@ -513,6 +573,7 @@ where
             Value::Symbol(name) => self.formatter.write_symbol(&mut self.writer, &name),
             Value::Keyword(name) => self.formatter.write_keyword(&mut self.writer, &name),
             Value::String(s) => format_escaped_str(&mut self.writer, &mut self.formatter, &s),
+            Value::Bytes(bytes) => self.formatter.write_bytes(&mut self.writer, bytes),
             Value::Cons(elements) => {
                 self.formatter.begin_list(&mut self.writer)?;
                 for (i, pair) in elements.iter().enumerate() {
@@ -554,6 +615,28 @@ where
         }
         self.formatter.end_vector(&mut self.writer)
     }
+}
+
+fn write_scheme_vector<F: ?Sized, W: ?Sized, I, O>(
+    fmt: &mut F,
+    writer: &mut W,
+    kind: VectorType,
+    elements: I,
+    mut output: O,
+) -> io::Result<()>
+where
+    F: Formatter,
+    W: io::Write,
+    I: IntoIterator,
+    O: FnMut(&mut W, I::Item) -> io::Result<()>,
+{
+    fmt.begin_vector(kind, writer)?;
+    for (i, element) in elements.into_iter().enumerate() {
+        fmt.begin_seq_element(writer, i == 0)?;
+        output(writer, element)?;
+        fmt.end_seq_element(writer)?;
+    }
+    fmt.end_vector(writer)
 }
 
 impl<W> Printer<W>

@@ -151,3 +151,11 @@ fn test_list_elisp() {
         Value::list(vec![Value::Null])
     );
 }
+
+#[test]
+fn test_byte_vectors() {
+    assert_eq!(from_str("#u8(1 2 3)").unwrap(), Value::from(vec![1, 2, 3]));
+    for input in &["#u8(0 256 3)", "#u8(0.0 1 2)", "#u8(test 1 2)"] {
+        assert!(from_str(input).is_err());
+    }
+}
