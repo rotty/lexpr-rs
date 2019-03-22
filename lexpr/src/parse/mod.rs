@@ -44,6 +44,7 @@ pub struct Options {
     nil_symbol: NilSymbol,
     t_symbol: TSymbol,
     brackets: Brackets,
+    string_syntax: StringSyntax,
 }
 
 /// Defines the treatment of the symbol `nil`.
@@ -91,6 +92,20 @@ pub enum Brackets {
     Vector,
 }
 
+/// Defines the accepted syntax for strings.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum StringSyntax {
+    /// Syntax as specified the R6RS.
+    ///
+    /// Note that there is no R7RS variant, because R6RS specifies a superset of
+    /// R7RS syntax.
+    R6RS,
+    /// Emacs Lisp syntax.
+    ///
+    /// Note that unibyte strings will be parsed as byte vectors.
+    Elisp,
+}
+
 impl Options {
     /// Construct an empty set of options.
     ///
@@ -102,6 +117,7 @@ impl Options {
             nil_symbol: NilSymbol::Default,
             t_symbol: TSymbol::Default,
             brackets: Brackets::List,
+            string_syntax: StringSyntax::R6RS,
         }
     }
 
@@ -111,6 +127,7 @@ impl Options {
             .with_keyword_style(KeywordStyle::ColonPrefix)
             .with_nil_symbol(NilSymbol::EmptyList)
             .with_brackets(Brackets::Vector)
+            .with_string_syntax(StringSyntax::Elisp)
     }
 
     /// Add `style` to the recognized keyword styles.
@@ -149,6 +166,12 @@ impl Options {
         self
     }
 
+    /// Choose the accepted string syntax.
+    pub fn with_string_syntax(mut self, syntax: StringSyntax) -> Self {
+        self.string_syntax = syntax;
+        self
+    }
+
     /// Check wether a keyword style is enabled.
     #[inline]
     pub fn keyword_style(&self, style: KeywordStyle) -> bool {
@@ -169,6 +192,11 @@ impl Options {
     pub fn brackets(&self) -> Brackets {
         self.brackets
     }
+
+    /// Query the accepted string syntax.
+    pub fn string_syntax(&self) -> StringSyntax {
+        self.string_syntax
+    }
 }
 
 impl Default for Options {
@@ -184,6 +212,7 @@ impl Default for Options {
             nil_symbol: NilSymbol::Default,
             t_symbol: TSymbol::Default,
             brackets: Brackets::List,
+            string_syntax: StringSyntax::R6RS,
         }
     }
 }
@@ -1026,6 +1055,38 @@ mod tests {
     #[test]
     fn test_atom_failures() {
         assert!(from_str_custom("#:octothorpe-keyword", Options::new()).is_err());
+    }
+
+    #[test]
+    fn test_strings_default() {
+        assert_eq!(
+            from_str(r#""A plain string""#).unwrap(),
+            Value::string("A plain string")
+        );
+        assert_eq!(
+            from_str(r#""\a\b\t\n\v\f\r\"\\""#).unwrap(),
+            Value::string("\x07\x08\t\n\x0B\x0C\r\"\\")
+        );
+        // Examples taken from R6RS 4.2.4
+        assert_eq!(from_str(r#""\x41;bc""#).unwrap(), Value::string("Abc"));
+        assert_eq!(from_str(r#""\x41; bc""#).unwrap(), Value::string("A bc"));
+        assert_eq!(from_str(r#""\x41bc;""#).unwrap(), Value::string("\u{41BC}"));
+        assert!(from_str(r#""\x41""#).is_err());
+        assert!(from_str(r#""\x;"#).is_err());
+        assert!(from_str(r#""\x41bx;""#).is_err());
+        assert_eq!(from_str(r#""\x00000041;""#).unwrap(), Value::string("A"));
+        assert_eq!(
+            from_str(r#""\x0010FFFF;""#).unwrap(),
+            Value::string("\u{10FFFF}")
+        );
+        assert!(from_str(r#""\x00110000;""#).is_err());
+        assert_eq!(
+            from_str(r#""\x000000001;""#).unwrap(),
+            Value::string("\u{01}")
+        );
+        assert!(from_str(r#""\xD800;""#).is_err());
+        // Check that u32 overflow is detected
+        assert!(from_str(r#""\x100000001;""#).is_err());
     }
 
     #[test]

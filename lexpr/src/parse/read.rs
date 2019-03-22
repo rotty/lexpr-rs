@@ -47,9 +47,9 @@ pub trait Read<'de>: private::Sealed {
     #[doc(hidden)]
     fn byte_offset(&self) -> usize;
 
-    /// Assumes the previous byte was a quotation mark. Parses a JSON-escaped
-    /// string until the next quotation mark using the given scratch space if
-    /// necessary. The scratch space is initially empty.
+    /// Assumes the previous byte was a quotation mark. Parses a string with
+    /// R6RS escapes until the next quotation mark using the given scratch space
+    /// if necessary. The scratch space is initially empty.
     #[doc(hidden)]
     fn parse_str<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'de, 's, str>>;
 
@@ -69,15 +69,10 @@ pub trait Read<'de>: private::Sealed {
         scratch: &'s mut Vec<u8>,
     ) -> Result<Reference<'de, 's, [u8]>>;
 
-    /// Assumes the previous byte was a quotation mark. Parses a JSON-escaped
-    /// string until the next quotation mark but discards the data.
+    /// Assumes the previous byte was a hex escape sequnce ('\x') in a string.
+    /// Parses the hexadecimal sequence, including the terminating semicolon.
     #[doc(hidden)]
-    fn ignore_str(&mut self) -> Result<()>;
-
-    /// Assumes the previous byte was a hex escape sequnce ('\u') in a string.
-    /// Parses next hexadecimal sequence.
-    #[doc(hidden)]
-    fn decode_hex_escape(&mut self) -> Result<u16>;
+    fn decode_hex_escape(&mut self) -> Result<u32>;
 }
 
 pub struct Position {
@@ -175,7 +170,7 @@ where
                     return result(self, scratch);
                 }
                 b'\\' => {
-                    parse_escape(self, scratch)?;
+                    parse_r6rs_escape(self, scratch)?;
                 }
                 _ => {
                     if validate {
@@ -281,37 +276,24 @@ where
             .map(Reference::Copied)
     }
 
-    fn ignore_str(&mut self) -> Result<()> {
-        loop {
-            let ch = next_or_eof(self)?;
-            if !ESCAPE[ch as usize] {
-                continue;
-            }
-            match ch {
-                b'"' => {
-                    return Ok(());
-                }
-                b'\\' => {
-                    ignore_escape(self)?;
-                }
-                _ => {
-                    return error(self, ErrorCode::ControlCharacterWhileParsingString);
-                }
-            }
-        }
-    }
-
-    fn decode_hex_escape(&mut self) -> Result<u16> {
+    fn decode_hex_escape(&mut self) -> Result<u32> {
         let mut n = 0;
-        for _ in 0..4 {
-            match decode_hex_val(next_or_eof(self)?) {
+        loop {
+            let next = next_or_eof(self)?;
+            if next == b';' {
+                return Ok(n);
+            }
+            match decode_hex_val(next) {
                 None => return error(self, ErrorCode::InvalidEscape),
                 Some(val) => {
-                    n = (n << 4) + val;
+                    if val >= (1 << 24) {
+                        // A codepoint never has more than 24 bits
+                        return error(self, ErrorCode::InvalidUnicodeCodePoint);
+                    }
+                    n = (n << 4) + u32::from(val);
                 }
             }
         }
-        Ok(n)
     }
 }
 
@@ -419,7 +401,7 @@ impl<'a> SliceRead<'a> {
                 b'\\' => {
                     scratch.extend_from_slice(&self.slice[start..self.index]);
                     self.index += 1;
-                    parse_escape(self, scratch)?;
+                    parse_r6rs_escape(self, scratch)?;
                     start = self.index;
                 }
                 _ => {
@@ -494,44 +476,24 @@ impl<'a> Read<'a> for SliceRead<'a> {
         self.parse_symbol_bytes(scratch, as_str)
     }
 
-    fn ignore_str(&mut self) -> Result<()> {
-        loop {
-            while self.index < self.slice.len() && !ESCAPE[self.slice[self.index] as usize] {
-                self.index += 1;
-            }
-            if self.index == self.slice.len() {
-                return error(self, ErrorCode::EofWhileParsingString);
-            }
-            match self.slice[self.index] {
-                b'"' => {
-                    self.index += 1;
-                    return Ok(());
-                }
-                b'\\' => {
-                    self.index += 1;
-                    ignore_escape(self)?;
-                }
-                _ => {
-                    return error(self, ErrorCode::ControlCharacterWhileParsingString);
-                }
-            }
-        }
-    }
-
-    fn decode_hex_escape(&mut self) -> Result<u16> {
-        if self.index + 4 > self.slice.len() {
-            self.index = self.slice.len();
-            return error(self, ErrorCode::EofWhileParsingString);
-        }
-
+    fn decode_hex_escape(&mut self) -> Result<u32> {
         let mut n = 0;
-        for _ in 0..4 {
-            let ch = decode_hex_val(self.slice[self.index]);
+        loop {
+            let next = self.slice[self.index];
+            if next == b';' {
+                self.index += 1;
+                break;
+            }
+            let ch = decode_hex_val(next);
             self.index += 1;
             match ch {
                 None => return error(self, ErrorCode::InvalidEscape),
                 Some(val) => {
-                    n = (n << 4) + val;
+                    if n >= (1 << 24) {
+                        // A codepoint never has more than 24 bits
+                        return error(self, ErrorCode::InvalidUnicodeCodePoint);
+                    }
+                    n = (n << 4) + u32::from(val);
                 }
             }
         }
@@ -603,11 +565,7 @@ impl<'a> Read<'a> for StrRead<'a> {
         })
     }
 
-    fn ignore_str(&mut self) -> Result<()> {
-        self.delegate.ignore_str()
-    }
-
-    fn decode_hex_escape(&mut self) -> Result<u16> {
+    fn decode_hex_escape(&mut self) -> Result<u32> {
         self.delegate.decode_hex_escape()
     }
 }
@@ -658,108 +616,34 @@ fn as_str<'de, 's, R: Read<'de>>(read: &R, slice: &'s [u8]) -> Result<&'s str> {
     str::from_utf8(slice).or_else(|_| error(read, ErrorCode::InvalidUnicodeCodePoint))
 }
 
-/// Parses a S-expression escape sequence and appends it into the scratch
+/// Parses an R6RS escape sequence and appends it into the scratch
 /// space. Assumes the previous byte read was a backslash.
-fn parse_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> Result<()> {
+fn parse_r6rs_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> Result<()> {
     let ch = next_or_eof(read)?;
 
     match ch {
         b'"' => scratch.push(b'"'),
         b'\\' => scratch.push(b'\\'),
         b'/' => scratch.push(b'/'),
+        b'a' => scratch.push(0x07),
         b'b' => scratch.push(b'\x08'),
         b'f' => scratch.push(b'\x0c'),
         b'n' => scratch.push(b'\n'),
         b'r' => scratch.push(b'\r'),
         b't' => scratch.push(b'\t'),
-        b'u' => {
-            let c = match read.decode_hex_escape()? {
-                0xDC00...0xDFFF => {
-                    return error(read, ErrorCode::LoneLeadingSurrogateInHexEscape);
-                }
-
-                // Non-BMP characters are encoded as a sequence of
-                // two hex escapes, representing UTF-16 surrogates.
-                n1 @ 0xD800...0xDBFF => {
-                    if next_or_eof(read)? != b'\\' {
-                        return error(read, ErrorCode::UnexpectedEndOfHexEscape);
-                    }
-                    if next_or_eof(read)? != b'u' {
-                        return error(read, ErrorCode::UnexpectedEndOfHexEscape);
-                    }
-
-                    let n2 = read.decode_hex_escape()?;
-
-                    if n2 < 0xDC00 || n2 > 0xDFFF {
-                        return error(read, ErrorCode::LoneLeadingSurrogateInHexEscape);
-                    }
-
-                    let n = (u32::from(n1 - 0xD800) << 10 | u32::from(n2 - 0xDC00)) + 0x1_0000;
-
-                    match char::from_u32(n) {
-                        Some(c) => c,
-                        None => {
-                            return error(read, ErrorCode::InvalidUnicodeCodePoint);
-                        }
-                    }
-                }
-
-                n => match char::from_u32(u32::from(n)) {
+        b'v' => scratch.push(0x0B),
+        // TODO: trailing backspace (i.e., a continuation line)
+        b'x' => {
+            let c = {
+                let n = read.decode_hex_escape()?;
+                match char::from_u32(n) {
                     Some(c) => c,
                     None => {
                         return error(read, ErrorCode::InvalidUnicodeCodePoint);
                     }
-                },
+                }
             };
-
             scratch.extend_from_slice(c.encode_utf8(&mut [0_u8; 4]).as_bytes());
-        }
-        _ => {
-            return error(read, ErrorCode::InvalidEscape);
-        }
-    }
-
-    Ok(())
-}
-
-/// Parses a S-expression escape sequence and discards the value. Assumes the previous
-/// byte read was a backslash.
-fn ignore_escape<'de, R: ?Sized + Read<'de>>(read: &mut R) -> Result<()> {
-    let ch = next_or_eof(read)?;
-
-    match ch {
-        b'"' | b'\\' | b'/' | b'b' | b'f' | b'n' | b'r' | b't' => {}
-        b'u' => {
-            let n = match read.decode_hex_escape()? {
-                0xDC00...0xDFFF => {
-                    return error(read, ErrorCode::LoneLeadingSurrogateInHexEscape);
-                }
-
-                // Non-BMP characters are encoded as a sequence of
-                // two hex escapes, representing UTF-16 surrogates.
-                n1 @ 0xD800...0xDBFF => {
-                    if next_or_eof(read)? != b'\\' {
-                        return error(read, ErrorCode::UnexpectedEndOfHexEscape);
-                    }
-                    if next_or_eof(read)? != b'u' {
-                        return error(read, ErrorCode::UnexpectedEndOfHexEscape);
-                    }
-
-                    let n2 = read.decode_hex_escape()?;
-
-                    if n2 < 0xDC00 || n2 > 0xDFFF {
-                        return error(read, ErrorCode::LoneLeadingSurrogateInHexEscape);
-                    }
-
-                    (u32::from(n1 - 0xD800) << 10 | u32::from(n2 - 0xDC00)) + 0x1_0000
-                }
-
-                n => u32::from(n),
-            };
-
-            if char::from_u32(n).is_none() {
-                return error(read, ErrorCode::InvalidUnicodeCodePoint);
-            }
         }
         _ => {
             return error(read, ErrorCode::InvalidEscape);
@@ -793,8 +677,8 @@ static HEX: [u8; 256] = {
     ]
 };
 
-fn decode_hex_val(val: u8) -> Option<u16> {
-    let n = u16::from(HEX[val as usize]);
+fn decode_hex_val(val: u8) -> Option<u8> {
+    let n = HEX[val as usize];
     if n == 255 {
         None
     } else {
