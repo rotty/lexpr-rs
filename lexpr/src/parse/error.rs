@@ -111,14 +111,8 @@ pub(crate) enum ErrorCode {
     /// Control character found while parsing a string.
     ControlCharacterWhileParsingString,
 
-    /// Lone leading surrogate in hex escape.
-    LoneLeadingSurrogateInHexEscape,
-
     /// S-expression has non-whitespace trailing characters after the value.
     TrailingCharacters,
-
-    /// Unexpected end of hex excape.
-    UnexpectedEndOfHexEscape,
 
     /// Encountered nesting of S-expression maps and arrays more than 128 layers deep.
     RecursionLimitExceeded,
@@ -142,11 +136,7 @@ impl Display for ErrorCode {
                 f.write_str("control character while parsing string")
             }
             ErrorCode::InvalidUnicodeCodePoint => f.write_str("invalid unicode code point"),
-            ErrorCode::LoneLeadingSurrogateInHexEscape => {
-                f.write_str("lone leading surrogate in hex escape")
-            }
             ErrorCode::TrailingCharacters => f.write_str("trailing characters"),
-            ErrorCode::UnexpectedEndOfHexEscape => f.write_str("unexpected end of hex escape"),
             ErrorCode::RecursionLimitExceeded => f.write_str("recursion limit exceeded"),
         }
     }
