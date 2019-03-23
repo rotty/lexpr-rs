@@ -249,6 +249,9 @@ use proc_macro_hack::proc_macro_hack;
 /// ```
 /// # Lists
 ///
+/// Lists can be formed by using the same syntax as in Lisp, including dot
+/// notation.
+///
 /// ```
 /// # use lexpr::sexp;
 ///
@@ -257,6 +260,17 @@ use proc_macro_hack::proc_macro_hack;
 /// let l3 = sexp!((1 2 . (3 . ())));
 /// assert_eq!(l1, l2);
 /// assert_eq!(l2, l3);
+/// ```
+///
+/// Improper (aka dotted) lists are supported as well:
+///
+/// ```
+/// # use lexpr::sexp;
+/// let dotted = sexp!((1 2 . three));
+/// assert!(dotted.is_dotted_list());
+/// let tail = dotted.as_cons().unwrap().cdr();
+/// assert!(tail.is_cons());
+/// assert_eq!(tail, &sexp!((2 . three)));
 /// ```
 ///
 /// [`Value`]: enum.Value.html

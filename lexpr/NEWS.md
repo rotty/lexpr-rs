@@ -14,7 +14,7 @@ Incompatible changes:
   `Value`. As in-place modification of these variants is expected to
   be a seldom-required operation, the ergonomic impact is deemed
   acceptable.
-- The `Error` type, as it currently only related to S-expression
+- The `Error` type, as it currently only relates to S-expression
   parsing, is now found in the `lexpr::parse` module.
 
 New features:
