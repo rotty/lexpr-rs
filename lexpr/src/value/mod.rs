@@ -153,10 +153,11 @@ pub enum Value {
     /// Represents a Lisp "cons cell".
     ///
     /// Cons cells are often used to form singly-linked lists.
-    /// ```TODO
+    /// ```
     /// # use lexpr::sexp;
-    /// #
     /// let v = sexp!((a list 1 2 3));
+    /// assert!(v.is_cons());
+    /// assert_eq!(v[4], sexp!(3));
     /// ```
     Cons(Cons),
 }
@@ -265,11 +266,13 @@ impl Value {
         }
     }
 
-    /// Create a list value from elements convertible into `Value`.
+    /// Create a list value from elements convertible into `Value`, using a
+    /// given value as a tail.
     ///
     /// ```
     /// # use lexpr::{sexp, Value};
     /// assert_eq!(Value::append(vec![1u32, 2], 3), sexp!((1 2 . 3)));
+    /// assert_eq!(Value::append(vec![1u32, 2, 3], sexp!((4 5))), sexp!((1 2 3 4 5)));
     /// ```
     pub fn append<I, T>(elements: I, tail: T) -> Self
     where
