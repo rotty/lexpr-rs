@@ -78,6 +78,9 @@ pub(crate) enum ErrorCode {
     /// EOF while parsing a list.
     EofWhileParsingList,
 
+    /// EOF while parsing a vector.
+    EofWhileParsingVector,
+
     /// EOF while parsing a string.
     EofWhileParsingString,
 
@@ -123,6 +126,7 @@ impl Display for ErrorCode {
         match *self {
             ErrorCode::Io(ref err) => Display::fmt(err, f),
             ErrorCode::EofWhileParsingList => f.write_str("EOF while parsing a list"),
+            ErrorCode::EofWhileParsingVector => f.write_str("EOF while parsing a vector"),
             ErrorCode::EofWhileParsingString => f.write_str("EOF while parsing a string"),
             ErrorCode::EofWhileParsingValue => f.write_str("EOF while parsing a value"),
             ErrorCode::ExpectedSomeIdent => f.write_str("expected ident"),

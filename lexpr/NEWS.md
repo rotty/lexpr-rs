@@ -24,6 +24,9 @@ New features:
 - Serde support is now available via the companion crate
   [`serde-lexpr`], which is developed in parallel with `lexpr`,
   sharing the same git repository.
+- There is now a `Value::Vector` variant for representing Lisp
+  vectors. Vectors can be constructed via the `sexp!` macro using
+  Scheme syntax, e.g. `sexp!(#(1 2 3))`.
 
 [`serde-lexpr`]: https://github.com/rotty/lexpr-rs/tree/master/serde-lexpr
 

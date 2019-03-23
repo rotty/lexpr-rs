@@ -37,9 +37,8 @@ fn test_unit() {
 
 #[test]
 fn test_tuples() {
-    // TODO: This should use vectors, once supported
     let tuple = (1, "Hello".to_string(), true);
-    test_serde(&tuple, &sexp!((1 "Hello" #t)));
+    test_serde(&tuple, &sexp!(#(1 "Hello" #t)));
 }
 
 #[test]
@@ -108,7 +107,7 @@ fn test_complex_enum() {
     };
     test_serde(
         &s,
-        &sexp!((Struct (s "hello") (v 1 2 3) (t 23 1.23 "good bye"))),
+        &sexp!((Struct (s "hello") (v . (1 2 3)) (t . #(23 1.23 "good bye")))),
     );
 }
 

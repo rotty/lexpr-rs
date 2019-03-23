@@ -68,6 +68,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             Value::Symbol(_) => Err(invalid_value(self.input, "rust-compatible value")),
             Value::Number(n) => visit_number(n, visitor),
             Value::String(s) => visitor.visit_borrowed_str(s),
+            Value::Vector(elts) => visitor.visit_seq(VecAccess::new(elts)),
         }
     }
 
@@ -174,6 +175,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     {
         match self.input {
             Value::Null => visitor.visit_seq(ListAccess::empty()),
+            Value::Vector(elements) => visitor.visit_seq(VecAccess::new(elements)),
             Value::Cons(cell) => visitor.visit_seq(ListAccess::new(cell)),
             _ => Err(invalid_value(self.input, "list")),
         }
@@ -183,8 +185,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        // TODO: should use vectors, once implemented
         match self.input {
+            Value::Vector(elements) => visitor.visit_seq(VecAccess::new(elements)),
             Value::Cons(cell) => visitor.visit_seq(ListAccess::new(cell)),
             _ => Err(invalid_value(self.input, "list")),
         }
@@ -302,6 +304,7 @@ fn invalid_value(value: &Value, expected: &'static str) -> Error {
         Value::Bool(b) => de::Unexpected::Bool(*b),
         Value::Cons(_) => de::Unexpected::Other("cons cell"),
         Value::Number(_) => de::Unexpected::Other("number"), // FIXME: implement properly
+        Value::Vector(_) => de::Unexpected::Other("vector"),
     };
     Error::invalid_type(unexpected, &expected)
 }
@@ -366,6 +369,35 @@ impl<'de> de::SeqAccess<'de> for ListAccess<'de> {
                 Ok(Some(element))
             }
             None => Ok(None),
+        }
+    }
+}
+
+struct VecAccess<'a> {
+    vec: &'a [Value],
+    index: usize,
+}
+
+impl<'a> VecAccess<'a> {
+    fn new(vec: &'a [Value]) -> Self {
+        VecAccess { vec, index: 0 }
+    }
+}
+
+impl<'de> de::SeqAccess<'de> for VecAccess<'de> {
+    type Error = Error;
+
+    fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
+    where
+        T: de::DeserializeSeed<'de>,
+    {
+        if self.index >= self.vec.len() {
+            Ok(None)
+        } else {
+            let deserialized =
+                seed.deserialize(&mut Deserializer::from_value(&self.vec[self.index]))?;
+            self.index += 1;
+            Ok(Some(deserialized))
         }
     }
 }

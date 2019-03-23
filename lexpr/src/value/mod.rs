@@ -160,6 +160,9 @@ pub enum Value {
     /// assert_eq!(v[4], sexp!(3));
     /// ```
     Cons(Cons),
+
+    /// A Lisp vector.
+    Vector(Box<[Value]>),
 }
 
 impl Value {
@@ -297,6 +300,21 @@ impl Value {
         } else {
             tail.into()
         }
+    }
+
+    /// Create a vector value from elements convertible into `Value`.
+    ///
+    /// ```
+    /// # use lexpr::{sexp, Value};
+    /// assert_eq!(Value::vector(vec![1u32, 2, 3]), sexp!(#(1 2 3)));
+    /// ```
+    pub fn vector<I>(elements: I) -> Self
+    where
+        I: IntoIterator,
+        I::Item: Into<Value>,
+    {
+        let v: Vec<_> = elements.into_iter().map(|e| e.into()).collect();
+        Value::Vector(v.into_boxed_slice())
     }
 
     /// Returns true if the value is a String. Returns false otherwise.
@@ -704,6 +722,45 @@ impl Value {
     /// ```
     pub fn as_pair(&self) -> Option<(&Value, &Value)> {
         self.as_cons().map(Cons::as_pair)
+    }
+
+    /// Returns true if the value is a vector.
+    pub fn is_vector(&self) -> bool {
+        match self {
+            Value::Vector(_) => true,
+            _ => false,
+        }
+    }
+
+    /// If the value is a vector, return a reference to its elements.
+    ///
+    /// ```
+    /// # use lexpr::{sexp, Value};
+    /// let v = sexp!(#(1 2 "three"));
+    /// let slice: &[Value] = &[sexp!(1), sexp!(2), sexp!("three")];
+    /// assert_eq!(v.as_slice(), Some(slice));
+    /// ```
+    pub fn as_slice(&self) -> Option<&[Value]> {
+        match self {
+            Value::Vector(elements) => Some(elements),
+            _ => None,
+        }
+    }
+
+    /// If the value is a vector, return a mutable reference to its elements.
+    ///
+    /// ```
+    /// # use lexpr::{sexp, Value};
+    /// let mut v = sexp!(#(1 2 "three"));
+    /// v.as_slice_mut().unwrap()[2] = sexp!(3);
+    /// let slice: &[Value] = &[sexp!(1), sexp!(2), sexp!(3)];
+    /// assert_eq!(v.as_slice(), Some(slice));
+    /// ```
+    pub fn as_slice_mut(&mut self) -> Option<&mut [Value]> {
+        match self {
+            Value::Vector(elements) => Some(elements),
+            _ => None,
+        }
     }
 
     /// Attempts conversion to a vector, cloning the values.

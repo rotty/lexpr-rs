@@ -35,3 +35,9 @@ fn test_improper_lists() {
         r#"(((((42 . a-symbol) . $?:!) . "") . #f) . #nil)"#,
     );
 }
+
+#[test]
+fn test_vectors() {
+    check_roundtrip_default(sexp!(#()), "#()");
+    check_roundtrip_default(sexp!(#(1 2 3 4)), "#(1 2 3 4)");
+}
