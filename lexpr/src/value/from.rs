@@ -75,3 +75,15 @@ impl From<Cons> for Value {
         Value::Cons(pair)
     }
 }
+
+impl From<Vec<Value>> for Value {
+    fn from(elts: Vec<Value>) -> Self {
+        Value::Vector(elts.into())
+    }
+}
+
+impl From<Box<[Value]>> for Value {
+    fn from(elts: Box<[Value]>) -> Self {
+        Value::Vector(elts)
+    }
+}

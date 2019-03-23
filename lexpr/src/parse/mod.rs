@@ -357,6 +357,21 @@ impl<'de, R: Read<'de>> Parser<R> {
                         self.expect_ident(b"il")?;
                         Ok(Value::Nil)
                     }
+                    Some(b'(') => {
+                        self.remaining_depth -= 1;
+                        if self.remaining_depth == 0 {
+                            return Err(self.peek_error(ErrorCode::RecursionLimitExceeded));
+                        }
+
+                        let ret = self.parse_vector_elements(b')');
+
+                        self.remaining_depth += 1;
+
+                        match (ret, self.end_seq()) {
+                            (Ok(elements), Ok(())) => Ok(Value::Vector(elements.into())),
+                            (Err(err), _) | (_, Err(err)) => Err(err),
+                        }
+                    }
                     Some(b':') if self.options.keyword_style(KeywordStyle::Octothorpe) => {
                         Ok(Value::keyword(self.parse_symbol()?))
                     }
@@ -495,6 +510,23 @@ impl<'de, R: Read<'de>> Parser<R> {
                     }
                 },
                 Ok(None) => return Err(self.peek_error(ErrorCode::EofWhileParsingList)),
+            }
+        }
+    }
+
+    fn parse_vector_elements(&mut self, terminator: u8) -> Result<Vec<Value>> {
+        let mut elements = Vec::new();
+        loop {
+            match self.parse_whitespace() {
+                Err(e) => return Err(e),
+                Ok(Some(c)) => {
+                    if c == terminator {
+                        return Ok(elements);
+                    } else {
+                        elements.push(self.parse_value()?);
+                    }
+                }
+                Ok(None) => return Err(self.peek_error(ErrorCode::EofWhileParsingVector)),
             }
         }
     }

@@ -96,7 +96,10 @@ impl Parser {
                     _ => Err(ParseError::UnexpectedToken(token.clone())),
                 }
             }
-            t => Err(ParseError::UnexpectedToken(t.clone())),
+            TokenTree::Group(group) => match group.delimiter() {
+                Delimiter::Parenthesis => parse_vector(group.stream()),
+                delim => Err(ParseError::UnexpectedDelimiter(delim)),
+            },
         }
     }
 }
@@ -141,6 +144,15 @@ fn parse_list(tokens: TokenStream) -> Result<Value, ParseError> {
         },
         None => Ok(Value::List(elements)),
     }
+}
+
+fn parse_vector(tokens: TokenStream) -> Result<Value, ParseError> {
+    let mut elements = vec![];
+    let mut parser = Parser::new(tokens.into_iter().collect());
+    while let Some(_) = parser.peek() {
+        elements.push(parser.parse()?);
+    }
+    Ok(Value::Vector(elements))
 }
 
 pub fn parse(tokens: TokenStream) -> Result<Value, ParseError> {

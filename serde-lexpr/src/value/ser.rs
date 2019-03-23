@@ -12,8 +12,8 @@ impl ser::Serializer for Serializer {
     type Error = Error;
 
     type SerializeSeq = SerializeList;
-    type SerializeTuple = SerializeList;
-    type SerializeTupleStruct = SerializeList;
+    type SerializeTuple = SerializeVector;
+    type SerializeTupleStruct = SerializeVector;
     type SerializeTupleVariant = SerializeTupleVariant;
     type SerializeMap = SerializeMap;
     type SerializeStruct = SerializeStruct;
@@ -133,12 +133,14 @@ impl ser::Serializer for Serializer {
         })
     }
 
-    fn serialize_tuple(self, len: usize) -> Result<SerializeList> {
-        self.serialize_seq(Some(len))
+    fn serialize_tuple(self, len: usize) -> Result<SerializeVector> {
+        Ok(SerializeVector {
+            items: Vec::with_capacity(len),
+        })
     }
 
-    fn serialize_tuple_struct(self, _name: &'static str, len: usize) -> Result<SerializeList> {
-        self.serialize_seq(Some(len))
+    fn serialize_tuple_struct(self, _name: &'static str, len: usize) -> Result<SerializeVector> {
+        self.serialize_tuple(len)
     }
 
     fn serialize_tuple_variant(
@@ -187,6 +189,11 @@ pub struct SerializeList {
 }
 
 #[doc(hidden)]
+pub struct SerializeVector {
+    items: Vec<Value>,
+}
+
+#[doc(hidden)]
 pub struct SerializeTupleVariant {
     name: &'static str,
     items: Vec<Value>,
@@ -226,7 +233,7 @@ impl ser::SerializeSeq for SerializeList {
     }
 }
 
-impl ser::SerializeTuple for SerializeList {
+impl ser::SerializeTuple for SerializeVector {
     type Ok = Value;
     type Error = Error;
 
@@ -234,15 +241,16 @@ impl ser::SerializeTuple for SerializeList {
     where
         V: ser::Serialize,
     {
-        ser::SerializeSeq::serialize_element(self, value)
+        self.items.push(to_value(value)?);
+        Ok(())
     }
 
     fn end(self) -> Result<Value> {
-        ser::SerializeSeq::end(self)
+        Ok(Value::Vector(self.items.into()))
     }
 }
 
-impl ser::SerializeTupleStruct for SerializeList {
+impl ser::SerializeTupleStruct for SerializeVector {
     type Ok = Value;
     type Error = Error;
 
@@ -250,11 +258,11 @@ impl ser::SerializeTupleStruct for SerializeList {
     where
         V: ser::Serialize,
     {
-        ser::SerializeSeq::serialize_element(self, value)
+        ser::SerializeTuple::serialize_element(self, value)
     }
 
     fn end(self) -> Result<Value> {
-        ser::SerializeSeq::end(self)
+        ser::SerializeTuple::end(self)
     }
 }
 

@@ -18,6 +18,7 @@ enum ValueKind {
     Symbol,
     Keyword,
     Cons,
+    Vector,
 }
 
 fn gen_value<G: Gen>(g: &mut G, depth: usize) -> Value {
@@ -25,7 +26,9 @@ fn gen_value<G: Gen>(g: &mut G, depth: usize) -> Value {
     let choices = if depth >= g.size() {
         &[Nil, Null, Bool, Number, String, Symbol, Keyword] as &[ValueKind]
     } else {
-        &[Nil, Null, Bool, Number, String, Symbol, Keyword, Cons]
+        &[
+            Nil, Null, Bool, Number, String, Symbol, Keyword, Cons, Vector,
+        ]
     };
     match choices.choose(g).unwrap() {
         Nil => Value::Nil,
@@ -45,6 +48,10 @@ fn gen_value<G: Gen>(g: &mut G, depth: usize) -> Value {
             Value::keyword(*choices.choose(g).unwrap())
         }
         Cons => Value::from((gen_value(g, depth + 1), gen_value(g, depth + 1))),
+        Vector => {
+            let elements: Vec<Value> = Arbitrary::arbitrary(g);
+            Value::from(elements)
+        }
     }
 }
 

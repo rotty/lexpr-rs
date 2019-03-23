@@ -19,6 +19,7 @@ pub struct Options {
     keyword_style: KeywordStyle,
     nil_style: NilStyle,
     bool_style: BoolStyle,
+    vector_style: VectorStyle,
 }
 
 impl Options {
@@ -32,6 +33,7 @@ impl Options {
             keyword_style: KeywordStyle::ColonPrefix,
             nil_style: NilStyle::Symbol,
             bool_style: BoolStyle::Symbol,
+            vector_style: VectorStyle::Brackets,
         }
     }
 
@@ -52,6 +54,12 @@ impl Options {
         self.bool_style = style;
         self
     }
+
+    /// Set the style for printing vectors.
+    pub fn with_vector_style(mut self, style: VectorStyle) -> Self {
+        self.vector_style = style;
+        self
+    }
 }
 
 impl Default for Options {
@@ -60,6 +68,7 @@ impl Default for Options {
             keyword_style: KeywordStyle::Octothorpe,
             nil_style: NilStyle::Token,
             bool_style: BoolStyle::Token,
+            vector_style: VectorStyle::Octothorpe,
         }
     }
 }
@@ -84,6 +93,15 @@ pub enum BoolStyle {
     Token,
     /// Use symbols `nil` and `t`.
     Symbol,
+}
+
+/// How to print vectors.
+#[derive(Debug, Clone, Copy)]
+pub enum VectorStyle {
+    /// Use Scheme notation, i.e. `#(...)`.
+    Octothorpe,
+    /// Use brackets, as used in Emacs Lisp.
+    Brackets,
 }
 
 /// Represents a character escape code in a type-safe manner.
@@ -124,6 +142,14 @@ impl CharEscape {
             _ => unreachable!(),
         }
     }
+}
+
+/// Different vector types
+pub enum VectorType {
+    /// Generic vector, containing elements of any type.
+    Generic,
+    /// Byte vector, containing only byte (octet) values.
+    Byte,
 }
 
 /// This trait abstracts away serializing the S-expression pieces,
@@ -293,10 +319,20 @@ pub trait Formatter {
         writer.write_all(b"(")
     }
 
-    /// Called before starting to write a list element. Writes a space if needed
-    /// to the specified writer.
+    /// Called after all list elements have been written.  Writes a `)` to the
+    /// specified writer.
     #[inline]
-    fn begin_list_element<W: ?Sized>(&mut self, writer: &mut W, first: bool) -> io::Result<()>
+    fn end_list<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        writer.write_all(b")")
+    }
+
+    /// Called before starting to write a list or vector element. Writes a space
+    /// to the specified writer, if needed.
+    #[inline]
+    fn begin_seq_element<W: ?Sized>(&mut self, writer: &mut W, first: bool) -> io::Result<()>
     where
         W: io::Write,
     {
@@ -307,19 +343,32 @@ pub trait Formatter {
         }
     }
 
-    /// Called after every list element.
+    /// Called after every list or vector element.
     #[inline]
-    fn end_list_element<W: ?Sized>(&mut self, _writer: &mut W) -> io::Result<()>
+    fn end_seq_element<W: ?Sized>(&mut self, _writer: &mut W) -> io::Result<()>
     where
         W: io::Write,
     {
         Ok(())
     }
 
-    /// Called after all list elements have been written.  Writes a `)` to the
+    /// Called before any vector elements.  Will write `#(` for generic vectors,
+    /// or `#u8(` for byte vectors, to the specified writer.
+    #[inline]
+    fn begin_vector<W: ?Sized>(&mut self, kind: VectorType, writer: &mut W) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        match kind {
+            VectorType::Generic => writer.write_all(b"#("),
+            VectorType::Byte => writer.write_all(b"#u8("),
+        }
+    }
+
+    /// Called after all vector elements have been written.  Writes a `)` to the
     /// specified writer.
     #[inline]
-    fn end_list<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    fn end_vector<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
     where
         W: io::Write,
     {
@@ -447,26 +496,43 @@ where
             Value::Cons(elements) => {
                 self.formatter.begin_list(&mut self.writer)?;
                 for (i, pair) in elements.iter().enumerate() {
-                    self.formatter
-                        .begin_list_element(&mut self.writer, i == 0)?;
+                    self.formatter.begin_seq_element(&mut self.writer, i == 0)?;
                     self.print(pair.car())?;
-                    self.formatter.end_list_element(&mut self.writer)?;
+                    self.formatter.end_seq_element(&mut self.writer)?;
                     match pair.cdr() {
                         Value::Null | Value::Cons(_) => {}
                         _ => {
-                            self.formatter.begin_list_element(&mut self.writer, false)?;
+                            self.formatter.begin_seq_element(&mut self.writer, false)?;
                             self.formatter.write_dot(&mut self.writer)?;
-                            self.formatter.end_list_element(&mut self.writer)?;
-                            self.formatter.begin_list_element(&mut self.writer, false)?;
+                            self.formatter.end_seq_element(&mut self.writer)?;
+                            self.formatter.begin_seq_element(&mut self.writer, false)?;
                             self.print(pair.cdr())?;
-                            self.formatter.end_list_element(&mut self.writer)?;
+                            self.formatter.end_seq_element(&mut self.writer)?;
                         }
                     }
                 }
-                self.formatter.end_list(&mut self.writer)?;
-                Ok(())
+                self.formatter.end_list(&mut self.writer)
+            }
+            Value::Vector(elements) => {
+                self.write_vector(VectorType::Generic, elements.iter(), |printer, element| {
+                    printer.print(element)
+                })
             }
         }
+    }
+
+    fn write_vector<I, O>(&mut self, kind: VectorType, elements: I, mut output: O) -> io::Result<()>
+    where
+        I: IntoIterator,
+        O: FnMut(&mut Self, I::Item) -> io::Result<()>,
+    {
+        self.formatter.begin_vector(kind, &mut self.writer)?;
+        for (i, element) in elements.into_iter().enumerate() {
+            self.formatter.begin_seq_element(&mut self.writer, i == 0)?;
+            output(self, element)?;
+            self.formatter.end_seq_element(&mut self.writer)?;
+        }
+        self.formatter.end_vector(&mut self.writer)
     }
 }
 

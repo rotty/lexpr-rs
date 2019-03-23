@@ -210,6 +210,16 @@
 //! ((a . 42) (b . 43))
 //! ```
 //!
+//! ## Vectors
+//!
+//! In contrast to lists, which are represented as singly-linked chains of "cons
+//! cells", vectors allow O(1) indexing, and thus are quite similar to Rusts
+//! `Vec` datatype.
+//!
+//! ```scheme
+//! #(1 2 "three") ; A vector in Scheme notation
+//! ```
+//!
 //! [Serde]: https://crates.io/crates/serde
 //! [`serde-lexpr`]: https://docs.rs/serde-lexpr
 
@@ -271,6 +281,17 @@ use proc_macro_hack::proc_macro_hack;
 /// let tail = dotted.as_cons().unwrap().cdr();
 /// assert!(tail.is_cons());
 /// assert_eq!(tail, &sexp!((2 . three)));
+/// ```
+///
+/// # Vectors
+///
+/// Vectors can be written using Scheme notation, e.g.:
+///
+/// ```
+/// # use lexpr::sexp;
+/// let v = sexp!(#(1 2 "three"));
+/// assert!(v.is_vector());
+/// assert_eq!(v[2], sexp!("three"));
 /// ```
 ///
 /// [`Value`]: enum.Value.html

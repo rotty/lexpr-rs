@@ -9,4 +9,5 @@ pub enum Value {
     Unquoted(proc_macro2::TokenTree),
     List(Vec<Value>),
     ImproperList(Vec<Value>, Box<Value>),
+    Vector(Vec<Value>),
 }

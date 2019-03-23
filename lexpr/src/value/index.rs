@@ -52,15 +52,18 @@ mod private {
 
 impl Index for usize {
     fn index_into<'v>(&self, v: &'v Value) -> Option<&'v Value> {
-        let mut head = v;
-        for _ in 0..*self {
-            match head {
-                Value::Cons(pair) => head = pair.cdr(),
-                _ => return None,
+        match v {
+            Value::Vector(elements) => elements.get(*self),
+            Value::Cons(cons) => {
+                let mut cursor = cons;
+                for _ in 0..*self {
+                    match cursor.cdr() {
+                        Value::Cons(next) => cursor = next,
+                        _ => return None,
+                    }
+                }
+                Some(cursor.car())
             }
-        }
-        match head {
-            Value::Cons(pair) => Some(pair.car()),
             _ => None,
         }
     }
