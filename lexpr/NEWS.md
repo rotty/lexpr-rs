@@ -25,7 +25,7 @@ New features:
   [`serde-lexpr`], which is developed in parallel with `lexpr`,
   sharing the same git repository.
 
-[`serde-lexpr`]: https://github.com/rotty/lexpr-rs/serde-lexpr
+[`serde-lexpr`]: https://github.com/rotty/lexpr-rs/tree/master/serde-lexpr
 
 # 0.1.3
 
