@@ -442,6 +442,26 @@ impl Formatter for CustomizedFormatter {
             }
         }
     }
+
+    fn begin_vector<W: ?Sized>(&mut self, kind: VectorType, writer: &mut W) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        match self.options.vector_style {
+            VectorStyle::Brackets => writer.write_all(b"["),
+            VectorStyle::Octothorpe => Formatter::begin_vector(self, kind, writer),
+        }
+    }
+
+    fn end_vector<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        match self.options.vector_style {
+            VectorStyle::Brackets => writer.write_all(b"]"),
+            VectorStyle::Octothorpe => writer.write_all(b")"),
+        }
+    }
 }
 
 /// A printer for S-expression values.

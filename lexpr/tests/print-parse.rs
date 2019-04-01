@@ -1,9 +1,16 @@
-use lexpr::{sexp, Value};
+use lexpr::{parse, print, sexp, Value};
 
 fn check_roundtrip_default(input: Value, printed: &str) {
     let string = lexpr::to_string(&input).expect("printing failed");
     assert_eq!(&string, printed);
     let output = lexpr::from_str(&string).expect("parsing failed");
+    assert_eq!(input, output);
+}
+
+fn check_roundtrip_elisp(input: Value, printed: &str) {
+    let string = lexpr::to_string_custom(&input, print::Options::elisp()).expect("printing failed");
+    assert_eq!(&string, printed);
+    let output = lexpr::from_str_custom(&string, parse::Options::elisp()).expect("parsing failed");
     assert_eq!(input, output);
 }
 
@@ -40,4 +47,10 @@ fn test_improper_lists() {
 fn test_vectors() {
     check_roundtrip_default(sexp!(#()), "#()");
     check_roundtrip_default(sexp!(#(1 2 3 4)), "#(1 2 3 4)");
+}
+
+#[test]
+fn test_vectors_elisp() {
+    check_roundtrip_elisp(sexp!(#()), "[]");
+    check_roundtrip_elisp(sexp!(#(1 2 3 4)), "[1 2 3 4]");
 }
