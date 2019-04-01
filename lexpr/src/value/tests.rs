@@ -10,6 +10,7 @@ static TYPE_PREDICATES: &[(&'static str, Predicate)] = &[
     ("nil", Value::is_nil),
     ("number", Value::is_number),
     ("list", Value::is_list),
+    ("vector", Value::is_vector),
 ];
 
 fn check_type_predicates(value: &Value, type_name: &str) {
@@ -107,5 +108,19 @@ fn test_dotted_lists() {
             l.as_cons().map(Cons::to_vec),
             Some((elts.clone(), rest.clone()))
         );
+    }
+}
+
+#[test]
+fn test_vectors() {
+    for elts in &[
+        vec![],
+        vec![Value::symbol("singleton")],
+        vec![Value::from(1), Value::from(2)],
+        vec![Value::symbol("answer"), Value::from(42)],
+    ] {
+        let v = Value::vector(elts.clone());
+        check_type_predicates(&v, "vector");
+        assert_eq!(v.as_slice(), Some(elts.as_slice()));
     }
 }
