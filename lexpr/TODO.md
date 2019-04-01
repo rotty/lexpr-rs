@@ -2,11 +2,30 @@
 
 - [ ] Comments (both line and R6RS multi-line comments)
 - [ ] Proper string escape syntax, instead of using JSON's rules
-- [ ] Serde support
+- [X] Serde support
 - [ ] Syntactic sugar for quote, quasiquote, unquote and unquote-splicing
-- [ ] Support for character atoms
-- [ ] Support for vectors and byte vectors
+- [ ] Support for characters
+- [X] Support for vectors
+- [ ] Support for byte vectors
 - [ ] Pretty-printing
+
+## The `sexp` Macro
+
+- [ ] Quote syntactic sugar
+- [ ] Unquote-splicing
+- [ ] Improve error reporting
+
+## Lisp dialects
+
+- [ ] Scheme (R6RS, R7RS, Guile/Racket extensions)
+- [ ] Emacs Lisp
+- [ ] Common Lisp
+
+## Numbers
+
+- [ ] Complete support for number syntax (e.g., different bases)
+- [ ] Scheme numeric tower (complex numbers, rationals, bignums)
+- [ ] NaNs and infinities (fixup `from` implementations vs. `from_f64`)
 
 ## Architectural considerations
 
@@ -27,26 +46,3 @@
 
   [`yaml_rust::parser::Parser`]: https://docs.rs/yaml-rust/*/yaml_rust/parser/struct.Parser.html
   [`serde_yaml`]: https://github.com/dtolnay/serde-yaml/blob/master/src/de.rs
-
-## The `sexp` Macro
-
-- [ ] Quote syntactic sugar
-- [ ] Unquote-splicing
-- [ ] Improve error reporting
-
-## Documentation
-
-- [ ] Atom docs
-- [ ] Mention differences from `serde_json`
-
-## Lisp dialects
-
-- [ ] Scheme (R6RS, R7RS, Guile/Racket extensions)
-- [ ] Emacs Lisp
-- [ ] Common Lisp
-
-## Numbers
-
-- [ ] Complete support for number syntax (e.g., different bases)
-- [ ] Scheme numeric tower (complex numbers, rationals, bignums)
-- [ ] NaNs and infinities (fixup `from` implementations vs. `from_f64`)
