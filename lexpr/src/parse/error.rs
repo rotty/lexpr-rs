@@ -90,6 +90,9 @@ pub(crate) enum ErrorCode {
     /// Expected to parse either a `#t`, `#f`, or a `#nil`.
     ExpectedSomeIdent,
 
+    /// Used a mismatching parenthesis to close a list or vector.
+    MismatchedParenthesis,
+
     /// Expected this character to start an S-expression value.
     ExpectedSomeValue,
 
@@ -133,6 +136,7 @@ impl Display for ErrorCode {
             ErrorCode::ExpectedSomeValue => f.write_str("expected value"),
             ErrorCode::InvalidEscape => f.write_str("invalid escape"),
             ErrorCode::InvalidNumber => f.write_str("invalid number"),
+            ErrorCode::MismatchedParenthesis => f.write_str("mismatched parenthesis"),
             ErrorCode::NumberOutOfRange => f.write_str("number out of range"),
             ErrorCode::ControlCharacterWhileParsingString => {
                 f.write_str("control character while parsing string")

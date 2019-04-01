@@ -43,9 +43,10 @@ pub struct Options {
     keyword_styles: u8,
     nil_symbol: NilSymbol,
     t_symbol: TSymbol,
+    brackets: Brackets,
 }
 
-/// Defines the handling of the symbol `nil`.
+/// Defines the treatment of the symbol `nil`.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum NilSymbol {
     /// Parse `nil` like as the empty list. This the behavior of Emacs
@@ -69,7 +70,7 @@ pub enum NilSymbol {
     Special,
 }
 
-/// Defines the handling of the symbol `t`.
+/// Defines the treatment of the symbol `t`.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TSymbol {
     /// Parse `t` as the boolean true value.
@@ -77,6 +78,17 @@ pub enum TSymbol {
 
     /// Parse `t` as a regular symbol.
     Default,
+}
+
+/// Defines the treatment of brackets.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Brackets {
+    /// Brackets are synonymous with regular parentheses, and indicate a list,
+    /// as in R6RS Scheme.
+    List,
+
+    /// Brackets indicate a vector, like in Emacs Lisp.
+    Vector,
 }
 
 impl Options {
@@ -89,6 +101,7 @@ impl Options {
             keyword_styles: 0,
             nil_symbol: NilSymbol::Default,
             t_symbol: TSymbol::Default,
+            brackets: Brackets::List,
         }
     }
 
@@ -97,6 +110,7 @@ impl Options {
         Self::new()
             .with_keyword_style(KeywordStyle::ColonPrefix)
             .with_nil_symbol(NilSymbol::EmptyList)
+            .with_brackets(Brackets::Vector)
     }
 
     /// Add `style` to the recognized keyword styles.
@@ -118,14 +132,20 @@ impl Options {
     }
 
     /// Choose how to parse the `nil` symbol.
-    pub fn with_nil_symbol(mut self, handling: NilSymbol) -> Self {
-        self.nil_symbol = handling;
+    pub fn with_nil_symbol(mut self, treatment: NilSymbol) -> Self {
+        self.nil_symbol = treatment;
         self
     }
 
     /// Choose how to parse the `t` symbol.
-    pub fn with_t_symbol(mut self, handling: TSymbol) -> Self {
-        self.t_symbol = handling;
+    pub fn with_t_symbol(mut self, treatment: TSymbol) -> Self {
+        self.t_symbol = treatment;
+        self
+    }
+
+    /// Choose how to handle brackets.
+    pub fn with_brackets(mut self, treatment: Brackets) -> Self {
+        self.brackets = treatment;
         self
     }
 
@@ -144,6 +164,11 @@ impl Options {
     pub fn t_symbol(&self) -> TSymbol {
         self.t_symbol
     }
+
+    /// Query the way brackets are handled.
+    pub fn brackets(&self) -> Brackets {
+        self.brackets
+    }
 }
 
 impl Default for Options {
@@ -152,11 +177,13 @@ impl Default for Options {
     ///
     /// - The identifiers `nil` and `t` are treated as regular symbols.
     /// - Only octothorpe keywords are recognized.
+    /// - Brackets are treated just like parentheses, i.e. indicating a list.
     fn default() -> Self {
         Options {
             keyword_styles: KeywordStyle::Octothorpe.to_flag(),
             nil_symbol: NilSymbol::Default,
             t_symbol: TSymbol::Default,
+            brackets: Brackets::List,
         }
     }
 }
@@ -400,7 +427,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                 }
 
                 self.eat_char();
-                let ret = self.parse_list_elements();
+                let ret = self.parse_list_elements(b')');
 
                 self.remaining_depth += 1;
 
@@ -409,6 +436,40 @@ impl<'de, R: Read<'de>> Parser<R> {
                     (Err(err), _) | (_, Err(err)) => Err(err),
                 }
             }
+            b'[' => match self.options.brackets {
+                Brackets::Vector => {
+                    self.remaining_depth -= 1;
+                    if self.remaining_depth == 0 {
+                        return Err(self.peek_error(ErrorCode::RecursionLimitExceeded));
+                    }
+
+                    self.eat_char();
+                    let ret = self.parse_vector_elements(b']');
+
+                    self.remaining_depth += 1;
+
+                    match (ret, self.end_seq()) {
+                        (Ok(elements), Ok(())) => Ok(Value::Vector(elements.into())),
+                        (Err(err), _) | (_, Err(err)) => Err(err),
+                    }
+                }
+                Brackets::List => {
+                    self.remaining_depth -= 1;
+                    if self.remaining_depth == 0 {
+                        return Err(self.peek_error(ErrorCode::RecursionLimitExceeded));
+                    }
+
+                    self.eat_char();
+                    let ret = self.parse_list_elements(b']');
+
+                    self.remaining_depth += 1;
+
+                    match (ret, self.end_seq()) {
+                        (Ok(ret), Ok(())) => Ok(ret),
+                        (Err(err), _) | (_, Err(err)) => Err(err),
+                    }
+                }
+            },
             b':' => {
                 if self.options.keyword_style(KeywordStyle::ColonPrefix) {
                     self.eat_char();
@@ -476,7 +537,7 @@ impl<'de, R: Read<'de>> Parser<R> {
         Ok(())
     }
 
-    fn parse_list_elements(&mut self) -> Result<Value> {
+    fn parse_list_elements(&mut self, terminator: u8) -> Result<Value> {
         let mut list = Cons::new(Value::Nil, Value::Null);
         let mut pair = &mut list;
         let mut have_value = false;
@@ -484,7 +545,10 @@ impl<'de, R: Read<'de>> Parser<R> {
             match self.parse_whitespace() {
                 Err(e) => return Err(e),
                 Ok(Some(c)) => match c {
-                    b')' => {
+                    b')' | b']' => {
+                        if c != terminator {
+                            return Err(self.peek_error(ErrorCode::MismatchedParenthesis));
+                        }
                         if have_value {
                             return Ok(Value::Cons(list));
                         } else {
@@ -519,13 +583,15 @@ impl<'de, R: Read<'de>> Parser<R> {
         loop {
             match self.parse_whitespace() {
                 Err(e) => return Err(e),
-                Ok(Some(c)) => {
-                    if c == terminator {
+                Ok(Some(c)) => match c {
+                    b')' | b']' => {
+                        if c != terminator {
+                            return Err(self.peek_error(ErrorCode::MismatchedParenthesis));
+                        }
                         return Ok(elements);
-                    } else {
-                        elements.push(self.parse_value()?);
                     }
-                }
+                    _ => elements.push(self.parse_value()?),
+                },
                 Ok(None) => return Err(self.peek_error(ErrorCode::EofWhileParsingVector)),
             }
         }
@@ -776,7 +842,7 @@ impl<'de, R: Read<'de>> Parser<R> {
 
     fn end_seq(&mut self) -> Result<()> {
         match self.parse_whitespace()? {
-            Some(b')') => {
+            Some(b')') | Some(b']') => {
                 self.eat_char();
                 Ok(())
             }
