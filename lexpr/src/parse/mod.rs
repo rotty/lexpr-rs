@@ -1024,6 +1024,16 @@ pub fn from_reader(rdr: impl io::Read) -> Result<Value> {
     from_reader_custom(rdr, Options::default())
 }
 
+/// Parse a value from an IO stream of S-expressions, using the parser
+/// options suitable for parsing Emacs Lisp.
+///
+/// See [`from_reader_custom`] for more information.
+///
+/// [`from_reader_custom`]: fn.from_reader_custom.html
+pub fn from_reader_elisp(rdr: impl io::Read) -> Result<Value> {
+    from_reader_custom(rdr, Options::elisp())
+}
+
 /// Parse a value from bytes representing a single S-expression.
 ///
 /// ```
@@ -1044,6 +1054,16 @@ pub fn from_slice(bytes: &[u8]) -> Result<Value> {
     from_slice_custom(bytes, Options::default())
 }
 
+/// Parse a value from bytes representing a single S-expressions, using parser
+/// options suitable for Emacs Lisp.
+///
+/// See [`from_slice_custom`] for more information.
+///
+/// [`from_slice_custom`]: fn.from_slice_custom.html
+pub fn from_slice_elisp(bytes: &[u8]) -> Result<Value> {
+    from_slice_custom(bytes, Options::elisp())
+}
+
 /// Parse a value from a string slice representing a single S-expression.
 ///
 /// ```
@@ -1062,6 +1082,16 @@ pub fn from_str_custom(s: &str, options: Options) -> Result<Value> {
 /// [`from_str_custom`]: fn.from_str_custom.html
 pub fn from_str(s: &str) -> Result<Value> {
     from_str_custom(s, Options::default())
+}
+
+/// Parse a value from a string slice representing a single S-expression, using
+/// parser options suitable for Emacs Lisp.
+///
+/// See [`from_str_custom`] for more information.
+///
+/// [`from_str_custom`]: fn.from_str_custom.html
+pub fn from_str_elisp(s: &str) -> Result<Value> {
+    from_str_custom(s, Options::elisp())
 }
 
 mod error;
