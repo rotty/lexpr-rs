@@ -286,7 +286,7 @@ where
             match decode_hex_val(next) {
                 None => return error(self, ErrorCode::InvalidEscape),
                 Some(val) => {
-                    if val >= (1 << 24) {
+                    if n >= (1 << 24) {
                         // A codepoint never has more than 24 bits
                         return error(self, ErrorCode::InvalidUnicodeCodePoint);
                     }
