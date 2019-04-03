@@ -57,7 +57,7 @@ pub trait Read<'de>: private::Sealed {
     #[doc(hidden)]
     fn parse_symbol<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'de, 's, str>>;
 
-    /// Assumes the previous byte was a quotation mark. Parses a JSON-escaped
+    /// Assumes the previous byte was a quotation mark. Parses a R6RS-escaped
     /// string until the next quotation mark using the given scratch space if
     /// necessary. The scratch space is initially empty.
     ///
@@ -68,11 +68,6 @@ pub trait Read<'de>: private::Sealed {
         &'s mut self,
         scratch: &'s mut Vec<u8>,
     ) -> Result<Reference<'de, 's, [u8]>>;
-
-    /// Assumes the previous byte was a hex escape sequnce ('\x') in a string.
-    /// Parses the hexadecimal sequence, including the terminating semicolon.
-    #[doc(hidden)]
-    fn decode_hex_escape(&mut self) -> Result<u32>;
 }
 
 pub struct Position {
@@ -275,26 +270,6 @@ where
         self.parse_symbol_bytes(scratch, as_str)
             .map(Reference::Copied)
     }
-
-    fn decode_hex_escape(&mut self) -> Result<u32> {
-        let mut n = 0;
-        loop {
-            let next = next_or_eof(self)?;
-            if next == b';' {
-                return Ok(n);
-            }
-            match decode_hex_val(next) {
-                None => return error(self, ErrorCode::InvalidEscape),
-                Some(val) => {
-                    if n >= (1 << 24) {
-                        // A codepoint never has more than 24 bits
-                        return error(self, ErrorCode::InvalidUnicodeCodePoint);
-                    }
-                    n = (n << 4) + u32::from(val);
-                }
-            }
-        }
-    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -475,30 +450,6 @@ impl<'a> Read<'a> for SliceRead<'a> {
     fn parse_symbol<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'a, 's, str>> {
         self.parse_symbol_bytes(scratch, as_str)
     }
-
-    fn decode_hex_escape(&mut self) -> Result<u32> {
-        let mut n = 0;
-        loop {
-            let next = self.slice[self.index];
-            if next == b';' {
-                self.index += 1;
-                break;
-            }
-            let ch = decode_hex_val(next);
-            self.index += 1;
-            match ch {
-                None => return error(self, ErrorCode::InvalidEscape),
-                Some(val) => {
-                    if n >= (1 << 24) {
-                        // A codepoint never has more than 24 bits
-                        return error(self, ErrorCode::InvalidUnicodeCodePoint);
-                    }
-                    n = (n << 4) + u32::from(val);
-                }
-            }
-        }
-        Ok(n)
-    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -564,10 +515,6 @@ impl<'a> Read<'a> for StrRead<'a> {
             Ok(unsafe { str::from_utf8_unchecked(bytes) })
         })
     }
-
-    fn decode_hex_escape(&mut self) -> Result<u32> {
-        self.delegate.decode_hex_escape()
-    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -616,6 +563,28 @@ fn as_str<'de, 's, R: Read<'de>>(read: &R, slice: &'s [u8]) -> Result<&'s str> {
     str::from_utf8(slice).or_else(|_| error(read, ErrorCode::InvalidUnicodeCodePoint))
 }
 
+/// Assumes the previous byte was a hex escape sequnce ('\x') in a string.
+/// Parses the hexadecimal sequence, including the terminating semicolon.
+fn decode_r6rs_hex_escape<'de, R: Read<'de>>(read: &mut R) -> Result<u32> {
+    let mut n = 0;
+    loop {
+        let next = next_or_eof(read)?;
+        if next == b';' {
+            return Ok(n);
+        }
+        match decode_hex_val(next) {
+            None => return error(read, ErrorCode::InvalidEscape),
+            Some(val) => {
+                if n >= (1 << 24) {
+                    // A codepoint never has more than 24 bits
+                    return error(read, ErrorCode::InvalidUnicodeCodePoint);
+                }
+                n = (n << 4) + u32::from(val);
+            }
+        }
+    }
+}
+
 /// Parses an R6RS escape sequence and appends it into the scratch
 /// space. Assumes the previous byte read was a backslash.
 fn parse_r6rs_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> Result<()> {
@@ -626,8 +595,8 @@ fn parse_r6rs_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> 
         b'\\' => scratch.push(b'\\'),
         b'/' => scratch.push(b'/'),
         b'a' => scratch.push(0x07),
-        b'b' => scratch.push(b'\x08'),
-        b'f' => scratch.push(b'\x0c'),
+        b'b' => scratch.push(0x08),
+        b'f' => scratch.push(0x0C),
         b'n' => scratch.push(b'\n'),
         b'r' => scratch.push(b'\r'),
         b't' => scratch.push(b'\t'),
@@ -635,7 +604,7 @@ fn parse_r6rs_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> 
         // TODO: trailing backspace (i.e., a continuation line)
         b'x' => {
             let c = {
-                let n = read.decode_hex_escape()?;
+                let n = decode_r6rs_hex_escape(read)?;
                 match char::from_u32(n) {
                     Some(c) => c,
                     None => {
