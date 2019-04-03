@@ -144,22 +144,13 @@ impl<R> IoRead<R>
 where
     R: io::Read,
 {
-    fn parse_str_bytes<'s, T, F>(
-        &'s mut self,
-        scratch: &'s mut Vec<u8>,
-        validate: bool,
-        result: F,
-    ) -> Result<T>
+    fn parse_str_bytes<'s, T, F>(&'s mut self, scratch: &'s mut Vec<u8>, result: F) -> Result<T>
     where
         T: 's,
         F: FnOnce(&'s Self, &'s [u8]) -> Result<T>,
     {
         loop {
             let ch = next_or_eof(self)?;
-            if !ESCAPE[ch as usize] {
-                scratch.push(ch);
-                continue;
-            }
             match ch {
                 b'"' => {
                     return result(self, scratch);
@@ -168,9 +159,6 @@ where
                     parse_r6rs_escape(self, scratch)?;
                 }
                 _ => {
-                    if validate {
-                        return error(self, ErrorCode::ControlCharacterWhileParsingString);
-                    }
                     scratch.push(ch);
                 }
             }
@@ -254,15 +242,14 @@ where
     }
 
     fn parse_str<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'de, 's, str>> {
-        self.parse_str_bytes(scratch, true, as_str)
-            .map(Reference::Copied)
+        self.parse_str_bytes(scratch, as_str).map(Reference::Copied)
     }
 
     fn parse_str_raw<'s>(
         &'s mut self,
         scratch: &'s mut Vec<u8>,
     ) -> Result<Reference<'de, 's, [u8]>> {
-        self.parse_str_bytes(scratch, false, |_, bytes| Ok(bytes))
+        self.parse_str_bytes(scratch, |_, bytes| Ok(bytes))
             .map(Reference::Copied)
     }
 
@@ -342,7 +329,6 @@ impl<'a> SliceRead<'a> {
     fn parse_str_bytes<'s, T: ?Sized, F>(
         &'s mut self,
         scratch: &'s mut Vec<u8>,
-        validate: bool,
         result: F,
     ) -> Result<Reference<'a, 's, T>>
     where
@@ -353,7 +339,7 @@ impl<'a> SliceRead<'a> {
         let mut start = self.index;
 
         loop {
-            while self.index < self.slice.len() && !ESCAPE[self.slice[self.index] as usize] {
+            while self.index < self.slice.len() && !needs_escape(self.slice[self.index]) {
                 self.index += 1;
             }
             if self.index == self.slice.len() {
@@ -379,12 +365,7 @@ impl<'a> SliceRead<'a> {
                     parse_r6rs_escape(self, scratch)?;
                     start = self.index;
                 }
-                _ => {
-                    self.index += 1;
-                    if validate {
-                        return error(self, ErrorCode::ControlCharacterWhileParsingString);
-                    }
-                }
+                _ => unreachable!(),
             }
         }
     }
@@ -437,14 +418,14 @@ impl<'a> Read<'a> for SliceRead<'a> {
     }
 
     fn parse_str<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'a, 's, str>> {
-        self.parse_str_bytes(scratch, true, as_str)
+        self.parse_str_bytes(scratch, as_str)
     }
 
     fn parse_str_raw<'s>(
         &'s mut self,
         scratch: &'s mut Vec<u8>,
     ) -> Result<Reference<'a, 's, [u8]>> {
-        self.parse_str_bytes(scratch, false, |_, bytes| Ok(bytes))
+        self.parse_str_bytes(scratch, |_, bytes| Ok(bytes))
     }
 
     fn parse_symbol<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'a, 's, str>> {
@@ -494,8 +475,8 @@ impl<'a> Read<'a> for StrRead<'a> {
     }
 
     fn parse_str<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'a, 's, str>> {
-        self.delegate.parse_str_bytes(scratch, true, |_, bytes| {
-            // The input is assumed to be valid UTF-8 and the \u-escapes are
+        self.delegate.parse_str_bytes(scratch, |_, bytes| {
+            // The input is assumed to be valid UTF-8 and the \x-escapes are
             // checked along the way, so don't need to check here.
             Ok(unsafe { str::from_utf8_unchecked(bytes) })
         })
@@ -517,36 +498,6 @@ impl<'a> Read<'a> for StrRead<'a> {
     }
 }
 
-//////////////////////////////////////////////////////////////////////////////
-
-// Lookup table of bytes that must be escaped. A value of true at index i means
-// that byte i requires an escape sequence in the input.
-static ESCAPE: [bool; 256] = {
-    const CT: bool = true; // control character \x00...\x1F
-    const QU: bool = true; // quote \x22
-    const BS: bool = true; // backslash \x5C
-    const __: bool = false; // allow unescaped
-    [
-        //   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
-        CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, // 0
-        CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, CT, // 1
-        __, __, QU, __, __, __, __, __, __, __, __, __, __, __, __, __, // 2
-        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 3
-        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 4
-        __, __, __, __, __, __, __, __, __, __, __, __, BS, __, __, __, // 5
-        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 6
-        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 7
-        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 8
-        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 9
-        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // A
-        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // B
-        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // C
-        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // D
-        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // E
-        __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // F
-    ]
-};
-
 fn next_or_eof<'de, R: ?Sized + Read<'de>>(read: &mut R) -> Result<u8> {
     match read.next()? {
         Some(b) => Ok(b),
@@ -561,6 +512,10 @@ fn error<'de, R: ?Sized + Read<'de>, T>(read: &R, reason: ErrorCode) -> Result<T
 
 fn as_str<'de, 's, R: Read<'de>>(read: &R, slice: &'s [u8]) -> Result<&'s str> {
     str::from_utf8(slice).or_else(|_| error(read, ErrorCode::InvalidUnicodeCodePoint))
+}
+
+fn needs_escape(c: u8) -> bool {
+    c == b'\\' || c == b'"'
 }
 
 /// Assumes the previous byte was a hex escape sequnce ('\x') in a string.
