@@ -55,8 +55,16 @@ where
     assert!(parse(r#""\x00110000;""#).is_err());
     assert_eq!(parse(r#""\x000000001;""#).unwrap(), Value::string("\u{01}"));
     assert!(parse(r#""\xD800;""#).is_err());
+
     // Check that u32 overflow is detected
     assert!(parse(r#""\x100000001;""#).is_err());
+
+    // Check that raw control characters are accepted
+    let control_chars: String = (0..32).map(char::from).collect();
+    assert_eq!(
+        parse(&format!("\"{}\"", control_chars)).unwrap(),
+        Value::from(control_chars)
+    );
 }
 
 #[test]

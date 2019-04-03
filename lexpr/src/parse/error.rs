@@ -108,9 +108,6 @@ pub(crate) enum ErrorCode {
     /// Invalid unicode code point.
     InvalidUnicodeCodePoint,
 
-    /// Control character found while parsing a string.
-    ControlCharacterWhileParsingString,
-
     /// S-expression has non-whitespace trailing characters after the value.
     TrailingCharacters,
 
@@ -132,9 +129,6 @@ impl Display for ErrorCode {
             ErrorCode::InvalidNumber => f.write_str("invalid number"),
             ErrorCode::MismatchedParenthesis => f.write_str("mismatched parenthesis"),
             ErrorCode::NumberOutOfRange => f.write_str("number out of range"),
-            ErrorCode::ControlCharacterWhileParsingString => {
-                f.write_str("control character while parsing string")
-            }
             ErrorCode::InvalidUnicodeCodePoint => f.write_str("invalid unicode code point"),
             ErrorCode::TrailingCharacters => f.write_str("trailing characters"),
             ErrorCode::RecursionLimitExceeded => f.write_str("recursion limit exceeded"),
