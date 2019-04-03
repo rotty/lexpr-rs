@@ -26,36 +26,48 @@ fn test_atom_failures() {
     assert!(from_str_custom("#:octothorpe-keyword", Options::new()).is_err());
 }
 
-#[test]
-fn test_strings_default() {
+// This is generic over the parser to allow testing both the slice-based and
+// I/O-based `Read` trait implementations.
+fn check_strings_default<F>(parse: F)
+where
+    F: Fn(&str) -> Result<Value>,
+{
     assert_eq!(
-        from_str(r#""A plain string""#).unwrap(),
+        parse(r#""A plain string""#).unwrap(),
         Value::string("A plain string")
     );
     assert_eq!(
-        from_str(r#""\a\b\t\n\v\f\r\"\\""#).unwrap(),
+        parse(r#""\a\b\t\n\v\f\r\"\\""#).unwrap(),
         Value::string("\x07\x08\t\n\x0B\x0C\r\"\\")
     );
     // Examples taken from R6RS 4.2.4
-    assert_eq!(from_str(r#""\x41;bc""#).unwrap(), Value::string("Abc"));
-    assert_eq!(from_str(r#""\x41; bc""#).unwrap(), Value::string("A bc"));
-    assert_eq!(from_str(r#""\x41bc;""#).unwrap(), Value::string("\u{41BC}"));
-    assert!(from_str(r#""\x41""#).is_err());
-    assert!(from_str(r#""\x;"#).is_err());
-    assert!(from_str(r#""\x41bx;""#).is_err());
-    assert_eq!(from_str(r#""\x00000041;""#).unwrap(), Value::string("A"));
+    assert_eq!(parse(r#""\x41;bc""#).unwrap(), Value::string("Abc"));
+    assert_eq!(parse(r#""\x41; bc""#).unwrap(), Value::string("A bc"));
+    assert_eq!(parse(r#""\x41bc;""#).unwrap(), Value::string("\u{41BC}"));
+    assert!(parse(r#""\x41""#).is_err());
+    assert!(parse(r#""\x;"#).is_err());
+    assert!(parse(r#""\x41bx;""#).is_err());
+    assert_eq!(parse(r#""\x00000041;""#).unwrap(), Value::string("A"));
     assert_eq!(
-        from_str(r#""\x0010FFFF;""#).unwrap(),
+        parse(r#""\x0010FFFF;""#).unwrap(),
         Value::string("\u{10FFFF}")
     );
-    assert!(from_str(r#""\x00110000;""#).is_err());
-    assert_eq!(
-        from_str(r#""\x000000001;""#).unwrap(),
-        Value::string("\u{01}")
-    );
-    assert!(from_str(r#""\xD800;""#).is_err());
+    assert!(parse(r#""\x00110000;""#).is_err());
+    assert_eq!(parse(r#""\x000000001;""#).unwrap(), Value::string("\u{01}"));
+    assert!(parse(r#""\xD800;""#).is_err());
     // Check that u32 overflow is detected
-    assert!(from_str(r#""\x100000001;""#).is_err());
+    assert!(parse(r#""\x100000001;""#).is_err());
+}
+
+#[test]
+fn test_strings_default() {
+    check_strings_default(from_str)
+}
+
+#[test]
+fn test_strings_io_default() {
+    use std::io::Cursor;
+    check_strings_default(|input| from_reader(Cursor::new(input.as_bytes())))
 }
 
 #[test]
