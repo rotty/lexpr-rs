@@ -1,7 +1,7 @@
 # Missing features
 
 - [ ] Comments (both line and R6RS multi-line comments)
-- [ ] Proper string escape syntax, instead of using JSON's rules
+- [X] Proper string escape syntax, instead of using JSON's rules
 - [X] Serde support
 - [ ] Syntactic sugar for quote, quasiquote, unquote and unquote-splicing
 - [ ] Support for characters

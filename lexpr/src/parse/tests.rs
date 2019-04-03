@@ -1,6 +1,8 @@
 use super::*;
 use crate::Value;
 
+use std::io::Cursor;
+
 #[test]
 fn test_atoms_default() {
     let mut parser =
@@ -74,8 +76,77 @@ fn test_strings_default() {
 
 #[test]
 fn test_strings_io_default() {
-    use std::io::Cursor;
     check_strings_default(|input| from_reader(Cursor::new(input.as_bytes())))
+}
+
+fn check_strings_elisp<F>(parse: F)
+where
+    F: Fn(&str) -> Result<Value>,
+{
+    assert_eq!(
+        parse(r#""A plain string""#).unwrap(),
+        Value::string("A plain string")
+    );
+    // Control character sanity check
+    assert_eq!(parse(r#""\t\^B""#).unwrap(), Value::string("\t\x01"));
+
+    // Special escapes
+    assert_eq!(
+        parse(r#""\a\b\t\n\v\f\r\"\\\s\d""#).unwrap(),
+        Value::string("\x07\x08\t\n\x0B\x0C\r\"\\ \x7F")
+    );
+
+    // Escaped blank will be ignored
+    assert_eq!(
+        parse(r#""Hello\ World""#).unwrap(),
+        Value::string("HelloWorld")
+    );
+
+    // Unicode escapes, 4-digit variant
+    assert_eq!(
+        parse(r#""\u41bcabc""#).unwrap(),
+        Value::string("\u{41bc}abc")
+    );
+    // Unicode escapes, 8-digit variant
+    assert_eq!(
+        parse(r#""\U0010FFFFABC""#).unwrap(),
+        Value::string("\u{10FFFF}ABC")
+    );
+    // Unicode escapes, "named" variant
+    assert_eq!(
+        parse(r#""\N{U+10FFFF}\N{U+203D}""#).unwrap(),
+        Value::string("\u{10FFFF}\u{203D}")
+    );
+
+    // Hex escapes in ASCII range, combined with non-ASCII UTF-8 text leads to a
+    // string.
+    assert_eq!(
+        parse("\"\\x01\\x02Hello World\u{203D}\"").unwrap(),
+        Value::string("\u{01}\u{02}Hello World\u{203D}")
+    );
+    // Octal escapes lead to byte vector
+    assert_eq!(
+        parse(r#""\001\002\377""#).unwrap(),
+        Value::from([1, 2, 255].as_ref())
+    );
+    // Hexadecimal escapes lead to byte vector
+    assert_eq!(
+        parse(r#""\x01\x02\xFF""#).unwrap(),
+        Value::from([1, 2, 255].as_ref())
+    );
+
+    // Mixing non-ASCII single-byte escapes and unicode will result in an error
+    assert!(parse(r#""\xFC\N{U+203D}""#).is_err());
+}
+
+#[test]
+fn test_strings_elisp() {
+    check_strings_elisp(from_str_elisp)
+}
+
+#[test]
+fn test_strings_elisp_io() {
+    check_strings_elisp(|input| from_reader_elisp(Cursor::new(input.as_bytes())))
 }
 
 #[test]

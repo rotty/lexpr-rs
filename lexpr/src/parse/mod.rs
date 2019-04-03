@@ -12,7 +12,7 @@ use std::str;
 use std::u64;
 
 use error::ErrorCode;
-use read::Reference;
+use read::{ElispStr, Reference};
 
 use crate::{Cons, Number, Value};
 
@@ -452,9 +452,21 @@ impl<'de, R: Read<'de>> Parser<R> {
             b'"' => {
                 self.eat_char();
                 self.scratch.clear();
-                match self.read.parse_str(&mut self.scratch)? {
-                    Reference::Borrowed(s) => Ok(Value::from(s)),
-                    Reference::Copied(s) => Ok(Value::from(s)),
+                match self.options.string_syntax {
+                    StringSyntax::R6RS => match self.read.parse_r6rs_str(&mut self.scratch)? {
+                        Reference::Borrowed(s) => Ok(Value::from(s)),
+                        Reference::Copied(s) => Ok(Value::from(s)),
+                    },
+                    StringSyntax::Elisp => match self.read.parse_elisp_str(&mut self.scratch)? {
+                        ElispStr::Multibyte(mb) => match mb {
+                            Reference::Borrowed(s) => Ok(Value::from(s)),
+                            Reference::Copied(s) => Ok(Value::from(s)),
+                        },
+                        ElispStr::Unibyte(ub) => match ub {
+                            Reference::Borrowed(b) => Ok(Value::from(b)),
+                            Reference::Copied(b) => Ok(Value::from(b)),
+                        },
+                    },
                 }
             }
             b'(' => {

@@ -51,7 +51,19 @@ pub trait Read<'de>: private::Sealed {
     /// R6RS escapes until the next quotation mark using the given scratch space
     /// if necessary. The scratch space is initially empty.
     #[doc(hidden)]
-    fn parse_str<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'de, 's, str>>;
+    fn parse_r6rs_str<'s>(
+        &'s mut self,
+        scratch: &'s mut Vec<u8>,
+    ) -> Result<Reference<'de, 's, str>>;
+
+    /// Assumes the previous byte was a quotation mark. Parses a string with
+    /// Emacs Lisp escapes until the next quotation mark using the given scratch
+    /// space if necessary. The scratch space is initially empty.
+    #[doc(hidden)]
+    fn parse_elisp_str<'s>(
+        &'s mut self,
+        scratch: &'s mut Vec<u8>,
+    ) -> Result<ElispStrReference<'de, 's>>;
 
     /// Parses an unescaped string until the next whitespace or list close..
     #[doc(hidden)]
@@ -77,6 +89,21 @@ impl<'b, 'c, T: ?Sized + 'static> Deref for Reference<'b, 'c, T> {
             Reference::Copied(c) => c,
         }
     }
+}
+
+#[derive(Debug)]
+pub enum ElispStr<U, M> {
+    Unibyte(U),
+    Multibyte(M),
+}
+
+pub type ElispStrReference<'b, 'c> = ElispStr<Reference<'b, 'c, [u8]>, Reference<'b, 'c, str>>;
+
+#[derive(Debug)]
+enum ElispEscape {
+    Unibyte,
+    Multibyte,
+    Indeterminate,
 }
 
 /// S-expression input source that reads from a std::io input stream.
@@ -132,7 +159,11 @@ impl<R> IoRead<R>
 where
     R: io::Read,
 {
-    fn parse_str_bytes<'s, T, F>(&'s mut self, scratch: &'s mut Vec<u8>, result: F) -> Result<T>
+    fn parse_r6rs_str_bytes<'s, T, F>(
+        &'s mut self,
+        scratch: &'s mut Vec<u8>,
+        result: F,
+    ) -> Result<T>
     where
         T: 's,
         F: FnOnce(&'s Self, &'s [u8]) -> Result<T>,
@@ -229,8 +260,45 @@ where
         }
     }
 
-    fn parse_str<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'de, 's, str>> {
-        self.parse_str_bytes(scratch, as_str).map(Reference::Copied)
+    fn parse_r6rs_str<'s>(
+        &'s mut self,
+        scratch: &'s mut Vec<u8>,
+    ) -> Result<Reference<'de, 's, str>> {
+        self.parse_r6rs_str_bytes(scratch, as_str)
+            .map(Reference::Copied)
+    }
+
+    fn parse_elisp_str<'s>(
+        &'s mut self,
+        scratch: &'s mut Vec<u8>,
+    ) -> Result<ElispStrReference<'de, 's>> {
+        let mut seen_ub_escape = false;
+        let mut seen_mb_escape = false;
+        let mut seen_non_ascii = false;
+        loop {
+            let ch = next_or_eof(self)?;
+            match ch {
+                b'"' => {
+                    let s = if seen_ub_escape && !(seen_mb_escape || seen_non_ascii) {
+                        ElispStr::Unibyte(Reference::Copied(scratch.as_slice()))
+                    } else {
+                        ElispStr::Multibyte(Reference::Copied(as_str(self, scratch)?))
+                    };
+                    return Ok(s);
+                }
+                b'\\' => match parse_elisp_escape(self, scratch)? {
+                    ElispEscape::Unibyte => seen_ub_escape = true,
+                    ElispEscape::Multibyte => seen_mb_escape = true,
+                    ElispEscape::Indeterminate => {}
+                },
+                _ => {
+                    if ch > 127 {
+                        seen_non_ascii = true;
+                    }
+                    scratch.push(ch);
+                }
+            }
+        }
     }
 
     fn parse_symbol<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'de, 's, str>> {
@@ -303,10 +371,77 @@ impl<'a> SliceRead<'a> {
         }
     }
 
+    fn parse_elisp_str_bytes<'s, F>(
+        &'s mut self,
+        scratch: &'s mut Vec<u8>,
+        result: F,
+    ) -> Result<ElispStrReference<'a, 's>>
+    where
+        F: for<'f> FnOnce(&'s Self, &'f [u8]) -> Result<&'f str>,
+    {
+        // Index of the first byte not yet copied into the scratch space.
+        let mut start = self.index;
+        let mut seen_ub_escape = false;
+        let mut seen_mb_escape = false;
+        let mut seen_non_ascii = false;
+
+        loop {
+            while self.index < self.slice.len() {
+                let ch = self.slice[self.index];
+                if ch > 127 {
+                    seen_non_ascii = true;
+                }
+                if needs_escape(ch) {
+                    break;
+                }
+                self.index += 1;
+            }
+            if self.index == self.slice.len() {
+                return error(self, ErrorCode::EofWhileParsingString);
+            }
+            match self.slice[self.index] {
+                b'"' => {
+                    if scratch.is_empty() {
+                        // Fast path: return a slice of the raw S-expression without any
+                        // copying.
+                        let borrowed = &self.slice[start..self.index];
+                        self.index += 1;
+                        if seen_ub_escape && !(seen_mb_escape || seen_non_ascii) {
+                            return Ok(ElispStr::Unibyte(Reference::Borrowed(borrowed)));
+                        } else {
+                            return result(self, borrowed)
+                                .map(|s| ElispStr::Multibyte(Reference::Borrowed(s)));
+                        }
+                    } else {
+                        scratch.extend_from_slice(&self.slice[start..self.index]);
+                        self.index += 1;
+                        if seen_ub_escape && !(seen_mb_escape || seen_non_ascii) {
+                            return Ok(ElispStr::Unibyte(Reference::Copied(scratch)));
+                        } else {
+                            return result(self, scratch)
+                                .map(|s| ElispStr::Multibyte(Reference::Copied(s)));
+                        }
+                    }
+                }
+                b'\\' => {
+                    scratch.extend_from_slice(&self.slice[start..self.index]);
+                    self.index += 1;
+                    match parse_elisp_escape(self, scratch)? {
+                        ElispEscape::Multibyte => seen_mb_escape = true,
+                        ElispEscape::Unibyte => seen_ub_escape = true,
+                        ElispEscape::Indeterminate => {}
+                    }
+                    start = self.index;
+                }
+                _ => unreachable!(),
+            }
+        }
+    }
+
     /// The big optimization here over IoRead is that if the string contains no
     /// backslash escape sequences, the returned &str is a slice of the raw
     /// S-expression data so we avoid copying into the scratch space.
-    fn parse_str_bytes<'s, T: ?Sized, F>(
+    fn parse_r6rs_str_bytes<'s, T: ?Sized, F>(
         &'s mut self,
         scratch: &'s mut Vec<u8>,
         result: F,
@@ -397,8 +532,18 @@ impl<'a> Read<'a> for SliceRead<'a> {
         self.index
     }
 
-    fn parse_str<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'a, 's, str>> {
-        self.parse_str_bytes(scratch, as_str)
+    fn parse_r6rs_str<'s>(
+        &'s mut self,
+        scratch: &'s mut Vec<u8>,
+    ) -> Result<Reference<'a, 's, str>> {
+        self.parse_r6rs_str_bytes(scratch, as_str)
+    }
+
+    fn parse_elisp_str<'s>(
+        &'s mut self,
+        scratch: &'s mut Vec<u8>,
+    ) -> Result<ElispStrReference<'a, 's>> {
+        self.parse_elisp_str_bytes(scratch, as_str)
     }
 
     fn parse_symbol<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'a, 's, str>> {
@@ -447,12 +592,25 @@ impl<'a> Read<'a> for StrRead<'a> {
         self.delegate.byte_offset()
     }
 
-    fn parse_str<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'a, 's, str>> {
-        self.delegate.parse_str_bytes(scratch, |_, bytes| {
+    fn parse_r6rs_str<'s>(
+        &'s mut self,
+        scratch: &'s mut Vec<u8>,
+    ) -> Result<Reference<'a, 's, str>> {
+        self.delegate.parse_r6rs_str_bytes(scratch, |_, bytes| {
             // The input is assumed to be valid UTF-8 and the \x-escapes are
             // checked along the way, so don't need to check here.
             Ok(unsafe { str::from_utf8_unchecked(bytes) })
         })
+    }
+
+    fn parse_elisp_str<'s>(
+        &'s mut self,
+        scratch: &'s mut Vec<u8>,
+    ) -> Result<ElispStrReference<'a, 's>> {
+        // We cannot apply the same optimization as in `parse_r6rs_str`, because
+        // Emacs Lisp allows embedding arbitrary bytes using hex and octal
+        // escapes.
+        self.delegate.parse_elisp_str_bytes(scratch, as_str)
     }
 
     fn parse_symbol<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'a, 's, str>> {
@@ -514,7 +672,6 @@ fn parse_r6rs_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> 
     match ch {
         b'"' => scratch.push(b'"'),
         b'\\' => scratch.push(b'\\'),
-        b'/' => scratch.push(b'/'),
         b'a' => scratch.push(0x07),
         b'b' => scratch.push(0x08),
         b'f' => scratch.push(0x0C),
@@ -541,6 +698,195 @@ fn parse_r6rs_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> 
     }
 
     Ok(())
+}
+
+/// Assumes the previous byte was a hex escape sequence ('\x') in a string.
+/// Parses the hexadecimal sequence, not including the terminating character
+/// (i.e, first non hex-digit).
+fn decode_elisp_hex_escape<'de, R: Read<'de>>(read: &mut R) -> Result<u32> {
+    let mut n = 0;
+    while let Some(c) = read.peek()? {
+        match decode_hex_val(c) {
+            None => break,
+            Some(val) => {
+                read.discard();
+                if n >= (1 << 24) {
+                    // A codepoint never has more than 24 bits
+                    return error(read, ErrorCode::InvalidUnicodeCodePoint);
+                }
+                n = (n << 4) + u32::from(val);
+            }
+        }
+    }
+    Ok(n)
+}
+
+fn decode_elisp_uni_escape<'de, R: Read<'de>>(read: &mut R, count: u8) -> Result<u32> {
+    let mut n = 0;
+    for _ in 0..count {
+        let c = next_or_eof(read)?;
+        let val = match decode_hex_val(c) {
+            None => return error(read, ErrorCode::InvalidEscape),
+            Some(val) => val,
+        };
+        if n >= (1 << 24) {
+            // A codepoint never has more than 24 bits
+            return error(read, ErrorCode::InvalidUnicodeCodePoint);
+        }
+        n = (n << 4) + u32::from(val);
+    }
+    Ok(n)
+}
+
+/// Assumes the previous byte was a backslash, followed by a character is in the
+/// octal range ('0'..'7'). This character is passed in as `initial`.  Parses
+/// the octal sequence, not including the terminating character (i.e, first non
+/// octal digit).
+fn decode_elisp_octal_escape<'de, R: Read<'de>>(read: &mut R, initial: u8) -> Result<u32> {
+    let mut n = u32::from(initial - b'0');
+    while let Some(c) = read.peek()? {
+        match decode_octal_val(c) {
+            None => break,
+            Some(val) => {
+                read.discard();
+                if n >= (1 << 24) {
+                    // A codepoint never has more than 24 bits
+                    return error(read, ErrorCode::InvalidUnicodeCodePoint);
+                }
+                n = (n << 3) + u32::from(val);
+            }
+        }
+    }
+    Ok(n)
+}
+
+fn parse_elisp_char_escape<'de, R, F>(
+    read: &mut R,
+    scratch: &mut Vec<u8>,
+    decode: F,
+) -> Result<ElispEscape>
+where
+    R: Read<'de>,
+    F: FnOnce(&mut R) -> Result<u32>,
+{
+    let n = decode(read)?;
+    match char::from_u32(n) {
+        Some(c) => {
+            if n > 255 {
+                scratch.extend_from_slice(c.encode_utf8(&mut [0_u8; 4]).as_bytes());
+                Ok(ElispEscape::Multibyte)
+            } else {
+                scratch.push(n as u8);
+                Ok(ElispEscape::Unibyte)
+            }
+        }
+        None => error(read, ErrorCode::InvalidUnicodeCodePoint),
+    }
+}
+
+fn parse_elisp_uni_char_escape<'de, R, F>(
+    read: &mut R,
+    scratch: &mut Vec<u8>,
+    decode: F,
+) -> Result<ElispEscape>
+where
+    R: Read<'de>,
+    F: FnOnce(&mut R) -> Result<u32>,
+{
+    let n = decode(read)?;
+    match char::from_u32(n) {
+        Some(c) => {
+            scratch.extend_from_slice(c.encode_utf8(&mut [0_u8; 4]).as_bytes());
+            Ok(ElispEscape::Multibyte)
+        }
+        None => error(read, ErrorCode::InvalidUnicodeCodePoint),
+    }
+}
+
+/// Parses an Emacs Lisp escape sequence and appends it into the scratch
+/// space. Assumes the previous byte read was a backslash.
+///
+/// Note that we explictly do not support meta-character syntax in
+/// strings. Including meta-escaped characters in strings is recommended against
+/// in the Emacs Lisp manual, Section 21.7.15 "Putting Keyboard Events in
+/// Strings". The same goes for control characters written in the
+/// "keyboard-oriented" syntax (see Section, 2.3.3.3 "Control-Character
+/// Syntax").
+fn parse_elisp_escape<'de, R: Read<'de>>(
+    read: &mut R,
+    scratch: &mut Vec<u8>,
+) -> Result<ElispEscape> {
+    let ch = next_or_eof(read)?;
+
+    match ch {
+        b'"' => scratch.push(b'"'),
+        b'\\' => scratch.push(b'\\'),
+        b' ' => {} // Escaped blank is ignored
+        b'a' => scratch.push(0x07),
+        b'b' => scratch.push(0x08),
+        b't' => scratch.push(b'\t'),
+        b'n' => scratch.push(b'\n'),
+        b'v' => scratch.push(0x0B),
+        b'f' => scratch.push(0x0C),
+        b'r' => scratch.push(b'\r'),
+        b'e' => scratch.push(0x1B),
+        b's' => scratch.push(b' '),
+        b'd' => scratch.push(0x7F),
+        b'^' => {
+            // Control character syntax
+            let ch = next_or_eof(read)?.to_ascii_lowercase();
+            if b'a' <= ch && ch <= b'z' {
+                scratch.push(ch - b'a');
+            } else {
+                return error(read, ErrorCode::InvalidEscape);
+            }
+        }
+        b'N' => {
+            // Name based unicode escape, `\N{NAME}` or `\N{U+X}`. These imply a
+            // multibyte string.
+            if next_or_eof(read)? != b'{' {
+                return error(read, ErrorCode::InvalidEscape);
+            }
+            if next_or_eof(read)? != b'U' || next_or_eof(read)? != b'+' {
+                return error(read, ErrorCode::InvalidEscape);
+            }
+            let escape = parse_elisp_uni_char_escape(read, scratch, decode_elisp_hex_escape)?;
+            if next_or_eof(read)? != b'}' {
+                return error(read, ErrorCode::InvalidEscape);
+            }
+            return Ok(escape);
+        }
+        b'u' => {
+            // Codepoint unicode escape, `\uXXXX` (exactly four hex digits). These imply a multibyte
+            // string.
+            return parse_elisp_uni_char_escape(read, scratch, |read| {
+                decode_elisp_uni_escape(read, 4)
+            });
+        }
+        b'U' => {
+            // Codepoint unicode escape, `\UXXXXXXXX` (exactly eight hex
+            // digits). These imply a multibyte string.
+            return parse_elisp_uni_char_escape(read, scratch, |read| {
+                decode_elisp_uni_escape(read, 8)
+            });
+        }
+        b'x' => {
+            // Hexadecimal escape, allows arbitrary number of hex digits. If in
+            // byte range, these imply a unibyte string, if the other conditions
+            // are met.
+            return parse_elisp_char_escape(read, scratch, decode_elisp_hex_escape);
+        }
+        b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' => {
+            // Octal escape, allows arbitrary number of octale digits. If in
+            // byte range, these imply a unibyte string, if the other conditions
+            // are met.
+            return parse_elisp_char_escape(read, scratch, |read| {
+                decode_elisp_octal_escape(read, ch)
+            });
+        }
+        _ => scratch.push(ch),
+    }
+    Ok(ElispEscape::Indeterminate)
 }
 
 #[allow(clippy::zero_prefixed_literal)]
@@ -573,5 +919,13 @@ fn decode_hex_val(val: u8) -> Option<u8> {
         None
     } else {
         Some(n)
+    }
+}
+
+fn decode_octal_val(val: u8) -> Option<u8> {
+    if b'0' <= val && val <= b'7' {
+        Some(val - b'0')
+    } else {
+        None
     }
 }
