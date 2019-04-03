@@ -56,18 +56,6 @@ pub trait Read<'de>: private::Sealed {
     /// Parses an unescaped string until the next whitespace or list close..
     #[doc(hidden)]
     fn parse_symbol<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'de, 's, str>>;
-
-    /// Assumes the previous byte was a quotation mark. Parses a R6RS-escaped
-    /// string until the next quotation mark using the given scratch space if
-    /// necessary. The scratch space is initially empty.
-    ///
-    /// This function returns the raw bytes in the string with escape sequences
-    /// expanded but without performing unicode validation.
-    #[doc(hidden)]
-    fn parse_str_raw<'s>(
-        &'s mut self,
-        scratch: &'s mut Vec<u8>,
-    ) -> Result<Reference<'de, 's, [u8]>>;
 }
 
 pub struct Position {
@@ -245,14 +233,6 @@ where
         self.parse_str_bytes(scratch, as_str).map(Reference::Copied)
     }
 
-    fn parse_str_raw<'s>(
-        &'s mut self,
-        scratch: &'s mut Vec<u8>,
-    ) -> Result<Reference<'de, 's, [u8]>> {
-        self.parse_str_bytes(scratch, |_, bytes| Ok(bytes))
-            .map(Reference::Copied)
-    }
-
     fn parse_symbol<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'de, 's, str>> {
         self.parse_symbol_bytes(scratch, as_str)
             .map(Reference::Copied)
@@ -421,13 +401,6 @@ impl<'a> Read<'a> for SliceRead<'a> {
         self.parse_str_bytes(scratch, as_str)
     }
 
-    fn parse_str_raw<'s>(
-        &'s mut self,
-        scratch: &'s mut Vec<u8>,
-    ) -> Result<Reference<'a, 's, [u8]>> {
-        self.parse_str_bytes(scratch, |_, bytes| Ok(bytes))
-    }
-
     fn parse_symbol<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'a, 's, str>> {
         self.parse_symbol_bytes(scratch, as_str)
     }
@@ -480,13 +453,6 @@ impl<'a> Read<'a> for StrRead<'a> {
             // checked along the way, so don't need to check here.
             Ok(unsafe { str::from_utf8_unchecked(bytes) })
         })
-    }
-
-    fn parse_str_raw<'s>(
-        &'s mut self,
-        scratch: &'s mut Vec<u8>,
-    ) -> Result<Reference<'a, 's, [u8]>> {
-        self.delegate.parse_str_raw(scratch)
     }
 
     fn parse_symbol<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'a, 's, str>> {
