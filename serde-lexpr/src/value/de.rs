@@ -67,6 +67,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             Value::Keyword(_) => Err(invalid_value(self.input, "rust-compatible value")),
             Value::Symbol(_) => Err(invalid_value(self.input, "rust-compatible value")),
             Value::Number(n) => visit_number(n, visitor),
+            Value::Char(c) => visitor.visit_char(*c),
             Value::String(s) => visitor.visit_borrowed_str(s),
             Value::Vector(elts) => visitor.visit_seq(VecAccess::new(elts)),
             Value::Bytes(bytes) => visitor.visit_borrowed_bytes(bytes),
@@ -98,8 +99,10 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        // TODO: Fix this once `Value::Char` is implemented
-        self.deserialize_str(visitor)
+        match self.input {
+            Value::Char(c) => visitor.visit_char(*c),
+            _ => Err(invalid_value(self.input, "char")),
+        }
     }
 
     fn deserialize_str<V>(self, visitor: V) -> Result<V::Value>
@@ -306,6 +309,7 @@ fn invalid_value(value: &Value, expected: &'static str) -> Error {
         Value::Symbol(_) => de::Unexpected::Other("symbol"),
         Value::Keyword(_) => de::Unexpected::Other("keyword"),
         Value::Bool(b) => de::Unexpected::Bool(*b),
+        Value::Char(c) => de::Unexpected::Char(*c),
         Value::Bytes(_) => de::Unexpected::Other("byte string"),
         Value::Cons(_) => de::Unexpected::Other("cons cell"),
         Value::Number(_) => de::Unexpected::Other("number"), // FIXME: implement properly

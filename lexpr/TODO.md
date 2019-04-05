@@ -4,7 +4,7 @@
 - [X] Proper string escape syntax, instead of using JSON's rules
 - [X] Serde support
 - [ ] Syntactic sugar for quote, quasiquote, unquote and unquote-splicing
-- [ ] Support for characters
+- [X] Support for characters
 - [X] Support for vectors
 - [X] Support for byte vectors
 - [ ] Pretty-printing

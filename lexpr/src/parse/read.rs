@@ -68,6 +68,14 @@ pub trait Read<'de>: private::Sealed {
     /// Parses an unescaped string until the next whitespace or list close..
     #[doc(hidden)]
     fn parse_symbol<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'de, 's, str>>;
+
+    /// Parses a R6RS character constant.
+    #[doc(hidden)]
+    fn parse_r6rs_char<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<char> {
+        // TODO: This could maybe benefit, performance-wise, from a seperate
+        // implementation on `SliceRead`.
+        parse_r6rs_char(self, scratch)
+    }
 }
 
 pub struct Position {
@@ -889,6 +897,122 @@ fn parse_elisp_escape<'de, R: Read<'de>>(
     Ok(ElispEscape::Indeterminate)
 }
 
+/// Expects either `<any character>, `<character name>` or `x<hex scalar
+/// value>`. Clears the scratch space if necessary.
+fn parse_r6rs_char<'de, R: Read<'de> + ?Sized>(
+    read: &mut R,
+    scratch: &mut Vec<u8>,
+) -> Result<char> {
+    let initial = match read.next()? {
+        None => return error(read, ErrorCode::EofWhileParsingCharacterConstant),
+        Some(c) => c,
+    };
+    if initial == b'x' {
+        match decode_r6rs_char_hex_escape(read)? {
+            Some(n) => match char::from_u32(n) {
+                Some(c) => Ok(c),
+                None => error(read, ErrorCode::InvalidUnicodeCodePoint),
+            },
+            None => Ok('x'),
+        }
+    } else if initial > 0x7F {
+        // Start of a UTF-8 sequence. It seems there is no simple way to
+        // consume a single UTF-8 codepoint from a source of bytes, so
+        // we implement just enough of an UTF-8 decoder to consume the
+        // correct number of bytes, and then use the standard library to
+        // turn these into a codepoint. If one would like to optimize
+        // this, doing the complete decoding here could eliminate the
+        // use of `scratch` and the calls into the standard library.
+        if initial < 0xC2 || initial > 0xF4 {
+            return error(read, ErrorCode::InvalidUnicodeCodePoint);
+        }
+        scratch.clear();
+        scratch.push(initial);
+        let len = (initial - 0xC0) >> 4;
+        for _ in 0..len {
+            let b = match read.next()? {
+                Some(c) => c,
+                None => return error(read, ErrorCode::InvalidUnicodeCodePoint),
+            };
+            scratch.push(b);
+        }
+        match str::from_utf8(&scratch) {
+            Err(_) => error(read, ErrorCode::InvalidUnicodeCodePoint),
+            Ok(s) => Ok(s.chars().next().unwrap()),
+        }
+    } else {
+        // ASCII character, may be standalone or part of a `<character name>`.
+        let next = match read.peek()? {
+            Some(next) => {
+                if is_delimiter(next) {
+                    return Ok(char::from(initial));
+                } else {
+                    next
+                }
+            }
+            None => return Ok(char::from(initial)),
+        };
+        // Accumulate `<character name>` in scratch space
+        scratch.clear();
+        scratch.push(initial);
+        scratch.push(next);
+        read.discard();
+        while let Some(next) = read.peek()? {
+            if is_delimiter(next) {
+                break;
+            }
+            scratch.push(next);
+            read.discard();
+        }
+        match scratch.as_slice() {
+            b"nul" => Ok('\x00'),
+            b"alarm" => Ok('\x07'),
+            b"backspace" => Ok('\x08'),
+            b"tab" => Ok('\t'),
+            b"linefeed" => Ok('\n'),
+            b"newline" => Ok('\n'),
+            b"vtab" => Ok('\x0B'),
+            b"page" => Ok('\x0C'),
+            b"return" => Ok('\r'),
+            b"esc" => Ok('\x1B'),
+            b"space" => Ok(' '),
+            b"delete" => Ok('\x7F'),
+            _ => error(read, ErrorCode::InvalidCharacterConstant),
+        }
+    }
+}
+
+/// Expects a `#\x` sequence has just been consumed; returns the value of the
+/// subsequent hex digits, or `None`, if the sequence was empty.
+fn decode_r6rs_char_hex_escape<'de, R: Read<'de> + ?Sized>(read: &mut R) -> Result<Option<u32>> {
+    let mut n = 0;
+    let mut first = true;
+    loop {
+        let next = match read.peek()? {
+            Some(c) => {
+                if is_delimiter(c) {
+                    return Ok(if first { None } else { Some(n) });
+                } else {
+                    c
+                }
+            }
+            None => return Ok(if first { None } else { Some(n) }),
+        };
+        read.discard();
+        first = false;
+        match decode_hex_val(next) {
+            None => return error(read, ErrorCode::InvalidEscape),
+            Some(val) => {
+                if n >= (1 << 24) {
+                    // A codepoint never has more than 24 bits
+                    return error(read, ErrorCode::InvalidUnicodeCodePoint);
+                }
+                n = (n << 4) + u32::from(val);
+            }
+        }
+    }
+}
+
 #[allow(clippy::zero_prefixed_literal)]
 static HEX: [u8; 256] = {
     const __: u8 = 255; // not a hex digit
@@ -929,3 +1053,12 @@ fn decode_octal_val(val: u8) -> Option<u8> {
         None
     }
 }
+
+fn is_delimiter(c: u8) -> bool {
+    DELIMITER.contains(&c)
+}
+
+// This could probably profit from being a `u8 -> bool` LUT instead.
+static DELIMITER: [u8; 12] = [
+    b'(', b')', b'[', b']', b'"', b';', b'#', b' ', b'\n', b'\t', b'\r', 0x0C,
+];

@@ -173,6 +173,11 @@
 //! 1 -4 3.14 ; A postive, negative, and a floating point number
 //! ```
 //!
+//! ### Characters
+//!
+//! Characters are unicode codepoints, represented by Rust's char data type
+//! embedded in the [`Value::Char`] variant.
+//!
 //! ### Strings
 //!
 //! ```scheme
@@ -267,6 +272,19 @@ use proc_macro_hack::proc_macro_hack;
 /// assert!(kebab_sym.is_symbol());
 /// assert!(kebab_kw.is_keyword());
 /// ```
+///
+/// # Characters
+///
+/// Characters can be written using Rust's character syntax:
+///
+/// ```
+/// # use lexpr::sexp;
+///
+/// let ch = sexp!('λ');
+/// assert!(ch.is_char());
+/// assert_eq!(ch.as_char(), Some('λ'));
+/// ```
+///
 /// # Lists
 ///
 /// Lists can be formed by using the same syntax as in Lisp, including dot

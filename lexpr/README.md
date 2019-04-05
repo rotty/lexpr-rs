@@ -55,16 +55,12 @@ common across dialects, are not yet implemented:
 
 - Comments. These are not high-priority, as the primary use-case for
   `lexpr` is for data exchange between Lisp and Rust programs.
-- Characters.
 - Syntactic shorthands for `quote`, `quasiquote`, `unquote` and
   `unquote-splicing`. Again, these are not usually important when
   using S-expressions as a data exchange format.
 - Support for number syntax is currently quite limited. Integers and
   floating point values written in decimal notation should work
   though.
-
-It is planned to add at least a character data type before the 0.2.0
-release, as this addition will be API-breaking.
 
 Further dialect-specific omissions, both ones that are planned to be
 fixed in the future, and deliberate ones, are listed below.

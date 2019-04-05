@@ -24,6 +24,11 @@ fn test_int() {
 }
 
 #[test]
+fn test_char() {
+    test_serde(&'c', &sexp!('c'));
+}
+
+#[test]
 fn test_bytes() {
     let bytes = b"abc";
     test_serde(

@@ -28,6 +28,32 @@ fn test_atom_failures() {
     assert!(from_str_custom("#:octothorpe-keyword", Options::new()).is_err());
 }
 
+#[test]
+fn test_chars_default() {
+    for &c in &['x', 'y', 'z', '\u{203D}', ' '] {
+        assert_eq!(from_str(&format!("#\\{}", c)).unwrap(), Value::Char(c));
+    }
+    for &(name, code) in &[
+        ("nul", 0x00),
+        ("alarm", 0x07),
+        ("backspace", 0x08),
+        ("tab", 0x09),
+        ("linefeed", 0x0A),
+        ("newline", 0x0A),
+        ("vtab", 0x0B),
+        ("page", 0x0C),
+        ("return", 0x0D),
+        ("esc", 0x1B),
+        ("space", 0x20),
+        ("delete", 0x7F),
+    ] {
+        assert_eq!(
+            from_str(&format!("#\\{}", name)).unwrap(),
+            Value::Char(char::from(code))
+        );
+    }
+}
+
 // This is generic over the parser to allow testing both the slice-based and
 // I/O-based `Read` trait implementations.
 fn check_strings_default<F>(parse: F)

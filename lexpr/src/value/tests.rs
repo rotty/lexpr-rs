@@ -9,6 +9,7 @@ static TYPE_PREDICATES: &[(&'static str, Predicate)] = &[
     ("keyword", Value::is_keyword),
     ("nil", Value::is_nil),
     ("number", Value::is_number),
+    ("char", Value::is_char),
     ("list", Value::is_list),
     ("vector", Value::is_vector),
 ];
@@ -79,6 +80,15 @@ fn test_numbers() {
         check_type_predicates(&n_value, "number");
         assert_eq!(n_value.as_number(), Some(n));
         assert_eq!(n_value.as_name(), None);
+    }
+}
+
+#[test]
+fn test_chars() {
+    for &c in &['x', '\u{203D}', '\u{10FFFF}'] {
+        let c_value = Value::from(c);
+        check_type_predicates(&c_value, "char");
+        assert_eq!(c_value.as_char(), Some(c));
     }
 }
 
