@@ -141,6 +141,9 @@ pub enum Value {
     /// A number.
     Number(Number),
 
+    /// A character.
+    Char(char),
+
     /// A string.
     String(Box<str>),
 
@@ -631,6 +634,31 @@ impl Value {
     pub fn as_bool(&self) -> Option<bool> {
         match self {
             Value::Bool(b) => Some(*b),
+            _ => None,
+        }
+    }
+
+    /// Returns true if the value is a character. Returns false otherwise.
+    pub fn is_char(&self) -> bool {
+        self.as_char().is_some()
+    }
+
+    /// If the value is a character, returns the associated `char`. Returns None
+    /// otherwise.
+    ///
+    /// ```
+    /// # use lexpr::sexp;
+    /// #
+    /// let v = sexp!(((a . 'c') (b . "c")));
+    ///
+    /// assert_eq!(v["a"].as_char(), Some('c'));
+    ///
+    /// // The string `"c"` is a single-character string, not a character.
+    /// assert_eq!(v["b"].as_char(), None);
+    /// ```
+    pub fn as_char(&self) -> Option<char> {
+        match self {
+            Value::Char(c) => Some(*c),
             _ => None,
         }
     }

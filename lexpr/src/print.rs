@@ -241,6 +241,24 @@ pub trait Formatter {
         value.visit(Write { writer })
     }
 
+    /// Writes a charactor to the specifiied writer.
+    ///
+    /// The implementation provided by the trait will use Scheme notation
+    /// (`#\C`).
+    fn write_char<W: ?Sized>(&mut self, writer: &mut W, c: char) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        let n = u32::from(c);
+        if n >= 32 && n < 127 {
+            // ASCII, excluding non-printable characters
+            writer.write_all(b"#\\")?;
+            writer.write_all(&[n as u8])
+        } else {
+            write!(writer, "#\\x{:x}", n)
+        }
+    }
+
     /// Called before each series of `write_string_fragment` and
     /// `write_char_escape`.  Writes a `"` to the specified writer.
     #[inline]
@@ -570,6 +588,7 @@ where
             Value::Null => self.formatter.write_null(&mut self.writer),
             Value::Bool(b) => self.formatter.write_bool(&mut self.writer, *b),
             Value::Number(n) => self.formatter.write_number(&mut self.writer, &n),
+            Value::Char(c) => self.formatter.write_char(&mut self.writer, *c),
             Value::Symbol(name) => self.formatter.write_symbol(&mut self.writer, &name),
             Value::Keyword(name) => self.formatter.write_keyword(&mut self.writer, &name),
             Value::String(s) => format_escaped_str(&mut self.writer, &mut self.formatter, &s),

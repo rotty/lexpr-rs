@@ -64,9 +64,7 @@ impl ser::Serializer for Serializer {
     }
 
     fn serialize_char(self, value: char) -> Result<Value> {
-        // TODO: Add char type
-        use std::iter::FromIterator;
-        Ok(Value::String(String::from_iter(&[value]).into_boxed_str()))
+        Ok(Value::Char(value))
     }
 
     fn serialize_str(self, value: &str) -> Result<Value> {

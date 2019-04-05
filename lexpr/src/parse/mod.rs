@@ -353,7 +353,7 @@ impl<'de, R: Read<'de>> Parser<R> {
     fn parse_whitespace(&mut self) -> Result<Option<u8>> {
         loop {
             match self.peek()? {
-                Some(b' ') | Some(b'\n') | Some(b'\t') | Some(b'\r') => {
+                Some(b' ') | Some(b'\n') | Some(b'\t') | Some(b'\r') | Some(0x0C) => {
                     self.eat_char();
                 }
                 other => {
@@ -439,6 +439,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                         self.expect_ident(b"8")?;
                         Ok(Value::Bytes(self.parse_byte_list()?.into_boxed_slice()))
                     }
+                    Some(b'\\') => Ok(Value::Char(self.read.parse_r6rs_char(&mut self.scratch)?)),
                     Some(_) => Err(self.peek_error(ErrorCode::ExpectedSomeIdent)),
                     None => Err(self.peek_error(ErrorCode::EofWhileParsingValue)),
                 }
@@ -934,7 +935,8 @@ impl<'de, R: Read<'de>> Parser<R> {
     }
 }
 
-const SYMBOL_EXTENDED: [u8; 17] = [
+// This could probably profit from being a `u8 -> bool` LUT instead.
+static SYMBOL_EXTENDED: [u8; 17] = [
     b'!', b'$', b'%', b'&', b'*', b'+', /* | b'-' FIXME, */ b'.', b'/', b':', b'<', b'=',
     b'>', b'?', b'@', b'^', b'_', b'~',
 ];

@@ -87,6 +87,9 @@ pub(crate) enum ErrorCode {
     /// EOF while parsing a S-expression value.
     EofWhileParsingValue,
 
+    // EOF while parsing character constant.
+    EofWhileParsingCharacterConstant,
+
     /// Expected to parse either a `#t`, `#f`, or a `#nil`.
     ExpectedSomeIdent,
 
@@ -114,6 +117,9 @@ pub(crate) enum ErrorCode {
     /// Invalid unicode code point.
     InvalidUnicodeCodePoint,
 
+    /// Invalid character constant.
+    InvalidCharacterConstant,
+
     /// S-expression has non-whitespace trailing characters after the value.
     TrailingCharacters,
 
@@ -129,6 +135,9 @@ impl Display for ErrorCode {
             ErrorCode::EofWhileParsingVector => f.write_str("EOF while parsing a vector"),
             ErrorCode::EofWhileParsingString => f.write_str("EOF while parsing a string"),
             ErrorCode::EofWhileParsingValue => f.write_str("EOF while parsing a value"),
+            ErrorCode::EofWhileParsingCharacterConstant => {
+                f.write_str("EOF while parsing a character constant")
+            }
             ErrorCode::ExpectedSomeIdent => f.write_str("expected ident"),
             ErrorCode::ExpectedSomeValue => f.write_str("expected value"),
             ErrorCode::ExpectedVector => f.write_str("expected vector"),
@@ -138,6 +147,7 @@ impl Display for ErrorCode {
             ErrorCode::MismatchedParenthesis => f.write_str("mismatched parenthesis"),
             ErrorCode::NumberOutOfRange => f.write_str("number out of range"),
             ErrorCode::InvalidUnicodeCodePoint => f.write_str("invalid unicode code point"),
+            ErrorCode::InvalidCharacterConstant => f.write_str("invalid character constant"),
             ErrorCode::TrailingCharacters => f.write_str("trailing characters"),
             ErrorCode::RecursionLimitExceeded => f.write_str("recursion limit exceeded"),
         }
