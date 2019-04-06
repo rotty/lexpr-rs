@@ -31,3 +31,19 @@ impl KeywordStyle {
         }
     }
 }
+
+/// Indicates the syntax for strings.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum StringSyntax {
+    /// Syntax as specified the R6RS.
+    ///
+    /// Note that there is no R7RS variant, because R6RS specifies a superset of
+    /// R7RS syntax. When printing however, the syntax used will be restricted
+    /// to be understood by an R7RS parser.
+    R6RS,
+
+    /// Emacs Lisp syntax.
+    ///
+    /// Note that unibyte strings will be parsed as byte vectors.
+    Elisp,
+}

@@ -1,3 +1,9 @@
+//! Basic sanity checking on the `Value` type.
+//!
+//! These tests primarily test the round-trip (i.e converting to text and back)
+//! behavior of `Value` using quickcheck. Note these do not test Emacs Lisp
+//! syntax, as it is not round-trip safe for all values tested here.
+
 use quickcheck::{Arbitrary, Gen, QuickCheck, StdGen};
 use quickcheck_macros::quickcheck;
 use rand::{seq::SliceRandom, Rng};
@@ -41,7 +47,7 @@ fn gen_value<G: Gen>(g: &mut G, depth: usize) -> Value {
         Number => Value::Number(Arbitrary::arbitrary(g)),
         Char => Value::Char(Arbitrary::arbitrary(g)),
         String => {
-            let choices = ["", "foo", "\"", "\t"];
+            let choices = ["", "foo", "\"", "\t", "\x01"];
             Value::string(*choices.choose(g).unwrap())
         }
         Symbol => {

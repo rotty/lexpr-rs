@@ -44,6 +44,11 @@ fn test_improper_lists() {
 }
 
 #[test]
+fn test_strings_elisp() {
+    check_roundtrip_elisp(sexp!("\x01\x02\x03\x7F"), r#""\u0001\u0002\u0003\u007F""#);
+}
+
+#[test]
 fn test_vectors() {
     check_roundtrip_default(sexp!(#()), "#()");
     check_roundtrip_default(sexp!(#(1 2 3 4)), "#(1 2 3 4)");
