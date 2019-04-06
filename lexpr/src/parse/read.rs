@@ -71,7 +71,7 @@ pub trait Read<'de>: private::Sealed {
 
     /// Parses a R6RS character constant.
     #[doc(hidden)]
-    fn parse_r6rs_char<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<char> {
+    fn parse_r6rs_char(&mut self, scratch: &mut Vec<u8>) -> Result<char> {
         // TODO: This could maybe benefit, performance-wise, from a seperate
         // implementation on `SliceRead`.
         parse_r6rs_char(self, scratch)
