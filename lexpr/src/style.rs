@@ -47,3 +47,16 @@ pub enum StringSyntax {
     /// Note that unibyte strings will be parsed as byte vectors.
     Elisp,
 }
+
+/// Indicates the syntax for characters.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum CharSyntax {
+    /// Syntax as specified in R6RS.
+    ///
+    /// Note that there is no R7RS variant, because R6RS specifies a superset of
+    /// R7RS syntax.
+    R6RS,
+
+    /// Emacs Lisp syntax.
+    Elisp,
+}

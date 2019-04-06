@@ -54,6 +54,67 @@ fn test_chars_default() {
     }
 }
 
+#[test]
+fn test_chars_elisp() {
+    // Regular characters, ASCII and non-ASCII
+    for &c in &['x', 'y', 'z', '\u{203D}', ' '] {
+        assert_eq!(from_str_elisp(&format!("?{}", c)).unwrap(), Value::Char(c));
+    }
+    // Memnonic escapes
+    for &(name, code) in &[
+        ("a", 0x07),
+        ("b", 0x08),
+        ("t", 0x09),
+        ("n", 0x0A),
+        ("v", 0x0B),
+        ("f", 0x0C),
+        ("r", 0x0D),
+        ("e", 0x1B),
+        ("s", 0x20),
+        ("d", 0x7F),
+    ] {
+        assert_eq!(
+            from_str_elisp(&format!("?\\{}", name)).unwrap(),
+            Value::Char(char::from(code))
+        );
+    }
+    // Unicode escapes (4 chars)
+    for &c in &['a', 'z', '\x7F', '\u{203D}'] {
+        assert_eq!(
+            from_str_elisp(&format!("?\\u{:04x}", c as u32)).unwrap(),
+            Value::Char(c)
+        );
+    }
+    // Unicode escapes (8 chars)
+    for &c in &['a', 'z', '\x7F', '\u{203D}', '\u{10FFFF}'] {
+        assert_eq!(
+            from_str_elisp(&format!("?\\U{:08x}", c as u32)).unwrap(),
+            Value::Char(c)
+        );
+    }
+    // "Named" unicode variant
+    for &c in &['a', 'z', '\x7F', '\u{203D}', '\u{10FFFF}'] {
+        assert_eq!(
+            from_str_elisp(&format!("?\\N{{U+{:x}}}", c as u32)).unwrap(),
+            Value::Char(c)
+        );
+    }
+    // Hexadecimal escapes
+    for &c in &['a', 'z', '\x7F', '\u{203D}', '\u{10FFFF}'] {
+        assert_eq!(
+            from_str_elisp(&format!("?\\x{:x}", c as u32)).unwrap(),
+            Value::Char(c)
+        );
+    }
+    // Octal escapes
+    for &c in &['a', 'z', '\x7F', '\u{1FF}'] {
+        assert_eq!(
+            from_str_elisp(&format!("?\\{:o}", c as u32)).unwrap(),
+            Value::Char(c)
+        );
+    }
+}
+
 // This is generic over the parser to allow testing both the slice-based and
 // I/O-based `Read` trait implementations.
 fn check_strings_default<F>(parse: F)

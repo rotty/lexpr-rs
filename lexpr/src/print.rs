@@ -10,7 +10,7 @@
 use std::io;
 
 use crate::number::{self, Number};
-pub use crate::style::{KeywordStyle, StringSyntax};
+pub use crate::style::{CharSyntax, KeywordStyle, StringSyntax};
 use crate::Value;
 
 /// Options for printing S-expressions.
@@ -22,6 +22,7 @@ pub struct Options {
     vector_style: VectorStyle,
     bytes_style: BytesStyle,
     string_syntax: StringSyntax,
+    char_syntax: CharSyntax,
 }
 
 impl Options {
@@ -38,6 +39,7 @@ impl Options {
             vector_style: VectorStyle::Brackets,
             bytes_style: BytesStyle::Elisp,
             string_syntax: StringSyntax::Elisp,
+            char_syntax: CharSyntax::Elisp,
         }
     }
 
@@ -76,6 +78,12 @@ impl Options {
         self.string_syntax = syntax;
         self
     }
+
+    /// Set the syntax used for printing characters.
+    pub fn with_char_syntax(mut self, syntax: CharSyntax) -> Self {
+        self.char_syntax = syntax;
+        self
+    }
 }
 
 impl Default for Options {
@@ -87,6 +95,7 @@ impl Default for Options {
             vector_style: VectorStyle::Octothorpe,
             bytes_style: BytesStyle::R7RS,
             string_syntax: StringSyntax::R6RS,
+            char_syntax: CharSyntax::R6RS,
         }
     }
 }
@@ -494,6 +503,16 @@ impl Formatter for CustomizedFormatter {
         }
     }
 
+    fn write_char<W: ?Sized>(&mut self, writer: &mut W, c: char) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        match self.options.char_syntax {
+            CharSyntax::R6RS => write_scheme_char(writer, c),
+            CharSyntax::Elisp => write_elisp_char(writer, c),
+        }
+    }
+
     /// Writes a character escape code to the specified writer.
     #[inline]
     fn write_char_escape<W: ?Sized>(
@@ -763,7 +782,6 @@ where
     writer.write_all(s)
 }
 
-
 fn write_elisp_char_escape<W: ?Sized>(writer: &mut W, char_escape: CharEscape) -> io::Result<()>
 where
     W: io::Write,
@@ -797,6 +815,42 @@ where
     writer.write_all(s)
 }
 
+fn write_scheme_char<W: ?Sized>(writer: &mut W, c: char) -> io::Result<()>
+where
+    W: io::Write,
+{
+    let n = u32::from(c);
+    if n >= 32 && n < 127 {
+        // ASCII, excluding non-printable characters
+        let buf = [b'#', b'\\', n as u8];
+        writer.write_all(&buf)
+    } else {
+        // TODO: we should probably output UTF-8 here, if reasonable, to be
+        // consistent with the behaviour inside strings.
+        write!(writer, "#\\x{:x}", n)
+    }
+}
+
+fn write_elisp_char<W: ?Sized>(writer: &mut W, c: char) -> io::Result<()>
+where
+    W: io::Write,
+{
+    let n = u32::from(c);
+    if n >= 32 && n < 127 {
+        let c = n as u8;
+        // ASCII, excluding non-printable characters
+        if ELISP_ESCAPE_CHARS.contains(&c) {
+            writer.write_all(&[b'?', b'\\', c])
+        } else {
+            writer.write_all(&[b'?', c])
+        }
+    } else {
+        // TODO: we should probably output UTF-8 here, if reasonable, to be
+        // consistent with the behaviour inside strings.
+        write!(writer, "#\\x{:x}", n)
+    }
+}
+
 const AA: u8 = b'a'; // \x07
 const BB: u8 = b'b'; // \x08
 const TT: u8 = b't'; // \x09
@@ -828,6 +882,8 @@ static ESCAPE: [u8; 256] = [
     __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // E
     __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // F
 ];
+
+static ELISP_ESCAPE_CHARS: &[u8] = b"()[]\\;|'`#.,";
 
 /// Serialize the given value value as S-expression text into the IO stream,
 /// using the default printer options.

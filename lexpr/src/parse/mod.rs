@@ -16,7 +16,7 @@ use read::{ElispStr, Reference};
 
 use crate::{Cons, Number, Value};
 
-pub use crate::style::{KeywordStyle, StringSyntax};
+pub use crate::style::{CharSyntax, KeywordStyle, StringSyntax};
 
 pub use read::{IoRead, Read, SliceRead, StrRead};
 
@@ -45,6 +45,7 @@ pub struct Options {
     t_symbol: TSymbol,
     brackets: Brackets,
     string_syntax: StringSyntax,
+    char_syntax: CharSyntax,
 }
 
 /// Defines the treatment of the symbol `nil`.
@@ -104,6 +105,7 @@ impl Options {
             t_symbol: TSymbol::Default,
             brackets: Brackets::List,
             string_syntax: StringSyntax::R6RS,
+            char_syntax: CharSyntax::R6RS,
         }
     }
 
@@ -114,6 +116,7 @@ impl Options {
             .with_nil_symbol(NilSymbol::EmptyList)
             .with_brackets(Brackets::Vector)
             .with_string_syntax(StringSyntax::Elisp)
+            .with_char_syntax(CharSyntax::Elisp)
     }
 
     /// Add `style` to the recognized keyword styles.
@@ -158,6 +161,12 @@ impl Options {
         self
     }
 
+    /// Choose the accepted character syntax.
+    pub fn with_char_syntax(mut self, syntax: CharSyntax) -> Self {
+        self.char_syntax = syntax;
+        self
+    }
+
     /// Check wether a keyword style is enabled.
     #[inline]
     pub fn keyword_style(&self, style: KeywordStyle) -> bool {
@@ -183,6 +192,11 @@ impl Options {
     pub fn string_syntax(&self) -> StringSyntax {
         self.string_syntax
     }
+
+    /// Query the accepted character syntax.
+    pub fn char_syntax(&self) -> CharSyntax {
+        self.char_syntax
+    }
 }
 
 impl Default for Options {
@@ -199,6 +213,7 @@ impl Default for Options {
             t_symbol: TSymbol::Default,
             brackets: Brackets::List,
             string_syntax: StringSyntax::R6RS,
+            char_syntax: CharSyntax::R6RS,
         }
     }
 }
@@ -533,6 +548,10 @@ impl<'de, R: Read<'de>> Parser<R> {
                 } else {
                     Ok(Value::symbol(name))
                 }
+            }
+            b'?' if self.options.char_syntax == CharSyntax::Elisp => {
+                self.eat_char();
+                Ok(Value::Char(self.read.parse_elisp_char(&mut self.scratch)?))
             }
             _ => {
                 if SYMBOL_EXTENDED.contains(&peek) {

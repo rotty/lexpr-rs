@@ -44,6 +44,13 @@ fn test_improper_lists() {
 }
 
 #[test]
+fn test_chars_elisp() {
+    for (value, printed) in vec![(sexp!('x'), "?x"), (sexp!('\\'), "?\\\\")] {
+        check_roundtrip_elisp(value, printed);
+    }
+}
+
+#[test]
 fn test_strings_elisp() {
     check_roundtrip_elisp(sexp!("\x01\x02\x03\x7F"), r#""\u0001\u0002\u0003\u007F""#);
 }
