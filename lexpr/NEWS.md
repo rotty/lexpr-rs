@@ -19,14 +19,22 @@ Incompatible changes:
 
 New features:
 
-- There is now a `Number::visit` method, which can be used to dispatch
-  on the internal type of the number.
 - Serde support is now available via the companion crate
   [`serde-lexpr`], which is developed in parallel with `lexpr`,
   sharing the same git repository.
-- There is now a `Value::Vector` variant for representing Lisp
+- There is now the `Value::Vector` variant for representing Lisp
   vectors. Vectors can be constructed via the `sexp!` macro using
-  Scheme syntax, e.g. `sexp!(#(1 2 3))`.
+  Scheme syntax, e.g. `sexp!(#(1 2 3))`. Both Emacs Lisp and Scheme
+  syntax is supported for reading and printing.
+- Characters are now supported with the `Value::Char` variant. Both
+  Emacs Lisp and Scheme syntax is supported.
+- Byte vectors are now supported with the `Value::Bytes` variant. This
+  is supported for Scheme R6RS and R7RS syntax. For Emacs Lisp, this
+  data type maps to unibyte strings.
+- Escapes sequences in string literals now support the appropriate
+  syntax for the selected Lisp dialect, instead of using JSON syntax.
+- There is now a `Number::visit` method, which can be used to dispatch
+  on the internal type of the number.
 
 [`serde-lexpr`]: https://github.com/rotty/lexpr-rs/tree/master/serde-lexpr
 
