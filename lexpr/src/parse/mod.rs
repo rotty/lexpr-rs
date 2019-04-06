@@ -16,7 +16,7 @@ use read::{ElispStr, Reference};
 
 use crate::{Cons, Number, Value};
 
-pub use crate::style::KeywordStyle;
+pub use crate::style::{KeywordStyle, StringSyntax};
 
 pub use read::{IoRead, Read, SliceRead, StrRead};
 
@@ -90,20 +90,6 @@ pub enum Brackets {
 
     /// Brackets indicate a vector, like in Emacs Lisp.
     Vector,
-}
-
-/// Defines the accepted syntax for strings.
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum StringSyntax {
-    /// Syntax as specified the R6RS.
-    ///
-    /// Note that there is no R7RS variant, because R6RS specifies a superset of
-    /// R7RS syntax.
-    R6RS,
-    /// Emacs Lisp syntax.
-    ///
-    /// Note that unibyte strings will be parsed as byte vectors.
-    Elisp,
 }
 
 impl Options {

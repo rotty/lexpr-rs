@@ -93,6 +93,8 @@ where
         parse(&format!("\"{}\"", control_chars)).unwrap(),
         Value::from(control_chars)
     );
+    // Check an escaped vertical bar (pipe) is accepted
+    assert_eq!(parse(r#""foo\|bar""#).unwrap(), Value::string("foo|bar"));
 }
 
 #[test]

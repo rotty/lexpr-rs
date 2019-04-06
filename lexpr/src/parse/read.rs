@@ -687,6 +687,7 @@ fn parse_r6rs_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> 
         b'r' => scratch.push(b'\r'),
         b't' => scratch.push(b'\t'),
         b'v' => scratch.push(0x0B),
+        b'|' => scratch.push(b'|'),
         // TODO: trailing backspace (i.e., a continuation line)
         b'x' => {
             let c = {

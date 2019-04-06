@@ -10,7 +10,7 @@
 use std::io;
 
 use crate::number::{self, Number};
-pub use crate::style::KeywordStyle;
+pub use crate::style::{KeywordStyle, StringSyntax};
 use crate::Value;
 
 /// Options for printing S-expressions.
@@ -21,6 +21,7 @@ pub struct Options {
     bool_style: BoolStyle,
     vector_style: VectorStyle,
     bytes_style: BytesStyle,
+    string_syntax: StringSyntax,
 }
 
 impl Options {
@@ -36,6 +37,7 @@ impl Options {
             bool_style: BoolStyle::Symbol,
             vector_style: VectorStyle::Brackets,
             bytes_style: BytesStyle::Elisp,
+            string_syntax: StringSyntax::Elisp,
         }
     }
 
@@ -68,6 +70,12 @@ impl Options {
         self.bytes_style = style;
         self
     }
+
+    /// Set the syntax used for printing strings.
+    pub fn with_string_syntax(mut self, syntax: StringSyntax) -> Self {
+        self.string_syntax = syntax;
+        self
+    }
 }
 
 impl Default for Options {
@@ -78,6 +86,7 @@ impl Default for Options {
             bool_style: BoolStyle::Token,
             vector_style: VectorStyle::Octothorpe,
             bytes_style: BytesStyle::R7RS,
+            string_syntax: StringSyntax::R6RS,
         }
     }
 }
@@ -130,12 +139,10 @@ pub enum CharEscape {
     Quote,
     /// An escaped reverse solidus `\`
     ReverseSolidus,
-    /// An escaped solidus `/`
-    Solidus,
+    /// Alert, also known as "bell" (usually escaped as `\a`)
+    Alert,
     /// An escaped backspace character (usually escaped as `\b`)
     Backspace,
-    /// An escaped form feed character (usually escaped as `\f`)
-    FormFeed,
     /// An escaped line feed character (usually escaped as `\n`)
     LineFeed,
     /// An escaped carriage return character (usually escaped as `\r`)
@@ -151,10 +158,10 @@ impl CharEscape {
     #[inline]
     fn from_escape_table(escape: u8, byte: u8) -> CharEscape {
         match escape {
+            self::AA => CharEscape::Alert,
             self::BB => CharEscape::Backspace,
             self::TT => CharEscape::Tab,
             self::NN => CharEscape::LineFeed,
-            self::FF => CharEscape::FormFeed,
             self::RR => CharEscape::CarriageReturn,
             self::QU => CharEscape::Quote,
             self::BS => CharEscape::ReverseSolidus,
@@ -304,21 +311,19 @@ pub trait Formatter {
         let s = match char_escape {
             Quote => b"\\\"",
             ReverseSolidus => b"\\\\",
-            Solidus => b"\\/",
+            Alert => b"\\a",
             Backspace => b"\\b",
-            FormFeed => b"\\f",
             LineFeed => b"\\n",
             CarriageReturn => b"\\r",
             Tab => b"\\t",
             AsciiControl(byte) => {
-                static HEX_DIGITS: [u8; 16] = *b"0123456789abcdef";
+                static HEX_DIGITS: [u8; 16] = *b"0123456789ABCDEF";
                 let bytes = &[
                     b'\\',
-                    b'u',
-                    b'0',
-                    b'0',
+                    b'x',
                     HEX_DIGITS[(byte >> 4) as usize],
                     HEX_DIGITS[(byte & 0xF) as usize],
+                    b';',
                 ];
                 return writer.write_all(bytes);
             }
@@ -509,6 +514,51 @@ impl Formatter for CustomizedFormatter {
         match self.options.vector_style {
             VectorStyle::Brackets => writer.write_all(b"]"),
             VectorStyle::Octothorpe => writer.write_all(b")"),
+        }
+    }
+
+    /// Writes a character escape code to the specified writer.
+    #[inline]
+    fn write_char_escape<W: ?Sized>(
+        &mut self,
+        writer: &mut W,
+        char_escape: CharEscape,
+    ) -> io::Result<()>
+    where
+        W: io::Write,
+    {
+        match self.options.string_syntax {
+            StringSyntax::R6RS => Formatter::write_char_escape(self, writer, char_escape),
+            StringSyntax::Elisp => {
+                use self::CharEscape::*;
+
+                let s = match char_escape {
+                    Quote => b"\\\"",
+                    ReverseSolidus => b"\\\\",
+                    Alert => b"\\a",
+                    Backspace => b"\\b",
+                    LineFeed => b"\\n",
+                    CarriageReturn => b"\\r",
+                    Tab => b"\\t",
+                    AsciiControl(byte) => {
+                        // Note we use the `\uNNNN` syntax here, as a
+                        // hexadecimal or octal escape might turn the string
+                        // into a unibyte string.
+                        static HEX_DIGITS: [u8; 16] = *b"0123456789ABCDEF";
+                        let bytes = &[
+                            b'\\',
+                            b'u',
+                            b'0',
+                            b'0',
+                            HEX_DIGITS[(byte >> 4) as usize],
+                            HEX_DIGITS[(byte & 0xF) as usize],
+                        ];
+                        return writer.write_all(bytes);
+                    }
+                };
+
+                writer.write_all(s)
+            }
         }
     }
 
@@ -735,10 +785,10 @@ where
     Ok(())
 }
 
+const AA: u8 = b'a'; // \x07
 const BB: u8 = b'b'; // \x08
 const TT: u8 = b't'; // \x09
 const NN: u8 = b'n'; // \x0A
-const FF: u8 = b'f'; // \x0C
 const RR: u8 = b'r'; // \x0D
 const QU: u8 = b'"'; // \x22
 const BS: u8 = b'\\'; // \x5C
@@ -749,14 +799,14 @@ const __: u8 = 0;
 // i is escaped as "\x" in JSON. A value of 0 means that byte i is not escaped.
 static ESCAPE: [u8; 256] = [
     //   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
-    UU, UU, UU, UU, UU, UU, UU, UU, BB, TT, NN, UU, FF, RR, UU, UU, // 0
+    UU, UU, UU, UU, UU, UU, UU, AA, BB, TT, NN, UU, UU, RR, UU, UU, // 0
     UU, UU, UU, UU, UU, UU, UU, UU, UU, UU, UU, UU, UU, UU, UU, UU, // 1
     __, __, QU, __, __, __, __, __, __, __, __, __, __, __, __, __, // 2
     __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 3
     __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 4
     __, __, __, __, __, __, __, __, __, __, __, __, BS, __, __, __, // 5
     __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 6
-    __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 7
+    __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, UU, // 7
     __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 8
     __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // 9
     __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, __, // A
