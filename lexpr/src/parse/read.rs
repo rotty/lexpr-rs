@@ -76,6 +76,13 @@ pub trait Read<'de>: private::Sealed {
         // implementation on `SliceRead`.
         parse_r6rs_char(self, scratch)
     }
+
+    /// Parses an Emacs Lisp character constant.
+    fn parse_elisp_char(&mut self, scratch: &mut Vec<u8>) -> Result<char> {
+        // TODO: This could maybe benefit, performance-wise, from a seperate
+        // implementation on `SliceRead`.
+        parse_elisp_char(self, scratch)
+    }
 }
 
 pub struct Position {
@@ -637,6 +644,13 @@ fn next_or_eof<'de, R: ?Sized + Read<'de>>(read: &mut R) -> Result<u8> {
     }
 }
 
+fn next_or_eof_char<'de, R: ?Sized + Read<'de>>(read: &mut R) -> Result<u8> {
+    match read.next()? {
+        Some(b) => Ok(b),
+        None => error(read, ErrorCode::EofWhileParsingCharacterConstant),
+    }
+}
+
 fn error<'de, R: ?Sized + Read<'de>, T>(read: &R, reason: ErrorCode) -> Result<T> {
     let position = read.position();
     Err(Error::syntax(reason, position.line, position.column))
@@ -644,6 +658,13 @@ fn error<'de, R: ?Sized + Read<'de>, T>(read: &R, reason: ErrorCode) -> Result<T
 
 fn as_str<'de, 's, R: Read<'de>>(read: &R, slice: &'s [u8]) -> Result<&'s str> {
     str::from_utf8(slice).or_else(|_| error(read, ErrorCode::InvalidUnicodeCodePoint))
+}
+
+fn as_char<'de, 's, R: Read<'de> + ?Sized>(read: &R, value: u32) -> Result<char> {
+    match char::from_u32(value) {
+        None => error(read, ErrorCode::InvalidUnicodeCodePoint),
+        Some(c) => Ok(c),
+    }
 }
 
 fn needs_escape(c: u8) -> bool {
@@ -712,7 +733,7 @@ fn parse_r6rs_escape<'de, R: Read<'de>>(read: &mut R, scratch: &mut Vec<u8>) -> 
 /// Assumes the previous byte was a hex escape sequence ('\x') in a string.
 /// Parses the hexadecimal sequence, not including the terminating character
 /// (i.e, first non hex-digit).
-fn decode_elisp_hex_escape<'de, R: Read<'de>>(read: &mut R) -> Result<u32> {
+fn decode_elisp_hex_escape<'de, R: Read<'de> + ?Sized>(read: &mut R) -> Result<u32> {
     let mut n = 0;
     while let Some(c) = read.peek()? {
         match decode_hex_val(c) {
@@ -730,7 +751,7 @@ fn decode_elisp_hex_escape<'de, R: Read<'de>>(read: &mut R) -> Result<u32> {
     Ok(n)
 }
 
-fn decode_elisp_uni_escape<'de, R: Read<'de>>(read: &mut R, count: u8) -> Result<u32> {
+fn decode_elisp_uni_escape<'de, R: Read<'de> + ?Sized>(read: &mut R, count: u8) -> Result<u32> {
     let mut n = 0;
     for _ in 0..count {
         let c = next_or_eof(read)?;
@@ -751,7 +772,7 @@ fn decode_elisp_uni_escape<'de, R: Read<'de>>(read: &mut R, count: u8) -> Result
 /// octal range ('0'..'7'). This character is passed in as `initial`.  Parses
 /// the octal sequence, not including the terminating character (i.e, first non
 /// octal digit).
-fn decode_elisp_octal_escape<'de, R: Read<'de>>(read: &mut R, initial: u8) -> Result<u32> {
+fn decode_elisp_octal_escape<'de, R: Read<'de> + ?Sized>(read: &mut R, initial: u8) -> Result<u32> {
     let mut n = u32::from(initial - b'0');
     while let Some(c) = read.peek()? {
         match decode_octal_val(c) {
@@ -904,10 +925,7 @@ fn parse_r6rs_char<'de, R: Read<'de> + ?Sized>(
     read: &mut R,
     scratch: &mut Vec<u8>,
 ) -> Result<char> {
-    let initial = match read.next()? {
-        None => return error(read, ErrorCode::EofWhileParsingCharacterConstant),
-        Some(c) => c,
-    };
+    let initial = next_or_eof_char(read)?;
     if initial == b'x' {
         match decode_r6rs_char_hex_escape(read)? {
             Some(n) => match char::from_u32(n) {
@@ -917,30 +935,7 @@ fn parse_r6rs_char<'de, R: Read<'de> + ?Sized>(
             None => Ok('x'),
         }
     } else if initial > 0x7F {
-        // Start of a UTF-8 sequence. It seems there is no simple way to
-        // consume a single UTF-8 codepoint from a source of bytes, so
-        // we implement just enough of an UTF-8 decoder to consume the
-        // correct number of bytes, and then use the standard library to
-        // turn these into a codepoint. If one would like to optimize
-        // this, doing the complete decoding here could eliminate the
-        // use of `scratch` and the calls into the standard library.
-        if initial < 0xC2 || initial > 0xF4 {
-            return error(read, ErrorCode::InvalidUnicodeCodePoint);
-        }
-        scratch.clear();
-        scratch.push(initial);
-        let len = (initial - 0xC0) >> 4;
-        for _ in 0..len {
-            let b = match read.next()? {
-                Some(c) => c,
-                None => return error(read, ErrorCode::InvalidUnicodeCodePoint),
-            };
-            scratch.push(b);
-        }
-        match str::from_utf8(&scratch) {
-            Err(_) => error(read, ErrorCode::InvalidUnicodeCodePoint),
-            Ok(s) => Ok(s.chars().next().unwrap()),
-        }
+        decode_utf8_sequence(read, scratch, initial)
     } else {
         // ASCII character, may be standalone or part of a `<character name>`.
         let next = match read.peek()? {
@@ -1014,6 +1009,100 @@ fn decode_r6rs_char_hex_escape<'de, R: Read<'de> + ?Sized>(read: &mut R) -> Resu
     }
 }
 
+/// Expects either `\<memnonic escape>`, `\<normal escape>`, `\x<hex scalar
+/// value>` or `<non-delimiter>` where `<non delimiter>` is any character but
+/// `()[]\;"`. Clears the scratch space if necessary.
+fn parse_elisp_char<'de, R: Read<'de> + ?Sized>(
+    read: &mut R,
+    scratch: &mut Vec<u8>,
+) -> Result<char> {
+    let initial = match read.next()? {
+        None => return error(read, ErrorCode::EofWhileParsingCharacterConstant),
+        Some(c) => c,
+    };
+    if initial > 0x7F {
+        decode_utf8_sequence(read, scratch, initial)
+    } else {
+        // ASCII character
+        match initial {
+            b'(' | b')' | b'[' | b']' | b';' => error(read, ErrorCode::InvalidCharacterConstant),
+            b'\\' => decode_elisp_char_escape(read, scratch),
+            _ => Ok(char::from(initial)),
+        }
+    }
+}
+
+fn decode_elisp_char_escape<'de, R: Read<'de> + ?Sized>(
+    read: &mut R,
+    scratch: &mut Vec<u8>,
+) -> Result<char> {
+    let ch = next_or_eof_char(read)?;
+    match ch {
+        b'a' => Ok('\x07'),
+        b'b' => Ok('\x08'),
+        b't' => Ok('\t'),
+        b'n' => Ok('\n'),
+        b'v' => Ok('\x0B'),
+        b'f' => Ok('\x0C'),
+        b'r' => Ok('\r'),
+        b'e' => Ok('\x1B'),
+        b's' => Ok(' '),
+        b'\\' => Ok('\\'),
+        b'd' => Ok('\x7F'),
+        b'^' => {
+            // Control character syntax
+            let ch = next_or_eof_char(read)?.to_ascii_lowercase();
+            if b'a' <= ch && ch <= b'z' {
+                Ok(char::from(ch - b'a'))
+            } else {
+                error(read, ErrorCode::InvalidEscape)
+            }
+        }
+        b'N' => {
+            // Name based unicode escape, `\N{NAME}` or `\N{U+X}`. These imply a
+            // multibyte string.
+            if next_or_eof_char(read)? != b'{' {
+                return error(read, ErrorCode::InvalidEscape);
+            }
+            if next_or_eof_char(read)? != b'U' || next_or_eof_char(read)? != b'+' {
+                return error(read, ErrorCode::InvalidEscape);
+            }
+            let n = decode_elisp_hex_escape(read)?;
+            if next_or_eof(read)? != b'}' {
+                return error(read, ErrorCode::InvalidEscape);
+            }
+            match char::from_u32(n) {
+                Some(c) => Ok(c),
+                None => error(read, ErrorCode::InvalidEscape),
+            }
+        }
+        b'u' => {
+            // Codepoint unicode escape, `\uXXXX` (exactly four hex digits).
+            decode_elisp_uni_escape(read, 4).and_then(|n| as_char(read, n))
+        }
+        b'U' => {
+            // Codepoint unicode escape, `\UXXXXXXXX` (exactly eight hex
+            // digits).
+            decode_elisp_uni_escape(read, 8).and_then(|n| as_char(read, n))
+        }
+        b'x' => {
+            // Hexadecimal escape, allows arbitrary number of hex digits.
+            decode_elisp_hex_escape(read).and_then(|n| as_char(read, n))
+        }
+        b'0' | b'1' | b'2' | b'3' | b'4' | b'5' | b'6' | b'7' => {
+            // Octal escape, allows arbitrary number of octale digits.
+            decode_elisp_octal_escape(read, ch).and_then(|n| as_char(read, n))
+        }
+        next => {
+            if next > 0x7F {
+                decode_utf8_sequence(read, scratch, next)
+            } else {
+                Ok(char::from(next))
+            }
+        }
+    }
+}
+
 #[allow(clippy::zero_prefixed_literal)]
 static HEX: [u8; 256] = {
     const __: u8 = 255; // not a hex digit
@@ -1063,3 +1152,36 @@ fn is_delimiter(c: u8) -> bool {
 static DELIMITER: [u8; 12] = [
     b'(', b')', b'[', b']', b'"', b';', b'#', b' ', b'\n', b'\t', b'\r', 0x0C,
 ];
+
+/// Decode a UTF8 multibyte sequence starting with `initial` and return the
+/// decoded codepoint.
+fn decode_utf8_sequence<'de, R: Read<'de> + ?Sized>(
+    read: &mut R,
+    scratch: &mut Vec<u8>,
+    initial: u8,
+) -> Result<char> {
+    // Start of a UTF-8 sequence. It seems there is no simple way to
+    // consume a single UTF-8 codepoint from a source of bytes, so
+    // we implement just enough of an UTF-8 decoder to consume the
+    // correct number of bytes, and then use the standard library to
+    // turn these into a codepoint. If one would like to optimize
+    // this, doing the complete decoding here could eliminate the
+    // use of `scratch` and the calls into the standard library.
+    if initial < 0xC2 || initial > 0xF4 {
+        return error(read, ErrorCode::InvalidUnicodeCodePoint);
+    }
+    scratch.clear();
+    scratch.push(initial);
+    let len = (initial - 0xC0) >> 4;
+    for _ in 0..len {
+        let b = match read.next()? {
+            Some(c) => c,
+            None => return error(read, ErrorCode::InvalidUnicodeCodePoint),
+        };
+        scratch.push(b);
+    }
+    match str::from_utf8(&scratch) {
+        Err(_) => error(read, ErrorCode::InvalidUnicodeCodePoint),
+        Ok(s) => Ok(s.chars().next().unwrap()),
+    }
+}
