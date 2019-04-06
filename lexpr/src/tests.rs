@@ -13,7 +13,7 @@ use std::str;
 
 use crate as lexpr;
 
-use lexpr::{Number, Value};
+use lexpr::{parse, print, Number, Value};
 
 enum ValueKind {
     Nil,
@@ -132,6 +132,24 @@ fn print_parse_roundtrip_default() {
     fn prop(input: Value) -> bool {
         let string = lexpr::to_string(&input).expect("conversion to string failed");
         let output = lexpr::from_str(&string).expect("parsing failed");
+        input == output
+    }
+    QuickCheck::new()
+        .tests(1000)
+        .max_tests(2000)
+        .gen(StdGen::new(::rand::thread_rng(), 4))
+        .quickcheck(prop as fn(Value) -> bool);
+}
+
+// The printer uses different code paths depending on whether it was customized,
+// so do a roundtrip test using this path as well.
+#[test]
+fn print_parse_roundtrip_custom_default() {
+    fn prop(input: Value) -> bool {
+        let string = lexpr::to_string_custom(&input, print::Options::default())
+            .expect("conversion to string failed");
+        let output =
+            lexpr::from_str_custom(&string, parse::Options::default()).expect("parsing failed");
         input == output
     }
     QuickCheck::new()

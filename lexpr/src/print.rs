@@ -248,7 +248,7 @@ pub trait Formatter {
         value.visit(Write { writer })
     }
 
-    /// Writes a charactor to the specifiied writer.
+    /// Writes a charactor to the specified writer.
     ///
     /// The implementation provided by the trait will use Scheme notation
     /// (`#\C`).
@@ -256,14 +256,7 @@ pub trait Formatter {
     where
         W: io::Write,
     {
-        let n = u32::from(c);
-        if n >= 32 && n < 127 {
-            // ASCII, excluding non-printable characters
-            writer.write_all(b"#\\")?;
-            writer.write_all(&[n as u8])
-        } else {
-            write!(writer, "#\\x{:x}", n)
-        }
+        write_scheme_char(writer, c)
     }
 
     /// Called before each series of `write_string_fragment` and
@@ -306,30 +299,7 @@ pub trait Formatter {
     where
         W: io::Write,
     {
-        use self::CharEscape::*;
-
-        let s = match char_escape {
-            Quote => b"\\\"",
-            ReverseSolidus => b"\\\\",
-            Alert => b"\\a",
-            Backspace => b"\\b",
-            LineFeed => b"\\n",
-            CarriageReturn => b"\\r",
-            Tab => b"\\t",
-            AsciiControl(byte) => {
-                static HEX_DIGITS: [u8; 16] = *b"0123456789ABCDEF";
-                let bytes = &[
-                    b'\\',
-                    b'x',
-                    HEX_DIGITS[(byte >> 4) as usize],
-                    HEX_DIGITS[(byte & 0xF) as usize],
-                    b';',
-                ];
-                return writer.write_all(bytes);
-            }
-        };
-
-        writer.write_all(s)
+        write_r6rs_char_escape(writer, char_escape)
     }
 
     /// Writes a symbol to the specified writer.
@@ -503,7 +473,14 @@ impl Formatter for CustomizedFormatter {
     {
         match self.options.vector_style {
             VectorStyle::Brackets => writer.write_all(b"["),
-            VectorStyle::Octothorpe => Formatter::begin_vector(self, kind, writer),
+            VectorStyle::Octothorpe => match kind {
+                VectorType::Generic => writer.write_all(b"#("),
+                VectorType::Byte => match self.options.bytes_style {
+                    BytesStyle::R6RS => writer.write_all(b"#vu8("),
+                    BytesStyle::R7RS => writer.write_all(b"#u8("),
+                    _ => panic!("invalid combination of VectorStyle and ByteStyle"),
+                },
+            },
         }
     }
 
@@ -528,37 +505,8 @@ impl Formatter for CustomizedFormatter {
         W: io::Write,
     {
         match self.options.string_syntax {
-            StringSyntax::R6RS => Formatter::write_char_escape(self, writer, char_escape),
-            StringSyntax::Elisp => {
-                use self::CharEscape::*;
-
-                let s = match char_escape {
-                    Quote => b"\\\"",
-                    ReverseSolidus => b"\\\\",
-                    Alert => b"\\a",
-                    Backspace => b"\\b",
-                    LineFeed => b"\\n",
-                    CarriageReturn => b"\\r",
-                    Tab => b"\\t",
-                    AsciiControl(byte) => {
-                        // Note we use the `\uNNNN` syntax here, as a
-                        // hexadecimal or octal escape might turn the string
-                        // into a unibyte string.
-                        static HEX_DIGITS: [u8; 16] = *b"0123456789ABCDEF";
-                        let bytes = &[
-                            b'\\',
-                            b'u',
-                            b'0',
-                            b'0',
-                            HEX_DIGITS[(byte >> 4) as usize],
-                            HEX_DIGITS[(byte & 0xF) as usize],
-                        ];
-                        return writer.write_all(bytes);
-                    }
-                };
-
-                writer.write_all(s)
-            }
+            StringSyntax::R6RS => write_r6rs_char_escape(writer, char_escape),
+            StringSyntax::Elisp => write_elisp_char_escape(writer, char_escape),
         }
     }
 
@@ -783,6 +731,70 @@ where
     }
 
     Ok(())
+}
+
+fn write_r6rs_char_escape<W: ?Sized>(writer: &mut W, char_escape: CharEscape) -> io::Result<()>
+where
+    W: io::Write,
+{
+    use self::CharEscape::*;
+
+    let s = match char_escape {
+        Quote => b"\\\"",
+        ReverseSolidus => b"\\\\",
+        Alert => b"\\a",
+        Backspace => b"\\b",
+        LineFeed => b"\\n",
+        CarriageReturn => b"\\r",
+        Tab => b"\\t",
+        AsciiControl(byte) => {
+            static HEX_DIGITS: [u8; 16] = *b"0123456789ABCDEF";
+            let bytes = &[
+                b'\\',
+                b'x',
+                HEX_DIGITS[(byte >> 4) as usize],
+                HEX_DIGITS[(byte & 0xF) as usize],
+                b';',
+            ];
+            return writer.write_all(bytes);
+        }
+    };
+
+    writer.write_all(s)
+}
+
+
+fn write_elisp_char_escape<W: ?Sized>(writer: &mut W, char_escape: CharEscape) -> io::Result<()>
+where
+    W: io::Write,
+{
+    use self::CharEscape::*;
+
+    let s = match char_escape {
+        Quote => b"\\\"",
+        ReverseSolidus => b"\\\\",
+        Alert => b"\\a",
+        Backspace => b"\\b",
+        LineFeed => b"\\n",
+        CarriageReturn => b"\\r",
+        Tab => b"\\t",
+        AsciiControl(byte) => {
+            // Note we use the `\uNNNN` syntax here, as a hexadecimal or octal
+            // escape might turn the string into a unibyte string.
+            static HEX_DIGITS: [u8; 16] = *b"0123456789ABCDEF";
+            let bytes = &[
+                b'\\',
+                b'u',
+                b'0',
+                b'0',
+                HEX_DIGITS[(byte >> 4) as usize],
+                HEX_DIGITS[(byte & 0xF) as usize],
+            ];
+            return writer.write_all(bytes);
+        }
+    };
+
+    writer.write_all(s)
 }
 
 const AA: u8 = b'a'; // \x07
