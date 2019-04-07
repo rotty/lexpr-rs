@@ -847,7 +847,7 @@ where
     } else {
         // TODO: we should probably output UTF-8 here, if reasonable, to be
         // consistent with the behaviour inside strings.
-        write!(writer, "#\\x{:x}", n)
+        write!(writer, "?\\x{:x}", n)
     }
 }
 
