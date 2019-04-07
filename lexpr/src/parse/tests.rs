@@ -29,6 +29,14 @@ fn test_atom_failures() {
 }
 
 #[test]
+fn test_numbers() {
+    assert_eq!(from_str("42").unwrap(), Value::from(42));
+    assert_eq!(from_str("-23").unwrap(), Value::from(-23));
+    assert_eq!(from_str("0.5e10").unwrap(), Value::from(0.5e10));
+    assert_eq!(from_str("-0.5e10").unwrap(), Value::from(-0.5e10));
+}
+
+#[test]
 fn test_chars_default() {
     for &c in &['x', 'y', 'z', '\u{203D}', ' '] {
         assert_eq!(from_str(&format!("#\\{}", c)).unwrap(), Value::Char(c));
@@ -310,6 +318,32 @@ fn test_list_elisp() {
         from_str_custom("(nil)", elisp.clone()).unwrap(),
         Value::list(vec![Value::Null])
     );
+}
+
+#[test]
+fn test_list_brackets() {
+    let options = Options::default().with_brackets(Brackets::List);
+    for (input, value) in &[
+        ("[]", Value::Null),
+        (
+            "[1 2 3]",
+            Value::list(vec![Value::from(1), Value::from(2), Value::from(3)]),
+        ),
+    ] {
+        assert_eq!(&from_str_custom(input, options.clone()).unwrap(), value);
+    }
+}
+
+#[test]
+fn test_vectors_default() {
+    assert_eq!(from_str("#()").unwrap(), Value::Vector(vec![].into()));
+    assert_eq!(from_str("#(1 2)").unwrap(), Value::vector(vec![1, 2]));
+}
+
+#[test]
+fn test_vectors_elisp() {
+    assert_eq!(from_str_elisp("[]").unwrap(), Value::Vector(vec![].into()));
+    assert_eq!(from_str_elisp("[1 2]").unwrap(), Value::vector(vec![1, 2]));
 }
 
 #[test]

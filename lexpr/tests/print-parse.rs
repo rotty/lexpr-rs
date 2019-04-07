@@ -66,3 +66,13 @@ fn test_vectors_elisp() {
     check_roundtrip_elisp(sexp!(#()), "[]");
     check_roundtrip_elisp(sexp!(#(1 2 3 4)), "[1 2 3 4]");
 }
+
+#[test]
+fn test_bytes() {
+    check_roundtrip_default(Value::bytes(vec![1, 2, 3]), "#u8(1 2 3)");
+}
+
+#[test]
+fn test_bytes_elisp() {
+    check_roundtrip_elisp(Value::bytes(vec![1, 255, 3]), r#""\001\377\003""#);
+}
