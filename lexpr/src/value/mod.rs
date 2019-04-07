@@ -319,7 +319,7 @@ impl Value {
         I: IntoIterator,
         I::Item: Into<Value>,
     {
-        let v: Vec<_> = elements.into_iter().map(|e| e.into()).collect();
+        let v: Vec<_> = elements.into_iter().map(Into::into).collect();
         Value::Vector(v.into_boxed_slice())
     }
 

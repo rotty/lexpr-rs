@@ -1,0 +1,6 @@
+ignore:
+  - "lexpr-macros" # proc-macros don't show up in coverage, so ignore
+  - "lexpr/tests" # we also don't care about coverage of test code
+  - "serde-lexpr/tests"
+  - "lexpr/benches" # or coverage of benchmarks
+  - "serde-lexpr/benches"

@@ -1,34 +1,52 @@
 language: rust
+cache: cargo
+rust:
+  - 1.32.0 # uniform paths
+  - stable
+  - beta
+  - nightly
+os: linux
 
-matrix:
-  include:
-    - rust: stable
-    - rust: beta
+# always test things that aren't pushes (like PRs)
+# never test tags or pushes to non-master branches (wait for PR)
+# https://github.com/travis-ci/travis-ci/issues/2200#issuecomment-441395545)
+if: type != push OR (tag IS blank AND branch = master)
+
+jobs:
+  allow_failures:
     - rust: nightly
-
-    # Catch code formatting issues
-    - env: RUSTFMT
+  fast_finish: true
+  include:
+    - stage: check # do a pre-screen to make sure this is even worth testing
+      script: cargo check --all-targets
       rust: stable
+    # We lint using rustfmt and clippy on beta, to future-proof
+    - stage: lint
+      name: "Rust: beta, rustfmt"
+      rust: beta
       install:
         - rustup component add rustfmt
       script:
-        - cargo fmt -- --check
-
-    # Make sure there are no clippy warnings
-    - env: CLIPPY
-      rust: stable
+        - cargo fmt -v -- --check
+    - name: "Rust: beta, clippy"
+      rust: beta
       install:
         - rustup component add clippy
       script:
         - cargo clippy --all-features --all-targets -- -D warnings
+    - stage: coverage
+      sudo: required
+      dist: xenial
+      cache: false
+      services:
+        - docker
+      script:
+        - docker run --security-opt seccomp=unconfined -v "$PWD:/volume" xd009642/tarpaulin:develop-nightly sh -c "cargo tarpaulin --all --out Xml  --run-types Tests Doctests"
+        - bash <(curl -s https://codecov.io/bash)
 
-  allow_failures:
-    - rust: nightly
-  fast_finish: true
+stages:
+  - check
+  - test
+  - lint
+  - coverage
 
-branches:
-  only:
-    - master
-
-cache:
-  cargo: true
