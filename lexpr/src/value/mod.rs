@@ -201,6 +201,18 @@ impl Value {
         Value::String(s.into())
     }
 
+    /// Construct a string.
+    ///
+    /// ```
+    /// # use lexpr::Value;
+    /// let value = Value::bytes(b"foo" as &[u8]);
+    /// assert!(value.is_bytes());
+    /// assert_eq!(value.as_bytes().unwrap(), b"foo");
+    /// ```
+    pub fn bytes(bv: impl Into<Box<[u8]>>) -> Self {
+        Value::Bytes(bv.into())
+    }
+
     /// Create a cons cell given its `car` and `cdr` fields.
     ///
     /// ```
@@ -452,6 +464,45 @@ impl Value {
             Value::Symbol(s) => Some(s),
             Value::Keyword(s) => Some(s),
             Value::String(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// Returns true if the value is a byte vector. Returns false otherwise.
+    ///
+    /// For any Value on which `is_bytes` returns true, `as_bytes` is guaranteed
+    /// to return the byte slice.
+    ///
+    /// ```
+    /// # use lexpr::sexp;
+    /// #
+    /// let v = sexp!(((a . ,(b"some bytes" as &[u8])) (b . "string")));
+    ///
+    /// assert!(v["a"].is_bytes());
+    ///
+    /// // A string is not a byte vector.
+    /// assert!(!v["b"].is_bytes());
+    /// ```
+    pub fn is_bytes(&self) -> bool {
+        self.as_bytes().is_some()
+    }
+
+    /// If the value is a byte vector, returns the associated byte
+    /// slice. Returns `None` otherwise.
+    ///
+    /// ```
+    /// # use lexpr::sexp;
+    /// #
+    /// let v = sexp!(((a . ,(b"some bytes" as &[u8])) (b . "string")));
+    ///
+    /// assert_eq!(v["a"].as_bytes(), Some(b"some bytes" as &[u8]));
+    ///
+    /// // A string is not a byte vector.
+    /// assert_eq!(v["b"].as_bytes(), None);
+    /// ```
+    pub fn as_bytes(&self) -> Option<&[u8]> {
+        match self {
+            Value::Bytes(s) => Some(s),
             _ => None,
         }
     }
