@@ -46,13 +46,25 @@ fn test_vec() {
 
 #[test]
 fn test_unit() {
-    test_serde(&(), &sexp!(#nil));
+    test_serde(&(), &sexp!(()));
 }
 
 #[test]
 fn test_tuples() {
     let tuple = (1, "Hello".to_string(), true);
     test_serde(&tuple, &sexp!(#(1 "Hello" #t)));
+}
+
+#[test]
+fn test_deser_list_as_tuple() {
+    let tuple: (u32, String) = from_value(&sexp!((42 "Answer"))).unwrap();
+    assert_eq!(tuple, (42, "Answer".to_string()));
+}
+
+#[test]
+fn test_deser_vector() {
+    let v: Vec<u32> = from_value(&sexp!(#(42 23))).unwrap();
+    assert_eq!(v, vec![42, 23]);
 }
 
 #[test]
@@ -123,6 +135,20 @@ fn test_complex_enum() {
         &s,
         &sexp!((Struct (s "hello") (v . (1 2 3)) (t . #(23 1.23 "good bye")))),
     );
+}
+
+#[test]
+fn test_unit_struct() {
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    struct Unit;
+    test_serde(&Unit, &sexp!(()));
+}
+
+#[test]
+fn test_newtype_struct() {
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    struct Newtype(u32);
+    test_serde(&Newtype(42), &sexp!(42));
 }
 
 #[test]

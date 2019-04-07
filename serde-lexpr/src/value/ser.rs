@@ -76,7 +76,7 @@ impl ser::Serializer for Serializer {
     }
 
     fn serialize_unit(self) -> Result<Value> {
-        Ok(Value::Nil)
+        Ok(Value::Null)
     }
 
     fn serialize_unit_struct(self, _name: &'static str) -> Result<Value> {
