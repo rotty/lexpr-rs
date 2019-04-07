@@ -156,10 +156,10 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        self.input
-            .as_nil()
-            .ok_or_else(|| invalid_value(self.input, "nil"))
-            .and_then(|_| visitor.visit_unit())
+        match self.input {
+            Value::Nil | Value::Null => visitor.visit_unit(),
+            _ => Err(invalid_value(self.input, "nil or null")),
+        }
     }
 
     fn deserialize_unit_struct<V>(self, _name: &'static str, visitor: V) -> Result<V::Value>
