@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use serde::de::{self, Error as _, Visitor};
+use serde::de::{self, Error as SerdeError, Visitor};
 use serde::Deserialize;
 
 use lexpr::{number, Cons, Number};

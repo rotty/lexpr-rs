@@ -1,7 +1,9 @@
-# lexpr: S-expressions for Rust [![Build Status]][travis]
+# lexpr: S-expressions for Rust [![Build Status]][travis] [![Codecov]][codecov] [![Rustc Version 1.32+]][rustc]
 
 [Build Status]: https://api.travis-ci.org/rotty/lexpr-rs.svg?branch=master
 [travis]: https://travis-ci.org/rotty/lexpr-rs
+[codecov]: https://codecov.io/github/rotty/lexpr-rs/coverage.svg?branch=master
+[rustc]: https://blog.rust-lang.org/2019/01/17/Rust-1.32.0.html
 
 This repositories hosts the following crates:
 

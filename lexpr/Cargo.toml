@@ -33,3 +33,4 @@ harness = false
 
 [badges]
 travis-ci = { repository = "rotty/lexpr-rs" }
+codecov = { repository = "rotty/lexpr-rs", branch = "master", service = "github" }
