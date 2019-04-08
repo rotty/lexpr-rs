@@ -247,10 +247,10 @@ fn test_strings_elisp_io() {
 }
 
 #[test]
-fn test_keyword_styles() {
-    let prefix = Options::new().with_keyword_style(KeywordStyle::ColonPrefix);
-    let postfix = Options::new().with_keyword_style(KeywordStyle::ColonPostfix);
-    let octothorpe = Options::new().with_keyword_style(KeywordStyle::Octothorpe);
+fn test_keyword_syntaxes() {
+    let prefix = Options::new().with_keyword_syntax(KeywordSyntax::ColonPrefix);
+    let postfix = Options::new().with_keyword_syntax(KeywordSyntax::ColonPostfix);
+    let octothorpe = Options::new().with_keyword_syntax(KeywordSyntax::Octothorpe);
 
     assert_eq!(
         from_str_custom(":prefix", prefix).unwrap(),

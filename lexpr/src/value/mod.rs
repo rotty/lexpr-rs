@@ -118,7 +118,7 @@ pub enum Value {
     /// symbols `t` and `nil` instead. The `lexpr` parser can be instructed to
     /// parse the `nil` symbol as the `Nil` value (see [`NilSymbol::Special`]),
     /// allowing to choose its representation when converting to text again (see
-    /// [`NilStyle`]). Note that empty list, when written as `()` or implicitly
+    /// [`NilSyntax`]). Note that empty list, when written as `()` or implicitly
     /// constructed as a list terminator is always parsed as [`Value::Null`],
     /// not `Value::Nil`.
     ///
@@ -127,7 +127,7 @@ pub enum Value {
     /// bracket indexing operator on `Value`.
     ///
     /// [`NilSymbol::Special`]: crate::parse::NilSymbol::Special
-    /// [`NilStyle`]: ../print/enum.NilStyle.html
+    /// [`NilSyntax`]: ../print/enum.NilSyntax.html
     Nil,
 
     /// The empty list.

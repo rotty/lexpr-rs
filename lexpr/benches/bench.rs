@@ -15,10 +15,13 @@ fn bench_parsing_keyword_default(c: &mut Criterion) {
 }
 
 fn bench_parsing_keyword_all_styles(c: &mut Criterion) {
-    use parse::KeywordStyle::*;
+    use parse::KeywordSyntax::*;
     c.bench_function("keyword parsing (all styles)", |b| {
-        let options =
-            parse::Options::default().with_keyword_styles(&[ColonPrefix, ColonPostfix, Octothorpe]);
+        let options = parse::Options::default().with_keyword_syntaxes(&[
+            ColonPrefix,
+            ColonPostfix,
+            Octothorpe,
+        ]);
         b.iter(|| black_box(from_str_custom("#:octo :prefix postfix:", options.clone())))
     });
 }
