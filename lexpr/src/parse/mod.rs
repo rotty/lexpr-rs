@@ -16,7 +16,7 @@ use read::{ElispStr, Reference};
 
 use crate::{Cons, Number, Value};
 
-pub use crate::style::{CharSyntax, KeywordStyle, StringSyntax};
+pub use crate::syntax::{CharSyntax, KeywordSyntax, StringSyntax};
 
 pub use read::{IoRead, Read, SliceRead, StrRead};
 
@@ -40,7 +40,7 @@ pub struct Parser<R> {
 /// Various options to influence parser behavior.
 #[derive(Debug, Clone)]
 pub struct Options {
-    keyword_styles: u8,
+    keyword_syntaxes: u8,
     nil_symbol: NilSymbol,
     t_symbol: TSymbol,
     brackets: Brackets,
@@ -100,7 +100,7 @@ impl Options {
     /// regular symbols.
     pub fn new() -> Self {
         Options {
-            keyword_styles: 0,
+            keyword_syntaxes: 0,
             nil_symbol: NilSymbol::Default,
             t_symbol: TSymbol::Default,
             brackets: Brackets::List,
@@ -112,28 +112,28 @@ impl Options {
     /// Construct a set of options suitable for parsing Emacs Lisp.
     pub fn elisp() -> Self {
         Self::new()
-            .with_keyword_style(KeywordStyle::ColonPrefix)
+            .with_keyword_syntax(KeywordSyntax::ColonPrefix)
             .with_nil_symbol(NilSymbol::EmptyList)
             .with_brackets(Brackets::Vector)
             .with_string_syntax(StringSyntax::Elisp)
             .with_char_syntax(CharSyntax::Elisp)
     }
 
-    /// Add `style` to the recognized keyword styles.
-    pub fn with_keyword_style(mut self, style: KeywordStyle) -> Self {
-        self.keyword_styles |= style.to_flag();
+    /// Add `syntax` to the recognized keyword syntaxes.
+    pub fn with_keyword_syntax(mut self, syntax: KeywordSyntax) -> Self {
+        self.keyword_syntaxes |= syntax.to_flag();
         self
     }
 
-    /// Set the recognized keyword styles.
-    pub fn with_keyword_styles<I, T>(mut self, styles: I) -> Self
+    /// Set the recognized keyword syntaxes.
+    pub fn with_keyword_syntaxes<I, T>(mut self, styles: I) -> Self
     where
         I: IntoIterator<Item = T>,
-        T: Borrow<KeywordStyle>,
+        T: Borrow<KeywordSyntax>,
     {
-        self.keyword_styles = styles
+        self.keyword_syntaxes = styles
             .into_iter()
-            .fold(0, |flags, style| flags | style.borrow().to_flag());
+            .fold(0, |flags, syntax| flags | syntax.borrow().to_flag());
         self
     }
 
@@ -167,10 +167,10 @@ impl Options {
         self
     }
 
-    /// Check wether a keyword style is enabled.
+    /// Check wether a keyword syntax is enabled.
     #[inline]
-    pub fn keyword_style(&self, style: KeywordStyle) -> bool {
-        (self.keyword_styles & style.to_flag()) != 0
+    pub fn keyword_syntax(&self, syntax: KeywordSyntax) -> bool {
+        (self.keyword_syntaxes & syntax.to_flag()) != 0
     }
 
     /// Query the way the `nil` symbol is handled.
@@ -208,7 +208,7 @@ impl Default for Options {
     /// - Brackets are treated just like parentheses, i.e. indicating a list.
     fn default() -> Self {
         Options {
-            keyword_styles: KeywordStyle::Octothorpe.to_flag(),
+            keyword_syntaxes: KeywordSyntax::Octothorpe.to_flag(),
             nil_symbol: NilSymbol::Default,
             t_symbol: TSymbol::Default,
             brackets: Brackets::List,
@@ -429,7 +429,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                             (Err(err), _) | (_, Err(err)) => Err(err),
                         }
                     }
-                    Some(b':') if self.options.keyword_style(KeywordStyle::Octothorpe) => {
+                    Some(b':') if self.options.keyword_syntax(KeywordSyntax::Octothorpe) => {
                         Ok(Value::keyword(self.parse_symbol()?))
                     }
                     Some(b'v') => {
@@ -522,7 +522,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                 }
             },
             b':' => {
-                if self.options.keyword_style(KeywordStyle::ColonPrefix) {
+                if self.options.keyword_syntax(KeywordSyntax::ColonPrefix) {
                     self.eat_char();
                     Ok(Value::keyword(self.parse_symbol()?))
                 } else {
@@ -531,7 +531,7 @@ impl<'de, R: Read<'de>> Parser<R> {
             }
             b'a'...b'z' | b'A'...b'Z' => {
                 let mut name = self.parse_symbol()?;
-                if self.options.keyword_style(KeywordStyle::ColonPostfix) && name.ends_with(':') {
+                if self.options.keyword_syntax(KeywordSyntax::ColonPostfix) && name.ends_with(':') {
                     name.pop();
                     Ok(Value::keyword(name))
                 } else if self.options.nil_symbol() != NilSymbol::Default && name == "nil" {

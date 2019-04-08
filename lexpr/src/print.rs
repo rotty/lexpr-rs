@@ -10,17 +10,17 @@
 use std::io;
 
 use crate::number::{self, Number};
-pub use crate::style::{CharSyntax, KeywordStyle, StringSyntax};
+pub use crate::syntax::{CharSyntax, KeywordSyntax, StringSyntax};
 use crate::Value;
 
 /// Options for printing S-expressions.
 #[derive(Clone, Debug)]
 pub struct Options {
-    keyword_style: KeywordStyle,
-    nil_style: NilStyle,
-    bool_style: BoolStyle,
-    vector_style: VectorStyle,
-    bytes_style: BytesStyle,
+    keyword_syntax: KeywordSyntax,
+    nil_syntax: NilSyntax,
+    bool_syntax: BoolSyntax,
+    vector_syntax: VectorSyntax,
+    bytes_syntax: BytesSyntax,
     string_syntax: StringSyntax,
     char_syntax: CharSyntax,
 }
@@ -33,43 +33,43 @@ impl Options {
     /// booleans will be represented by `nil` and `t`.
     pub fn elisp() -> Self {
         Options {
-            keyword_style: KeywordStyle::ColonPrefix,
-            nil_style: NilStyle::Symbol,
-            bool_style: BoolStyle::Symbol,
-            vector_style: VectorStyle::Brackets,
-            bytes_style: BytesStyle::Elisp,
+            keyword_syntax: KeywordSyntax::ColonPrefix,
+            nil_syntax: NilSyntax::Symbol,
+            bool_syntax: BoolSyntax::Symbol,
+            vector_syntax: VectorSyntax::Brackets,
+            bytes_syntax: BytesSyntax::Elisp,
             string_syntax: StringSyntax::Elisp,
             char_syntax: CharSyntax::Elisp,
         }
     }
 
-    /// Set the style to use for printing keywords.
-    pub fn with_keyword_style(mut self, style: KeywordStyle) -> Self {
-        self.keyword_style = style;
+    /// Set the syntax to use for printing keywords.
+    pub fn with_keyword_syntax(mut self, syntax: KeywordSyntax) -> Self {
+        self.keyword_syntax = syntax;
         self
     }
 
-    /// Set the style to use to print the special nil value.
-    pub fn with_nil_style(mut self, style: NilStyle) -> Self {
-        self.nil_style = style;
+    /// Set the syntax to use to print the special nil value.
+    pub fn with_nil_syntax(mut self, syntax: NilSyntax) -> Self {
+        self.nil_syntax = syntax;
         self
     }
 
-    /// Set the style to use to print boolean values.
-    pub fn with_bool_style(mut self, style: BoolStyle) -> Self {
-        self.bool_style = style;
+    /// Set the syntax to use to print boolean values.
+    pub fn with_bool_syntax(mut self, syntax: BoolSyntax) -> Self {
+        self.bool_syntax = syntax;
         self
     }
 
-    /// Set the style for printing vectors.
-    pub fn with_vector_style(mut self, style: VectorStyle) -> Self {
-        self.vector_style = style;
+    /// Set the syntax for printing vectors.
+    pub fn with_vector_syntax(mut self, syntax: VectorSyntax) -> Self {
+        self.vector_syntax = syntax;
         self
     }
 
-    /// Set the style to use for printing byte vectors.
-    pub fn with_bytes_style(mut self, style: BytesStyle) -> Self {
-        self.bytes_style = style;
+    /// Set the syntax to use for printing byte vectors.
+    pub fn with_bytes_syntax(mut self, syntax: BytesSyntax) -> Self {
+        self.bytes_syntax = syntax;
         self
     }
 
@@ -89,11 +89,11 @@ impl Options {
 impl Default for Options {
     fn default() -> Self {
         Options {
-            keyword_style: KeywordStyle::Octothorpe,
-            nil_style: NilStyle::Token,
-            bool_style: BoolStyle::Token,
-            vector_style: VectorStyle::Octothorpe,
-            bytes_style: BytesStyle::R7RS,
+            keyword_syntax: KeywordSyntax::Octothorpe,
+            nil_syntax: NilSyntax::Token,
+            bool_syntax: BoolSyntax::Token,
+            vector_syntax: VectorSyntax::Octothorpe,
+            bytes_syntax: BytesSyntax::R7RS,
             string_syntax: StringSyntax::R6RS,
             char_syntax: CharSyntax::R6RS,
         }
@@ -102,7 +102,7 @@ impl Default for Options {
 
 /// How to print the special nil value.
 #[derive(Debug, Clone, Copy)]
-pub enum NilStyle {
+pub enum NilSyntax {
     /// Output a `nil` symbol.
     Symbol,
     /// Output the `#nil` token.
@@ -115,7 +115,7 @@ pub enum NilStyle {
 
 /// How to print boolean values.
 #[derive(Debug, Clone, Copy)]
-pub enum BoolStyle {
+pub enum BoolSyntax {
     /// Use the Scheme tokens `#t` and `#f`
     Token,
     /// Use symbols `nil` and `t`.
@@ -124,7 +124,7 @@ pub enum BoolStyle {
 
 /// How to print vectors.
 #[derive(Debug, Clone, Copy)]
-pub enum VectorStyle {
+pub enum VectorSyntax {
     /// Use Scheme notation, i.e. `#(...)`.
     Octothorpe,
     /// Use brackets, as used in Emacs Lisp.
@@ -133,7 +133,7 @@ pub enum VectorStyle {
 
 /// How to print byte vectors.
 #[derive(Debug, Clone, Copy)]
-pub enum BytesStyle {
+pub enum BytesSyntax {
     /// Use R6RS byte vector syntax, e.g. `#vu8(1 2 3)`.
     R6RS,
     /// Use R7RS byte vector syntax, e.g. `#u8(1 2 3)`.
@@ -193,7 +193,7 @@ pub enum VectorType {
 /// S-expression output, as well as to allow customizing the printing
 /// for various S-expression "dialects".
 ///
-/// The default implementation produces Scheme-style S-expression
+/// The default implementation produces Scheme-syntax S-expression
 /// text.
 pub trait Formatter {
     /// Writes a representation of the special nil value to the specified writer.
@@ -438,11 +438,11 @@ impl Formatter for CustomizedFormatter {
     where
         W: io::Write,
     {
-        match self.options.nil_style {
-            NilStyle::EmptyList => writer.write_all(b"()"),
-            NilStyle::Symbol => writer.write_all(b"nil"),
-            NilStyle::Token => writer.write_all(b"#nil"),
-            NilStyle::False => self.write_bool(writer, false),
+        match self.options.nil_syntax {
+            NilSyntax::EmptyList => writer.write_all(b"()"),
+            NilSyntax::Symbol => writer.write_all(b"nil"),
+            NilSyntax::Token => writer.write_all(b"#nil"),
+            NilSyntax::False => self.write_bool(writer, false),
         }
     }
 
@@ -450,9 +450,9 @@ impl Formatter for CustomizedFormatter {
     where
         W: io::Write,
     {
-        match self.options.bool_style {
-            BoolStyle::Symbol => writer.write_all(if value { b"t" } else { b"nil" }),
-            BoolStyle::Token => writer.write_all(if value { b"#t" } else { b"#f" }),
+        match self.options.bool_syntax {
+            BoolSyntax::Symbol => writer.write_all(if value { b"t" } else { b"nil" }),
+            BoolSyntax::Token => writer.write_all(if value { b"#t" } else { b"#f" }),
         }
     }
 
@@ -460,16 +460,16 @@ impl Formatter for CustomizedFormatter {
     where
         W: io::Write,
     {
-        match self.options.keyword_style {
-            KeywordStyle::ColonPostfix => {
+        match self.options.keyword_syntax {
+            KeywordSyntax::ColonPostfix => {
                 writer.write_all(name.as_bytes())?;
                 writer.write_all(b":")
             }
-            KeywordStyle::ColonPrefix => {
+            KeywordSyntax::ColonPrefix => {
                 writer.write_all(b":")?;
                 writer.write_all(name.as_bytes())
             }
-            KeywordStyle::Octothorpe => {
+            KeywordSyntax::Octothorpe => {
                 writer.write_all(b"#:")?;
                 writer.write_all(name.as_bytes())
             }
@@ -480,14 +480,14 @@ impl Formatter for CustomizedFormatter {
     where
         W: io::Write,
     {
-        match self.options.vector_style {
-            VectorStyle::Brackets => writer.write_all(b"["),
-            VectorStyle::Octothorpe => match kind {
+        match self.options.vector_syntax {
+            VectorSyntax::Brackets => writer.write_all(b"["),
+            VectorSyntax::Octothorpe => match kind {
                 VectorType::Generic => writer.write_all(b"#("),
-                VectorType::Byte => match self.options.bytes_style {
-                    BytesStyle::R6RS => writer.write_all(b"#vu8("),
-                    BytesStyle::R7RS => writer.write_all(b"#u8("),
-                    _ => panic!("invalid combination of VectorStyle and ByteStyle"),
+                VectorType::Byte => match self.options.bytes_syntax {
+                    BytesSyntax::R6RS => writer.write_all(b"#vu8("),
+                    BytesSyntax::R7RS => writer.write_all(b"#u8("),
+                    _ => panic!("invalid combination of VectorSyntax and BytesSyntax"),
                 },
             },
         }
@@ -497,9 +497,9 @@ impl Formatter for CustomizedFormatter {
     where
         W: io::Write,
     {
-        match self.options.vector_style {
-            VectorStyle::Brackets => writer.write_all(b"]"),
-            VectorStyle::Octothorpe => writer.write_all(b")"),
+        match self.options.vector_syntax {
+            VectorSyntax::Brackets => writer.write_all(b"]"),
+            VectorSyntax::Octothorpe => writer.write_all(b")"),
         }
     }
 
@@ -533,13 +533,13 @@ impl Formatter for CustomizedFormatter {
     where
         W: io::Write,
     {
-        match self.options.bytes_style {
-            BytesStyle::R6RS | BytesStyle::R7RS => {
+        match self.options.bytes_syntax {
+            BytesSyntax::R6RS | BytesSyntax::R7RS => {
                 write_scheme_vector(self, writer, VectorType::Byte, bytes, |writer, &octet| {
                     itoa::write(writer, octet).map(|_| ())
                 })
             }
-            BytesStyle::Elisp => {
+            BytesSyntax::Elisp => {
                 static OCTAL_CHARS: &[u8] = b"012345678";
                 writer.write_all(b"\"")?;
                 for octet in bytes {

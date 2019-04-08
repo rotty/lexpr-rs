@@ -1,6 +1,8 @@
-/// Indicates a style of keywords.
+//! Declarations shared between printer and parser.
+
+/// Indicates a syntax of keywords.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum KeywordStyle {
+pub enum KeywordSyntax {
     /// Parse identifiers starting with a colon as keywords.
     ///
     /// In the absence of this option, such identifiers would be
@@ -20,10 +22,10 @@ pub enum KeywordStyle {
     Octothorpe,
 }
 
-impl KeywordStyle {
+impl KeywordSyntax {
     #[inline]
     pub(crate) fn to_flag(self) -> u8 {
-        use KeywordStyle::*;
+        use KeywordSyntax::*;
         match self {
             ColonPrefix => 1,
             ColonPostfix => 2,
