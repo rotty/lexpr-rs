@@ -6,7 +6,7 @@
 [Rustc Version 1.32+]: https://img.shields.io/badge/rustc-1.32+-lightgray.svg
 [rustc]: https://blog.rust-lang.org/2019/01/17/Rust-1.32.0.html
 
-This repositories hosts the following crates:
+This repository hosts the following crates:
 
 - [`lexpr`](./lexpr), providing the `lexpr::Value` type for
   representing S-expression data, the `sexp` macro to embed
