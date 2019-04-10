@@ -561,17 +561,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                 }
             }
         };
-
-        match value {
-            Ok(value) => Ok(Some(value)),
-            // The de::Error and From<de::value::Error> impls both create errors
-            // with unknown line and column. Fill in the position here by
-            // looking at the current index in the input. There is no way to
-            // tell whether this should call `error` or `peek_error` so pick the
-            // one that seems correct more often. Worst case, the position is
-            // off by one character.
-            Err(err) => Err(err.fix_position(|code| self.error(code))),
-        }
+        value.map(Some)
     }
 
     fn parse_symbol(&mut self) -> Result<String> {
@@ -1113,7 +1103,7 @@ pub fn from_str_elisp(s: &str) -> Result<Value> {
     from_str_custom(s, Options::elisp())
 }
 
-mod error;
+pub mod error;
 mod iter;
 mod read;
 

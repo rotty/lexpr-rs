@@ -681,7 +681,7 @@ fn decode_r6rs_hex_escape<'de, R: Read<'de>>(read: &mut R) -> Result<u32> {
             return Ok(n);
         }
         match decode_hex_val(next) {
-            None => return error(read, ErrorCode::InvalidEscape),
+            None => return error(read, ErrorCode::EofWhileParsingString),
             Some(val) => {
                 if n >= (1 << 24) {
                     // A codepoint never has more than 24 bits
@@ -997,7 +997,7 @@ fn decode_r6rs_char_hex_escape<'de, R: Read<'de> + ?Sized>(read: &mut R) -> Resu
         read.discard();
         first = false;
         match decode_hex_val(next) {
-            None => return error(read, ErrorCode::InvalidEscape),
+            None => return error(read, ErrorCode::EofWhileParsingCharacterConstant),
             Some(val) => {
                 if n >= (1 << 24) {
                     // A codepoint never has more than 24 bits
