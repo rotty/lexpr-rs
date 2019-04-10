@@ -1,3 +1,5 @@
+//! When parsing S-expressions goes wrong.
+
 use std::error;
 use std::fmt::{self, Debug, Display};
 use std::io;
@@ -12,22 +14,23 @@ pub struct Error {
     err: Box<ErrorImpl>,
 }
 
-struct ErrorImpl {
-    code: ErrorCode,
+/// Alias for a `Result` with the error type `lexpr::Error`.
+pub type Result<T> = result::Result<T, Error>;
+
+/// Location of a parse error.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Location {
     line: usize,
     column: usize,
 }
 
-/// Alias for a `Result` with the error type `lexpr::Error`.
-pub type Result<T> = result::Result<T, Error>;
-
-impl Error {
+impl Location {
     /// One-based line number at which the error was detected.
     ///
     /// Characters in the first line of the input (before the first newline
     /// character) are in line 1.
     pub fn line(&self) -> usize {
-        self.err.line
+        self.line
     }
 
     /// One-based column number at which the error was detected.
@@ -38,14 +41,131 @@ impl Error {
     /// Note that errors may occur in column 0, for example if a read from an IO
     /// stream fails immediately following a previously read newline character.
     pub fn column(&self) -> usize {
-        self.err.column
+        self.column
+    }
+}
+
+impl Error {
+    /// Location of the error in the input stream.
+    pub fn location(&self) -> Option<Location> {
+        self.err.location
+    }
+
+    /// Categorizes the cause of this error.
+    ///
+    /// - `Category::Io` - failure to read or write bytes on an IO stream
+    /// - `Category::Syntax` - input that is not a syntactically valid S-experssion
+    /// - `Category::Eof` - unexpected end of the input data
+    pub fn classify(&self) -> Category {
+        match self.err.code {
+            ErrorCode::Io(_) => Category::Io,
+            ErrorCode::EofWhileParsingList
+            | ErrorCode::EofWhileParsingString
+            | ErrorCode::EofWhileParsingVector
+            | ErrorCode::EofWhileParsingValue
+            | ErrorCode::EofWhileParsingCharacterConstant => Category::Eof,
+            ErrorCode::ExpectedSomeIdent
+            | ErrorCode::ExpectedSomeValue
+            | ErrorCode::ExpectedVector
+            | ErrorCode::ExpectedOctet
+            | ErrorCode::MismatchedParenthesis
+            | ErrorCode::InvalidEscape
+            | ErrorCode::InvalidNumber
+            | ErrorCode::InvalidCharacterConstant
+            | ErrorCode::NumberOutOfRange
+            | ErrorCode::InvalidUnicodeCodePoint
+            | ErrorCode::TrailingCharacters
+            | ErrorCode::RecursionLimitExceeded => Category::Syntax,
+        }
+    }
+
+    /// Returns true if this error was caused by a failure to read or write
+    /// bytes on an IO stream.
+    pub fn is_io(&self) -> bool {
+        self.classify() == Category::Io
+    }
+
+    /// Returns true if this error was caused by input that was not
+    /// a syntactically valid S-expression.
+    pub fn is_syntax(&self) -> bool {
+        self.classify() == Category::Syntax
+    }
+
+    /// Returns true if this error was caused by prematurely reaching the end of
+    /// the input data.
+    ///
+    /// Callers that process streaming input may be interested in retrying the
+    /// deserialization once more data is available.
+    pub fn is_eof(&self) -> bool {
+        self.classify() == Category::Eof
+    }
+}
+
+/// Categorizes the cause of a `lexpr::parse::Error`.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub enum Category {
+    /// The error was caused by a failure to read or bytes from an input source.
+    Io,
+
+    /// The error was caused by input that was not a syntactically valid
+    /// S-expression.
+    Syntax,
+
+    /// The error was caused by prematurely reaching the end of the input data.
+    ///
+    /// Callers that process streaming input may be interested in retrying the
+    /// deserialization once more data is available.
+    Eof,
+}
+
+impl From<Error> for io::Error {
+    /// Convert a `lexpr::parse::Error` into an `io::Error`.
+    ///
+    /// S-expression syntax errors are turned into `InvalidData` IO errors.  EOF
+    /// errors are turned into `UnexpectedEof` IO errors.
+    ///
+    /// ```
+    /// use std::io;
+    ///
+    /// enum MyError {
+    ///     Io(io::Error),
+    ///     Parse(lexpr::parse::Error),
+    /// }
+    ///
+    /// impl From<lexpr::parse::Error> for MyError {
+    ///     fn from(err: lexpr::parse::Error) -> MyError {
+    ///         use lexpr::parse::error::Category;
+    ///         match err.classify() {
+    ///             Category::Io => {
+    ///                 MyError::Io(err.into())
+    ///             }
+    ///             Category::Syntax | Category::Eof => {
+    ///                 MyError::Parse(err)
+    ///             }
+    ///         }
+    ///     }
+    /// }
+    /// ```
+    fn from(l: Error) -> Self {
+        if let ErrorCode::Io(err) = l.err.code {
+            err
+        } else {
+            match l.classify() {
+                Category::Io => unreachable!(),
+                Category::Syntax => io::Error::new(io::ErrorKind::InvalidData, l),
+                Category::Eof => io::Error::new(io::ErrorKind::UnexpectedEof, l),
+            }
+        }
     }
 }
 
 impl Error {
     pub(crate) fn syntax(code: ErrorCode, line: usize, column: usize) -> Self {
         Error {
-            err: Box::new(ErrorImpl { code, line, column }),
+            err: Box::new(ErrorImpl {
+                code,
+                location: Some(Location { line, column }),
+            }),
         }
     }
 
@@ -53,22 +173,15 @@ impl Error {
         Error {
             err: Box::new(ErrorImpl {
                 code: ErrorCode::Io(error),
-                line: 0,
-                column: 0,
+                location: None,
             }),
         }
     }
+}
 
-    pub(crate) fn fix_position<F>(self, f: F) -> Self
-    where
-        F: FnOnce(ErrorCode) -> Error,
-    {
-        if self.err.line == 0 {
-            f(self.err.code)
-        } else {
-            self
-        }
-    }
+struct ErrorImpl {
+    code: ErrorCode,
+    location: Option<Location>,
 }
 
 pub(crate) enum ErrorCode {
@@ -165,7 +278,7 @@ impl error::Error for Error {
         }
     }
 
-    fn cause(&self) -> Option<&error::Error> {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self.err.code {
             ErrorCode::Io(ref err) => Some(err),
             _ => None,
@@ -181,14 +294,14 @@ impl Display for Error {
 
 impl Display for ErrorImpl {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.line == 0 {
-            Display::fmt(&self.code, f)
-        } else {
+        if let Some(loc) = self.location {
             write!(
                 f,
                 "{} at line {} column {}",
-                self.code, self.line, self.column
+                self.code, loc.line, loc.column
             )
+        } else {
+            Display::fmt(&self.code, f)
         }
     }
 }
@@ -197,12 +310,16 @@ impl Display for ErrorImpl {
 // end up seeing this representation because it is what unwrap() shows.
 impl Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "Error({:?}, line: {}, column: {})",
-            self.err.code.to_string(),
-            self.err.line,
-            self.err.column
-        )
+        if let Some(loc) = self.err.location {
+            write!(
+                f,
+                "Error({:?}, line: {}, column: {})",
+                self.err.code.to_string(),
+                loc.line,
+                loc.column,
+            )
+        } else {
+            write!(f, "Error({:?})", self.err.code.to_string())
+        }
     }
 }

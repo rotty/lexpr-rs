@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use serde_derive::{Deserialize, Serialize};
 
 use lexpr::{sexp, Value};
-use serde_lexpr::{from_value, to_value};
+use serde_lexpr::{error::Category, from_str, from_value, to_value};
 
 fn test_serde<T>(thing: &T, expected: &Value)
 where
@@ -15,6 +15,15 @@ where
     assert_eq!(&value, expected);
     let deserialized: T = from_value(&value).unwrap();
     assert_eq!(&deserialized, thing);
+}
+
+fn deser_error<T>(s: &str) -> Option<(Category, Option<(usize, usize)>)>
+where
+    T: serde::de::DeserializeOwned,
+{
+    from_str::<T>(s)
+        .err()
+        .map(|e| (e.classify(), e.location().map(|l| (l.line(), l.column()))))
 }
 
 #[test]
@@ -167,5 +176,17 @@ fn test_basic_struct() {
     test_serde(
         &thing,
         &sexp!(((foo . -324) (bar . "Hello World") (baz . #t))),
+    );
+}
+
+#[test]
+fn test_parse_error_eof() {
+    assert_eq!(
+        deser_error::<String>("\""),
+        Some((Category::Eof, Some((1, 1))))
+    );
+    assert_eq!(
+        deser_error::<String>("\"\\x43"),
+        Some((Category::Eof, Some((1, 5))))
     );
 }

@@ -1,4 +1,5 @@
 use super::*;
+use crate::parse::error::Category;
 use crate::Value;
 
 use std::io::Cursor;
@@ -25,7 +26,12 @@ fn test_atoms_default() {
 
 #[test]
 fn test_atom_failures() {
-    assert!(from_str_custom("#:octothorpe-keyword", Options::new()).is_err());
+    assert_eq!(
+        from_str_custom("#:octothorpe-keyword", Options::new())
+            .err()
+            .map(|e| e.classify()),
+        Some(Category::Syntax)
+    );
 }
 
 #[test]
@@ -141,7 +147,12 @@ where
     assert_eq!(parse(r#""\x41;bc""#).unwrap(), Value::string("Abc"));
     assert_eq!(parse(r#""\x41; bc""#).unwrap(), Value::string("A bc"));
     assert_eq!(parse(r#""\x41bc;""#).unwrap(), Value::string("\u{41BC}"));
-    assert!(parse(r#""\x41""#).is_err());
+    assert_eq!(
+        parse(r#""\x41""#)
+            .err()
+            .map(|e| (e.classify(), e.location().is_some())),
+        Some((Category::Eof, true))
+    );
     assert!(parse(r#""\x;"#).is_err());
     assert!(parse(r#""\x41bx;""#).is_err());
     assert_eq!(parse(r#""\x00000041;""#).unwrap(), Value::string("A"));

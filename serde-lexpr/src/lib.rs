@@ -143,10 +143,10 @@
 //! [`lexpr::Value`]: https://docs.rs/lexpr/*/lexpr/enum.Value.html
 
 mod de;
-mod error;
 mod ser;
 mod value;
 
+pub mod error;
 pub use de::{
     from_reader, from_reader_custom, from_slice, from_slice_custom, from_str, from_str_custom,
 };
