@@ -147,11 +147,13 @@ mod error;
 mod ser;
 mod value;
 
-pub use de::from_str;
+pub use de::{
+    from_reader, from_reader_custom, from_slice, from_slice_custom, from_str, from_str_custom,
+};
 pub use error::{Error, Result};
-pub use ser::to_string;
+pub use ser::{to_string, to_string_custom, to_vec, to_vec_custom, to_writer, to_writer_custom};
 pub use value::{from_value, to_value, Cons, Value};
 
 // This is exposed for convenience (allowing importing via `serde_lexpr`) and so
 // that links from the `Value` documentation work.
-pub use lexpr::parse;
+pub use lexpr::{parse, print};
