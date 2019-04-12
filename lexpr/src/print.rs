@@ -14,7 +14,7 @@ pub use crate::syntax::{CharSyntax, KeywordSyntax, StringSyntax};
 use crate::Value;
 
 /// Options for printing S-expressions.
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Options {
     keyword_syntax: KeywordSyntax,
     nil_syntax: NilSyntax,
@@ -944,4 +944,15 @@ pub fn to_string_custom(value: &Value, options: Options) -> io::Result<String> {
         String::from_utf8_unchecked(vec)
     };
     Ok(string)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_options_size() {
+        // Parser options should fit in 2 machine words on 32-bit architectures.
+        assert!(std::mem::size_of::<Options>() <= std::mem::size_of::<u32>() * 2);
+    }
 }

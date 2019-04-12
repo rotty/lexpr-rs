@@ -22,7 +22,7 @@ fn bench_parsing_keyword_all_styles(c: &mut Criterion) {
             ColonPostfix,
             Octothorpe,
         ]);
-        b.iter(|| black_box(from_str_custom("#:octo :prefix postfix:", options.clone())))
+        b.iter(|| black_box(from_str_custom("#:octo :prefix postfix:", options)))
     });
 }
 

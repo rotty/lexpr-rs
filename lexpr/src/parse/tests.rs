@@ -322,11 +322,11 @@ fn test_list_nil_default() {
 fn test_list_elisp() {
     let elisp = Options::elisp();
     assert_eq!(
-        from_str_custom("(1 . nil)", elisp.clone()).unwrap(),
+        from_str_custom("(1 . nil)", elisp).unwrap(),
         Value::list(vec![1]),
     );
     assert_eq!(
-        from_str_custom("(nil)", elisp.clone()).unwrap(),
+        from_str_custom("(nil)", elisp).unwrap(),
         Value::list(vec![Value::Null])
     );
 }
@@ -341,7 +341,7 @@ fn test_list_brackets() {
             Value::list(vec![Value::from(1), Value::from(2), Value::from(3)]),
         ),
     ] {
-        assert_eq!(&from_str_custom(input, options.clone()).unwrap(), value);
+        assert_eq!(&from_str_custom(input, options).unwrap(), value);
     }
 }
 
@@ -363,4 +363,10 @@ fn test_byte_vectors() {
     for input in &["#u8(0 256 3)", "#u8(0.0 1 2)", "#u8(test 1 2)"] {
         assert!(from_str(input).is_err());
     }
+}
+
+#[test]
+fn test_options_size() {
+    // Parser options should fit in 2 machine words on 32-bit architectures.
+    assert!(std::mem::size_of::<Options>() <= std::mem::size_of::<u32>() * 2);
 }
