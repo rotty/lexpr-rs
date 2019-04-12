@@ -38,7 +38,7 @@ pub struct Parser<R> {
 }
 
 /// Various options to influence parser behavior.
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Options {
     keyword_syntaxes: u8,
     nil_symbol: NilSymbol,
@@ -169,32 +169,32 @@ impl Options {
 
     /// Check wether a keyword syntax is enabled.
     #[inline]
-    pub fn keyword_syntax(&self, syntax: KeywordSyntax) -> bool {
+    pub fn keyword_syntax(self, syntax: KeywordSyntax) -> bool {
         (self.keyword_syntaxes & syntax.to_flag()) != 0
     }
 
     /// Query the way the `nil` symbol is handled.
-    pub fn nil_symbol(&self) -> NilSymbol {
+    pub fn nil_symbol(self) -> NilSymbol {
         self.nil_symbol
     }
 
     /// Query the way the `t` symbol is handled.
-    pub fn t_symbol(&self) -> TSymbol {
+    pub fn t_symbol(self) -> TSymbol {
         self.t_symbol
     }
 
     /// Query the way brackets are handled.
-    pub fn brackets(&self) -> Brackets {
+    pub fn brackets(self) -> Brackets {
         self.brackets
     }
 
     /// Query the accepted string syntax.
-    pub fn string_syntax(&self) -> StringSyntax {
+    pub fn string_syntax(self) -> StringSyntax {
         self.string_syntax
     }
 
     /// Query the accepted character syntax.
-    pub fn char_syntax(&self) -> CharSyntax {
+    pub fn char_syntax(self) -> CharSyntax {
         self.char_syntax
     }
 }
