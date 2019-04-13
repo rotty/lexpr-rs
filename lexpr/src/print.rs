@@ -947,12 +947,4 @@ pub fn to_string_custom(value: &Value, options: Options) -> io::Result<String> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_options_size() {
-        // Parser options should fit in 2 machine words on 32-bit architectures.
-        assert!(std::mem::size_of::<Options>() <= std::mem::size_of::<u32>() * 2);
-    }
-}
+mod tests;
