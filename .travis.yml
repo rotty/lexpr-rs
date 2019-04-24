@@ -43,10 +43,19 @@ jobs:
       script:
         - docker run --security-opt seccomp=unconfined -v "$PWD:/volume" xd009642/tarpaulin:develop-nightly sh -c "cargo tarpaulin --all --out Xml  --run-types Tests Doctests"
         - bash <(curl -s https://codecov.io/bash)
+    - stage: publish
+      env:  GHP_UPLOAD_VERSION=0.3.2
+      rust: nightly
+      install:
+        - cargo install --force --version $GHP_UPLOAD_VERSION cargo-ghp-upload
+      script:
+        - cargo doc --verbose && cargo ghp-upload -vv
 
 stages:
   - check
   - test
   - lint
   - coverage
-
+  # Only publish for non-pull request, non-tag changes to master branch
+  - name: publish
+    if: type = push AND tag IS blank AND branch = master
