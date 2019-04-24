@@ -1,0 +1,12 @@
+var ALIASES = {};
+ALIASES["itoa"] = {};
+ALIASES["lexpr"] = {};
+ALIASES["lexpr_macros"] = {};
+ALIASES["proc_macro2"] = {};
+ALIASES["proc_macro_hack"] = {};
+ALIASES["quote"] = {};
+ALIASES["ryu"] = {};
+ALIASES["serde"] = {};
+ALIASES["serde_lexpr"] = {};
+ALIASES["syn"] = {};
+ALIASES["unicode_xid"] = {};

@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Number","Represents an S-expression number, whether integer or floating point."]],"trait":[["Visitor","Trait to access the value stored in `Number`."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Category","Categorizes the cause of a `lexpr::parse::Error`."]],"struct":[["Error","This type represents the possible errors when parsing S-expression data."],["Location","Location of a parse error."]],"type":[["Result","Alias for a `Result` with the error type `lexpr::Error`."]]});

@@ -1,0 +1,215 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `lexpr` crate."><meta name="keywords" content="rust, rustlang, rust-lang, lexpr"><title>lexpr - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../lexpr/index.html'><img src='../rust-logo.png' alt='logo' width='100'></a><p class='location'>Crate lexpr</p><div class="sidebar-elems"><a id='all-types' href='all.html'><p>See all lexpr's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'lexpr', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/lexpr/lib.rs.html#1-361' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>lexpr</a></span></h1><div class='docblock'><p>This crate provides facilities for parsing, printing and
+manipulating S-expression data. S-expressions are the format used
+to represent code and data in the Lisp language family.</p>
+<pre><code class="language-scheme">((name . &quot;John Doe&quot;)
+ (age . 43)
+ (address
+  (street &quot;10 Downing Street&quot;)
+  (city &quot;London&quot;))
+ (phones &quot;+44 1234567&quot; &quot;+44 2345678&quot;))
+</code></pre>
+<p><code>lexpr</code> also supports more complex types; including keywords and
+configurable tokens for <code>true</code>, <code>false</code> and <code>nil</code>, by default
+using Scheme syntax:</p>
+<pre><code class="language-scheme">(define-class rectangle ()
+ (width
+   #:init-value #nil ;; Nil value
+   #:settable #t     ;; true
+   #:guard (&gt; width 10)
+ )
+ (height
+   #:init-value 10
+   #:writable #f ;; false
+  ))
+</code></pre>
+<p>Note that keywords, and the corresponding <code>#:</code> notation, is not
+part of standard Scheme, but is supported by <code>lexpr</code>'s default
+parser settings.</p>
+<p>There are three common ways that you might find yourself needing
+to work with S-expression data in Rust:</p>
+<ul>
+<li>
+<p><strong>As text data</strong>. An unprocessed string of S-expression data
+that you receive from a Lisp program, read from a file, or
+prepare to send to a Lisp program.</p>
+</li>
+<li>
+<p><strong>As an dynamically typed representation</strong>. Maybe you want to check that
+some S-expression data is valid before passing it on, but without knowing
+the structure of what it contains. Or you want to handle arbirarily
+structured data, like Lisp code.</p>
+</li>
+<li>
+<p><strong>As a statically typed Rust data structure</strong>. When you expect all
+or most of your data to conform to a particular structure and
+want to get real work done without the dynamically typed nature
+of S-expressions tripping you up.</p>
+</li>
+</ul>
+<p>Only the first two items of this list are handled by <code>lexpr</code>; for conversion
+from and to statically typed Rust data structures see the <a href="https://docs.rs/serde-lexpr"><code>serde-lexpr</code></a>
+crate.</p>
+<h1 id="operating-on-dynamically-typed-s-expression-data" class="section-header"><a href="#operating-on-dynamically-typed-s-expression-data">Operating on dynamically typed S-expression data</a></h1>
+<p>Any valid S-expression can be manipulated using the <a href="../lexpr/value/enum.Value.html" title="`Value`"><code>Value</code></a> data
+structure.</p>
+<h2 id="constructing-s-expression-values" class="section-header"><a href="#constructing-s-expression-values">Constructing S-expression values</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+ <span class="kw">use</span> <span class="ident">lexpr</span>::{<span class="ident">Value</span>, <span class="ident">parse</span>::<span class="ident">Error</span>};
+
+ <span class="kw">fn</span> <span class="ident">example</span>() <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+     <span class="comment">// Some s-expressions a &amp;str.</span>
+     <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="string">r#&quot;((name . &quot;John Doe&quot;)
+                    (age . 43)
+                    (phones &quot;+44 1234567&quot; &quot;+44 2345678&quot;))&quot;#</span>;
+
+     <span class="comment">// Parse the string of data into lexpr::Value.</span>
+     <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">lexpr</span>::<span class="ident">from_str</span>(<span class="ident">data</span>)<span class="question-mark">?</span>;
+
+     <span class="comment">// Access parts of the data by indexing with square brackets.</span>
+     <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Please call {} at the number {}&quot;</span>, <span class="ident">v</span>[<span class="string">&quot;name&quot;</span>], <span class="ident">v</span>[<span class="string">&quot;phones&quot;</span>][<span class="number">1</span>]);
+
+     <span class="prelude-val">Ok</span>(())
+ }</pre></div>
+<h1 id="what-are-s-expressions" class="section-header"><a href="#what-are-s-expressions">What are S-expressions?</a></h1>
+<p>S-expressions, as mentioned above, is the notation used by various
+dialects of Lisp to represent data (and code). As a data format,
+it is roughly comparable to JSON (JavaScript Object Notation), but
+syntactically more lightweight and simpler. Note that different
+Lisp dialects have notational differences for some data types, and
+some may lack specific data types completely. This section tries
+to give an overview over the different types of values
+representable by the <a href="../lexpr/value/enum.Value.html" title="`Value`"><code>Value</code></a> data type and how it relates to
+different Lisp dialects. All examples are given in the syntax used
+in <a href="https://www.gnu.org/software/guile/">Guile</a> Scheme
+implementation.</p>
+<p>The parser and serializer implementation in <code>lexpr</code> can be
+tailored to parse and generate S-expression data in various
+&quot;dialects&quot; in use by different Lisp variants; the aim is to cover
+large parts of R6RS and R7RS Scheme with some Guile and Racket
+extensions, as well as Emacs Lisp.</p>
+<p>In the following, the S-expression values that are modeled by
+<code>lexpr</code> are introduced, In general, S-expression values can be
+split into the two categories primitive types and compound types.</p>
+<h2 id="primitive-types" class="section-header"><a href="#primitive-types">Primitive types</a></h2>
+<p>Primitive, or non-compound types are those that can not
+recursively contain arbitrary other values, such as numbers,
+strings and booleans.</p>
+<h3 id="symbols-and-keywords" class="section-header"><a href="#symbols-and-keywords">Symbols and keywords</a></h3>
+<p>Lisp has a data type not commonly found in other languages, namely
+&quot;symbols&quot;. A symbol is conceptually similar to identifiers in
+other languages, but allow for a much richer set of characters
+than allowed for identifiers in other languages. Also, identifiers
+in other languages can typically not be used in data; lisps expose
+them as a primitive data type, a result of the
+<a href="https://en.wikipedia.org/wiki/Homoiconicity">homoiconicity</a> of
+the Lisp language family.</p>
+<pre><code class="language-scheme">this-is-a-symbol ; A single symbol, dashes are allowed
+another.symbol   ; Periods are allowed as well
+foo$bar!&lt;_&gt;?     ; As are quite a few other characters
+</code></pre>
+<p>Another data type, present in some Lisp dialects, such as Emacs
+Lisp, Common Lisp, and several Scheme implementations, are
+keywords. These are also supported by <code>lexpr</code>. Keywords are very
+similiar to symbols, but are typically prefixed by <code>:</code> or <code>#:</code> and
+are used for different purposes in the language.</p>
+<pre><code class="language-lisp">#:foo ; A keyword named &quot;foo&quot;, written in Guile/Racket notation
+:bar  ; A keyword named &quot;bar&quot;, written in Emacs Lisp or Common Lisp notation
+</code></pre>
+<h3 id="booleans" class="section-header"><a href="#booleans">Booleans</a></h3>
+<pre><code class="language-scheme">#t ; The literal representing true
+#f ; The literal representing false
+</code></pre>
+<h3 id="the-empty-list-and-nil" class="section-header"><a href="#the-empty-list-and-nil">The empty list and &quot;nil&quot;</a></h3>
+<p>In traditional Lisps, the end of list is represented as by a
+special atom written as <code>nil</code>. In Scheme, the empty list is an
+atom written as <code>()</code>, and there <code>nil</code> is just a regular
+symbol. Both <code>nil</code> and the empty list are present and
+distinguishable in <code>lexpr</code>.</p>
+<h3 id="numbers" class="section-header"><a href="#numbers">Numbers</a></h3>
+<p>Numbers are represented by the <a href="../lexpr/number/struct.Number.html" title="`Number`"><code>Number</code></a> abstract data type. It
+can handle signed and unsigned integers, each up to 64 bit size,
+as well as floating point numbers.</p>
+<p>There is nothing surprising about the number syntax, extensions
+such as binary, octal and hexadecimal numbers are not yet
+implemented.</p>
+<pre><code class="language-scheme">1 -4 3.14 ; A postive, negative, and a floating point number
+</code></pre>
+<h3 id="characters" class="section-header"><a href="#characters">Characters</a></h3>
+<p>Characters are unicode codepoints, represented by Rust's char data type
+embedded in the <a href="../lexpr/value/enum.Value.html#Char.v" title="`Value::Char`"><code>Value::Char</code></a> variant.</p>
+<h3 id="strings" class="section-header"><a href="#strings">Strings</a></h3>
+<pre><code class="language-scheme">&quot;Hello World!&quot;
+</code></pre>
+<h2 id="lists" class="section-header"><a href="#lists">Lists</a></h2>
+<p>Lists are a sequence of values, of either atoms or lists. In fact,
+Lisp does not have a &quot;real&quot; list data type, but instead lists are
+represented by chains of so-called &quot;cons cells&quot;, which are used to
+form a singly-linked list, terminated by the empty list (or <code>nil</code>
+in tradional Lisps). It is also possible for the terminator to not
+be the empty list, but instead be af an arbitrary other data type.
+In this case, the list is refered to as an &quot;improper&quot; or &quot;dotted&quot;
+list. Here are some examples:</p>
+<pre><code class="language-scheme">(&quot;Hello&quot; &quot;World&quot;)   ; A regular list
+;; A list having with another, single-element, list as
+;; its second item
+(&quot;Hello&quot; (&quot;World&quot;))
+(1 . 2) ; A cons cell, represented as an improper list by `lexpr`
+(1 2 . 3) ; A dotted (improper) list
+</code></pre>
+<p>Lists are not only used to represent sequences of values, but also
+associative arrays, also known as maps. A map is represented as a
+list containing sub-lists, where the first element of each
+sub-list is the key, and the remainder of the list is the
+associated value.</p>
+<pre><code class="language-scheme">;; An association list with the symbols `a` and `b` as keys
+((a . 42) (b . 43))
+</code></pre>
+<h2 id="vectors" class="section-header"><a href="#vectors">Vectors</a></h2>
+<p>In contrast to lists, which are represented as singly-linked chains of &quot;cons
+cells&quot;, vectors allow O(1) indexing, and thus are quite similar to Rusts
+<code>Vec</code> datatype.</p>
+<pre><code class="language-scheme">#(1 2 &quot;three&quot;) ; A vector in Scheme notation
+</code></pre>
+<h2 id="byte-vectors" class="section-header"><a href="#byte-vectors">Byte vectors</a></h2>
+<p>Byte vectors are similar to regular vectors, but are uniform: each element
+only holds a single byte, i.e. an exact integer in the range of 0 to 255,
+inclusive.</p>
+<pre><code class="language-scheme">#u8(41 42 43) ; A byte vector
+</code></pre>
+</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table><tr class='module-item'><td><a class="mod" href="cons/index.html" title='lexpr::cons mod'>cons</a></td><td class='docblock-short'><p>List &quot;cons cell&quot; data type and accompanying iterator types.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="number/index.html" title='lexpr::number mod'>number</a></td><td class='docblock-short'><p>Dynamically typed number type.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="parse/index.html" title='lexpr::parse mod'>parse</a></td><td class='docblock-short'><p>S-expression parser and options.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="print/index.html" title='lexpr::print mod'>print</a></td><td class='docblock-short'><p>Converting S-expression values into text.</p>
+</td></tr><tr class='module-item'><td><a class="mod" href="value/index.html" title='lexpr::value mod'>value</a></td><td class='docblock-short'><p>The Value enum, a dynamically typed way of representing any valid S-expression value.</p>
+</td></tr></table><h2 id='macros' class='section-header'><a href="#macros">Macros</a></h2>
+<table><tr class='module-item'><td><a class="macro" href="macro.sexp.html" title='lexpr::sexp macro'>sexp</a></td><td class='docblock-short'><p>Construct a <a href="enum.Value.html"><code>Value</code></a> using syntax similar to regular S-expressions.</p>
+</td></tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
+<table><tr class='module-item'><td><a class="struct" href="struct.Cons.html" title='lexpr::Cons struct'>Cons</a></td><td class='docblock-short'><p>A Lisp &quot;cons cell&quot;.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.Number.html" title='lexpr::Number struct'>Number</a></td><td class='docblock-short'><p>Represents an S-expression number, whether integer or floating point.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.Parser.html" title='lexpr::Parser struct'>Parser</a></td><td class='docblock-short'><p>Parser for the S-expression text representation.</p>
+</td></tr><tr class='module-item'><td><a class="struct" href="struct.Printer.html" title='lexpr::Printer struct'>Printer</a></td><td class='docblock-short'><p>A printer for S-expression values.</p>
+</td></tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table><tr class='module-item'><td><a class="enum" href="enum.Value.html" title='lexpr::Value enum'>Value</a></td><td class='docblock-short'><p>Represents an S-expression value.</p>
+</td></tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table><tr class='module-item'><td><a class="trait" href="trait.Index.html" title='lexpr::Index trait'>Index</a></td><td class='docblock-short'><p>A type that can be used to index into a <code>lexpr::Value</code>.</p>
+</td></tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table><tr class='module-item'><td><a class="fn" href="fn.from_reader.html" title='lexpr::from_reader fn'>from_reader</a></td><td class='docblock-short'><p>Parse a value from an IO stream of S-expressions, using the default parser
+options.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.from_reader_custom.html" title='lexpr::from_reader_custom fn'>from_reader_custom</a></td><td class='docblock-short'><p>Parse a value from an IO stream containing a single S-expression.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.from_slice.html" title='lexpr::from_slice fn'>from_slice</a></td><td class='docblock-short'><p>Parse a value from bytes representing a single S-expressions, using the
+default parser options.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.from_slice_custom.html" title='lexpr::from_slice_custom fn'>from_slice_custom</a></td><td class='docblock-short'><p>Parse a value from bytes representing a single S-expression.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.from_str.html" title='lexpr::from_str fn'>from_str</a></td><td class='docblock-short'><p>Parse a value from a string slice representing a single S-expressions, using
+the default parser options.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.from_str_custom.html" title='lexpr::from_str_custom fn'>from_str_custom</a></td><td class='docblock-short'><p>Parse a value from a string slice representing a single S-expression.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.to_string.html" title='lexpr::to_string fn'>to_string</a></td><td class='docblock-short'><p>Serialize the given value an S-expression string,
+using the default printer options.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.to_string_custom.html" title='lexpr::to_string_custom fn'>to_string_custom</a></td><td class='docblock-short'><p>Serialize the given value an S-expression string.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.to_vec.html" title='lexpr::to_vec fn'>to_vec</a></td><td class='docblock-short'><p>Serialize the given value as byte vector containing S-expression text, using
+the default printer options.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.to_vec_custom.html" title='lexpr::to_vec_custom fn'>to_vec_custom</a></td><td class='docblock-short'><p>Serialize the given value as byte vector containing S-expression text.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.to_writer.html" title='lexpr::to_writer fn'>to_writer</a></td><td class='docblock-short'><p>Serialize the given value value as S-expression text into the IO stream,
+using the default printer options.</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.to_writer_custom.html" title='lexpr::to_writer_custom fn'>to_writer_custom</a></td><td class='docblock-short'><p>Serialize the given value value as S-expression text into the IO stream.</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g., <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g., <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g., <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../";window.currentCrate = "lexpr";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>
