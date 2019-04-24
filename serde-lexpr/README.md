@@ -10,6 +10,10 @@
 serde-lexpr = { git = 'https://github.com/rotty/lexpr-rs' }
 ```
 
+You may be looking for:
+
+- [API Documentation for master branch](https://rotty.github.io/lexpr-rs/master/serde_lexpr/)
+
 This crate is a Rust library for using the [Serde] serialization
 framework with data in [S-expression] format, which are the
 human-readable, textual representation of code and data in the Lisp

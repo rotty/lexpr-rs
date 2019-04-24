@@ -13,6 +13,7 @@ lexpr = "0.1.3"
 You may be looking for:
 
 - [API Documentation](https://docs.rs/crate/lexpr/)
+- [API Documentation for master branch](https://rotty.github.io/lexpr-rs/master/lexpr/)
 - [Serde support for S-expressions](https://github.com/rotty/lexpr-rs/serde-lexpr)
 - [TODO](./TODO.md)
 - [Goals and a survey of other S-expression crates](./docs/why.md)

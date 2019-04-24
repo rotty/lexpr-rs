@@ -31,9 +31,10 @@ under the [MIT](./LICENSE-MIT) or [Apache-2.0](./LICENSE-APACHE)
 license, at your choosing.
 
 The `lexpr` repository contains code and documentation adapted from
-the following projects:
+the following projects, all licensed under the same conditions,
+i.e. dual-licensed under MIT or Apache-2.0 license:
 
-- [`serde_json`](https://github.com/serde-rs/json), also dual-licensed
-  under MIT/Apache-2.0 licenses.
+- [`serde_json`](https://github.com/serde-rs/json)
+- [`serde_yaml`](https://github.com/dtolnay/serde-yaml)
 - [`sexpr`](https://github.com/zv/sexpr), Copyright 2017 Zephyr
-  Pellerin, dual-licensed under the same licenses.
+  Pellerin.
