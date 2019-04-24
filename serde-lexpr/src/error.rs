@@ -114,14 +114,6 @@ impl From<Error> for io::Error {
 }
 
 impl error::Error for Error {
-    fn description(&self) -> &str {
-        match &*self.0 {
-            ErrorImpl::Message(msg, _) => msg,
-            ErrorImpl::Io(e) => e.description(),
-            ErrorImpl::Parse(e) => e.description(),
-        }
-    }
-
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match &*self.0 {
             ErrorImpl::Io(e) => Some(e),
