@@ -1,20 +1,24 @@
 #![deny(missing_docs)]
 
-//! This crate provides [Serde]-based serialization and
-//! deserialization from statically-typed Rust data structures to the
-//! dynamically typed S-expression values, using the [`lexpr::Value`]
-//! type and to their text representation.
+//! This crate provides [Serde]-based serialization and deserialization from
+//! statically-typed Rust data structures to S-expressions, both using the
+//! [`lexpr::Value`] type and to S-expression textual representation.
 //!
 //! # About representations
+//!
+//! The guiding principle for choosing the S-expression representation of Rust
+//! types is that it should look "natural" (or ideomatic) to a Lisp programmer,
+//! without introducing ambiguities.
 //!
 //! ## Sequences
 //!
 //! The serializer will represent serde sequences as lists. Note that `Vec` is
-//! considered a sequence, so it will (counterintuitevely) be represented by an
-//! S-expression list. While it would be possible to serialize all sequences as
+//! considered a sequence, so it will be, perhaps counterintuitevely, be
+//! represented by an S-expression list, instead of an S-expression
+//! vector. While it would be possible to serialize all sequences as
 //! S-expression vectors instead, this would lead to unideomatic (noisy)
-//! S-expressions. When deserializing, both vectors and (proper) lists are when
-//! a serde sequence is expected.
+//! S-expressions. When deserializing, both vectors and (proper) lists are
+//! accepted when a Serde sequence is expected.
 //!
 //! ```
 //! use serde_lexpr::{from_str, to_string};
@@ -29,11 +33,11 @@
 //!
 //! # Option
 //!
-//! The two variants of the `Option` type are represented as empty list (`None`)
-//! or a single-element list (`Some(x)`). This representation is chosen for
-//! unambiguity over using a special "missing" value (such as `#nil`) for `None`
-//! and a plain value for `Some`. It also combines nicely with struct fields
-//! containing option values.
+//! The two variants of the `Option` type are represented as empty list
+//! (representing `None`) or a single-element list (representing
+//! `Some(x)`). This representation is chosen for unambiguity over using a
+//! special "missing" value (such as `#nil`) for `None` and a plain value for
+//! `Some`. It also combines nicely with struct fields containing option values.
 //!
 //! ```
 //! use serde_lexpr::{from_str, to_string};
