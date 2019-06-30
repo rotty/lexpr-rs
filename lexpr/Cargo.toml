@@ -19,7 +19,7 @@ fast-float-parsing = []
 itoa = "0.4.3"
 ryu = "1.0.0"
 proc-macro-hack = "0.5.4"
-lexpr-macros = { version = "0.1.2", path = "../lexpr-macros" }
+lexpr-macros = { version = "0.2.0", path = "../lexpr-macros" }
 
 [dev-dependencies]
 criterion = "0.2"

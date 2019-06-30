@@ -11,7 +11,7 @@ categories = ["encoding", "data-structures", "parser-implementations"]
 edition = "2018"
 
 [dependencies]
-lexpr = { path = "../lexpr" }
+lexpr = { version = "0.2.0", path = "../lexpr" }
 serde = "1.0.89"
 
 [dev-dependencies]
