@@ -111,16 +111,16 @@ pub use self::index::Index;
 pub enum Value {
     /// The special "nil" value.
     ///
-    /// This is kind of oddball value. In traditional Lisps (e.g. Emacs Lisp)
-    /// the empty list can be written as the symbol `nil`, which in Scheme,
-    /// `nil` is just a regular symbol. Furthermore, traditional Lisps don't
-    /// have a separate boolean data type, and represent true and false by the
-    /// symbols `t` and `nil` instead. The `lexpr` parser can be instructed to
-    /// parse the `nil` symbol as the `Nil` value (see [`NilSymbol::Special`]),
-    /// allowing to choose its representation when converting to text again (see
-    /// [`NilSyntax`]). Note that empty list, when written as `()` or implicitly
-    /// constructed as a list terminator is always parsed as [`Value::Null`],
-    /// not `Value::Nil`.
+    /// This is kind of an oddball value. In traditional Lisps (e.g., Common
+    /// Lisp or Emacs Lisp) the empty list can be written as the symbol `nil`,
+    /// while in Scheme, `nil` is just a regular symbol. Furthermore,
+    /// traditional Lisps don't have a separate boolean data type, and represent
+    /// true and false by the symbols `t` and `nil` instead. The `lexpr` parser
+    /// can be instructed to parse the `nil` symbol as the `Nil` value (see
+    /// [`NilSymbol::Special`]), allowing to choose its representation when
+    /// converting to text again (see [`NilSyntax`]). Note that the empty list,
+    /// when written as `()` or implicitly constructed as a list terminator, is
+    /// always parsed as [`Value::Null`], not `Value::Nil`.
     ///
     /// In addition to being useful for conversions between S-expression
     /// variants, this value is also potentially returned when using the square
@@ -183,7 +183,7 @@ impl Value {
     /// # use lexpr::Value;
     /// let value = Value::keyword("foo");
     /// assert!(value.is_keyword());
-    /// assert_eq!(value.as_name().unwrap(), "foo");
+    /// assert_eq!(value.as_keyword().unwrap(), "foo");
     /// ```
     pub fn keyword(name: impl Into<Box<str>>) -> Self {
         Value::Keyword(name.into())
@@ -201,7 +201,7 @@ impl Value {
         Value::String(s.into())
     }
 
-    /// Construct a string.
+    /// Construct a byte vector.
     ///
     /// ```
     /// # use lexpr::Value;
@@ -459,6 +459,22 @@ impl Value {
     }
 
     /// Get the name of a symbol or keyword, or the value of a string.
+    ///
+    /// This is useful if symbols, keywords and strings need to be treated
+    /// equivalently in some context.
+    ///
+    /// ```
+    /// # use lexpr::sexp;
+    /// #
+    /// let kw = sexp!(#:foo);
+    /// assert_eq!(kw.as_name(), Some("foo"));
+    ///
+    /// let sym = sexp!(bar);
+    /// assert_eq!(sym.as_name(), Some("bar"));
+    ///
+    /// let s = sexp!("baz");
+    /// assert_eq!(s.as_name(), Some("baz"));
+    /// ```
     pub fn as_name(&self) -> Option<&str> {
         match self {
             Value::Symbol(s) => Some(s),
