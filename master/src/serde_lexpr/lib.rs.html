@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `serde-lexpr/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../serde_lexpr/index.html'><img src='../../rust-logo.png' alt='logo' width='100'></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `serde-lexpr/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../serde_lexpr/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -157,24 +157,32 @@
 <span id="157">157</span>
 <span id="158">158</span>
 <span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">missing_docs</span>)]</span>
 
-<span class="doccomment">//! This crate provides [Serde]-based serialization and</span>
-<span class="doccomment">//! deserialization from statically-typed Rust data structures to the</span>
-<span class="doccomment">//! dynamically typed S-expression values, using the [`lexpr::Value`]</span>
-<span class="doccomment">//! type and to their text representation.</span>
+<span class="doccomment">//! This crate provides [Serde]-based serialization and deserialization from</span>
+<span class="doccomment">//! statically-typed Rust data structures to S-expressions, both using the</span>
+<span class="doccomment">//! [`lexpr::Value`] type and to S-expression textual representation.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! # About representations</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The guiding principle for choosing the S-expression representation of Rust</span>
+<span class="doccomment">//! types is that it should look &quot;natural&quot; (or ideomatic) to a Lisp programmer,</span>
+<span class="doccomment">//! without introducing ambiguities.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## Sequences</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! The serializer will represent serde sequences as lists. Note that `Vec` is</span>
-<span class="doccomment">//! considered a sequence, so it will (counterintuitevely) be represented by an</span>
-<span class="doccomment">//! S-expression list. While it would be possible to serialize all sequences as</span>
+<span class="doccomment">//! considered a sequence, so it will be, perhaps counterintuitevely, be</span>
+<span class="doccomment">//! represented by an S-expression list, instead of an S-expression</span>
+<span class="doccomment">//! vector. While it would be possible to serialize all sequences as</span>
 <span class="doccomment">//! S-expression vectors instead, this would lead to unideomatic (noisy)</span>
-<span class="doccomment">//! S-expressions. When deserializing, both vectors and (proper) lists are when</span>
-<span class="doccomment">//! a serde sequence is expected.</span>
+<span class="doccomment">//! S-expressions. When deserializing, both vectors and (proper) lists are</span>
+<span class="doccomment">//! accepted when a Serde sequence is expected.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//! use serde_lexpr::{from_str, to_string};</span>
@@ -189,11 +197,11 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! # Option</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! The two variants of the `Option` type are represented as empty list (`None`)</span>
-<span class="doccomment">//! or a single-element list (`Some(x)`). This representation is chosen for</span>
-<span class="doccomment">//! unambiguity over using a special &quot;missing&quot; value (such as `#nil`) for `None`</span>
-<span class="doccomment">//! and a plain value for `Some`. It also combines nicely with struct fields</span>
-<span class="doccomment">//! containing option values.</span>
+<span class="doccomment">//! The two variants of the `Option` type are represented as empty list</span>
+<span class="doccomment">//! (representing `None`) or a single-element list (representing</span>
+<span class="doccomment">//! `Some(x)`). This representation is chosen for unambiguity over using a</span>
+<span class="doccomment">//! special &quot;missing&quot; value (such as `#nil`) for `None` and a plain value for</span>
+<span class="doccomment">//! `Some`. It also combines nicely with struct fields containing option values.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//! use serde_lexpr::{from_str, to_string};</span>

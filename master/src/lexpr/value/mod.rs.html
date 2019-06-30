@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `lexpr/src/value/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../lexpr/index.html'><img src='../../../rust-logo.png' alt='logo' width='100'></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `lexpr/src/value/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css"><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../lexpr/index.html'><div class='logo-container'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1009,6 +1009,22 @@
 <span id="1009">1009</span>
 <span id="1010">1010</span>
 <span id="1011">1011</span>
+<span id="1012">1012</span>
+<span id="1013">1013</span>
+<span id="1014">1014</span>
+<span id="1015">1015</span>
+<span id="1016">1016</span>
+<span id="1017">1017</span>
+<span id="1018">1018</span>
+<span id="1019">1019</span>
+<span id="1020">1020</span>
+<span id="1021">1021</span>
+<span id="1022">1022</span>
+<span id="1023">1023</span>
+<span id="1024">1024</span>
+<span id="1025">1025</span>
+<span id="1026">1026</span>
+<span id="1027">1027</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The Value enum, a dynamically typed way of representing any valid S-expression value.</span>
 <span class="doccomment">//!</span>
@@ -1123,16 +1139,16 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Value</span> {
     <span class="doccomment">/// The special &quot;nil&quot; value.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// This is kind of oddball value. In traditional Lisps (e.g. Emacs Lisp)</span>
-    <span class="doccomment">/// the empty list can be written as the symbol `nil`, which in Scheme,</span>
-    <span class="doccomment">/// `nil` is just a regular symbol. Furthermore, traditional Lisps don&#39;t</span>
-    <span class="doccomment">/// have a separate boolean data type, and represent true and false by the</span>
-    <span class="doccomment">/// symbols `t` and `nil` instead. The `lexpr` parser can be instructed to</span>
-    <span class="doccomment">/// parse the `nil` symbol as the `Nil` value (see [`NilSymbol::Special`]),</span>
-    <span class="doccomment">/// allowing to choose its representation when converting to text again (see</span>
-    <span class="doccomment">/// [`NilSyntax`]). Note that empty list, when written as `()` or implicitly</span>
-    <span class="doccomment">/// constructed as a list terminator is always parsed as [`Value::Null`],</span>
-    <span class="doccomment">/// not `Value::Nil`.</span>
+    <span class="doccomment">/// This is kind of an oddball value. In traditional Lisps (e.g., Common</span>
+    <span class="doccomment">/// Lisp or Emacs Lisp) the empty list can be written as the symbol `nil`,</span>
+    <span class="doccomment">/// while in Scheme, `nil` is just a regular symbol. Furthermore,</span>
+    <span class="doccomment">/// traditional Lisps don&#39;t have a separate boolean data type, and represent</span>
+    <span class="doccomment">/// true and false by the symbols `t` and `nil` instead. The `lexpr` parser</span>
+    <span class="doccomment">/// can be instructed to parse the `nil` symbol as the `Nil` value (see</span>
+    <span class="doccomment">/// [`NilSymbol::Special`]), allowing to choose its representation when</span>
+    <span class="doccomment">/// converting to text again (see [`NilSyntax`]). Note that the empty list,</span>
+    <span class="doccomment">/// when written as `()` or implicitly constructed as a list terminator, is</span>
+    <span class="doccomment">/// always parsed as [`Value::Null`], not `Value::Nil`.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// In addition to being useful for conversions between S-expression</span>
     <span class="doccomment">/// variants, this value is also potentially returned when using the square</span>
@@ -1195,7 +1211,7 @@
     <span class="doccomment">/// # use lexpr::Value;</span>
     <span class="doccomment">/// let value = Value::keyword(&quot;foo&quot;);</span>
     <span class="doccomment">/// assert!(value.is_keyword());</span>
-    <span class="doccomment">/// assert_eq!(value.as_name().unwrap(), &quot;foo&quot;);</span>
+    <span class="doccomment">/// assert_eq!(value.as_keyword().unwrap(), &quot;foo&quot;);</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keyword</span>(<span class="ident">name</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;&gt;</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="ident">Value</span>::<span class="ident">Keyword</span>(<span class="ident">name</span>.<span class="ident">into</span>())
@@ -1213,7 +1229,7 @@
         <span class="ident">Value</span>::<span class="ident">String</span>(<span class="ident">s</span>.<span class="ident">into</span>())
     }
 
-    <span class="doccomment">/// Construct a string.</span>
+    <span class="doccomment">/// Construct a byte vector.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// ```</span>
     <span class="doccomment">/// # use lexpr::Value;</span>
@@ -1471,6 +1487,22 @@
     }
 
     <span class="doccomment">/// Get the name of a symbol or keyword, or the value of a string.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This is useful if symbols, keywords and strings need to be treated</span>
+    <span class="doccomment">/// equivalently in some context.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// # use lexpr::sexp;</span>
+    <span class="doccomment">/// #</span>
+    <span class="doccomment">/// let kw = sexp!(#:foo);</span>
+    <span class="doccomment">/// assert_eq!(kw.as_name(), Some(&quot;foo&quot;));</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// let sym = sexp!(bar);</span>
+    <span class="doccomment">/// assert_eq!(sym.as_name(), Some(&quot;bar&quot;));</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// let s = sexp!(&quot;baz&quot;);</span>
+    <span class="doccomment">/// assert_eq!(s.as_name(), Some(&quot;baz&quot;));</span>
+    <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">Value</span>::<span class="ident">Symbol</span>(<span class="ident">s</span>) <span class="op">=&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">s</span>),
