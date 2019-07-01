@@ -7,7 +7,7 @@
 
 ```toml
 [dependencies]
-serde-lexpr = { git = 'https://github.com/rotty/lexpr-rs' }
+serde-lexpr = "0.1.0"
 ```
 
 You may be looking for:

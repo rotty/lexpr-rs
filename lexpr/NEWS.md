@@ -1,3 +1,7 @@
+# 0.2.1
+
+Fix version number in README; no other changes.
+
 # 0.2.0
 
 Incompatible changes:
