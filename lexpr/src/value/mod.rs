@@ -1019,6 +1019,15 @@ impl fmt::Display for Value {
     }
 }
 
+impl str::FromStr for Value {
+    /// Parse an S-expression value from a string.
+    type Err = crate::parse::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        crate::parse::from_str(s)
+    }
+}
+
 mod from;
 mod index;
 mod partial_eq;
