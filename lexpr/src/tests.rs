@@ -4,6 +4,8 @@
 //! behavior of `Value` using quickcheck. Note these do not test Emacs Lisp
 //! syntax, as it is not round-trip safe for all values tested here.
 
+#![cfg_attr(tarpaulin, skip)]
+
 use quickcheck::{Arbitrary, Gen, QuickCheck, StdGen};
 use quickcheck_macros::quickcheck;
 use rand::{seq::SliceRandom, Rng};

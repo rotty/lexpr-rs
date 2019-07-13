@@ -1,3 +1,5 @@
+#![cfg_attr(tarpaulin, skip)]
+
 use crate::{Cons, Number, Value};
 
 type Predicate = fn(&Value) -> bool;
