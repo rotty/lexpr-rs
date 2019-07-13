@@ -1,3 +1,5 @@
+#![cfg_attr(tarpaulin, skip)]
+
 use super::*;
 use crate::print;
 
