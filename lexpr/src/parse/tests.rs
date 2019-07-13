@@ -25,6 +25,11 @@ fn test_atoms_default() {
 }
 
 #[test]
+fn test_symbols() {
+    assert!(from_str(".").is_err());
+}
+
+#[test]
 fn test_atom_failures() {
     assert_eq!(
         from_str_custom("#:octothorpe-keyword", Options::new())
@@ -38,6 +43,7 @@ fn test_atom_failures() {
 fn test_numbers() {
     assert_eq!(from_str("42").unwrap(), Value::from(42));
     assert_eq!(from_str("-23").unwrap(), Value::from(-23));
+    assert_eq!(from_str("+23").unwrap(), Value::from(23));
     assert_eq!(from_str("0.5e10").unwrap(), Value::from(0.5e10));
     assert_eq!(from_str("-0.5e10").unwrap(), Value::from(-0.5e10));
 }
@@ -319,6 +325,34 @@ fn test_list_nil_default() {
 }
 
 #[test]
+fn test_list_peculiar() {
+    assert!(from_str("(. foo)").is_err());
+    assert!(from_str("(.)").is_err());
+    for (peculiar, value) in &[
+        ("(-)", Value::list(vec![Value::symbol("-")])),
+        ("(-foo)", Value::list(vec![Value::symbol("-foo")])),
+        ("(+)", Value::list(vec![Value::symbol("+")])),
+        ("(+foo)", Value::list(vec![Value::symbol("+foo")])),
+        ("(..)", Value::list(vec![Value::symbol("..")])),
+        ("(.foo)", Value::list(vec![Value::symbol(".foo")])),
+        (
+            "(+ #nil 1)",
+            Value::list(vec![Value::symbol("+"), Value::Nil, Value::from(1)]),
+        ),
+        (
+            "(- . #())",
+            Value::cons(Value::symbol("-"), Value::Vector(vec![].into())),
+        ),
+        (
+            "(+ . #())",
+            Value::cons(Value::symbol("+"), Value::Vector(vec![].into())),
+        ),
+    ] {
+        assert_eq!(&from_str(dbg!(peculiar)).unwrap(), value);
+    }
+}
+
+#[test]
 fn test_list_elisp() {
     let elisp = Options::elisp();
     assert_eq!(
@@ -349,6 +383,18 @@ fn test_list_brackets() {
 fn test_vectors_default() {
     assert_eq!(from_str("#()").unwrap(), Value::Vector(vec![].into()));
     assert_eq!(from_str("#(1 2)").unwrap(), Value::vector(vec![1, 2]));
+}
+
+#[test]
+fn test_vector_peculiar() {
+    assert!(from_str("#(. foo)").is_err());
+    assert!(from_str("#(.)").is_err());
+    for &peculiar in &["-", "-foo", "+", "+foo", "..", ".foo"] {
+        assert_eq!(
+            from_str(&format!("#({})", peculiar)).unwrap(),
+            Value::vector(vec![Value::symbol(peculiar)])
+        );
+    }
 }
 
 #[test]
