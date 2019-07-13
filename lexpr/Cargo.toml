@@ -20,6 +20,7 @@ itoa = "0.4.3"
 ryu = "1.0.0"
 proc-macro-hack = "0.5.4"
 lexpr-macros = { version = "0.2.0", path = "../lexpr-macros" }
+num-traits = "0.2.8"
 
 [dev-dependencies]
 criterion = "0.2"

@@ -1,6 +1,11 @@
 //! Dynamically typed number type.
 
-use std::fmt::{self, Debug, Display};
+use std::{
+    fmt::{self, Debug, Display},
+    ops,
+};
+
+use num_traits::{CheckedAdd, CheckedMul, CheckedSub};
 
 /// Represents an S-expression number, whether integer or floating point.
 #[derive(PartialEq, Clone)]
@@ -297,5 +302,98 @@ impl Display for Number {
 impl Debug for Number {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         Debug::fmt(&self.n, formatter)
+    }
+}
+
+impl ops::Add for Number {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        self.checked_add(&other)
+            .unwrap_or_else(|| unimplemented!("bignums not supported yet"))
+    }
+}
+
+impl ops::Sub for Number {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self {
+        self.checked_sub(&other)
+            .unwrap_or_else(|| unimplemented!("bignums not supported yet"))
+    }
+}
+
+impl ops::Mul for Number {
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self {
+        self.checked_mul(&other)
+            .unwrap_or_else(|| unimplemented!("bignums not supported yet"))
+    }
+}
+
+impl CheckedAdd for Number {
+    fn checked_add(&self, other: &Self) -> Option<Self> {
+        match (&self.n, &other.n) {
+            (N::PosInt(n1), N::PosInt(n2)) => {
+                if let Some(result) = n1.checked_add(n2) {
+                    Some(result.into())
+                } else {
+                    None
+                }
+            }
+            (N::NegInt(n1), N::NegInt(n2)) => {
+                if let Some(result) = n1.checked_add(n2) {
+                    Some(result.into())
+                } else {
+                    None
+                }
+            }
+            _ => unimplemented!(),
+        }
+    }
+}
+
+impl CheckedSub for Number {
+    fn checked_sub(&self, other: &Self) -> Option<Self> {
+        match (&self.n, &other.n) {
+            (N::PosInt(n1), N::PosInt(n2)) => {
+                if let Some(result) = n1.checked_sub(n2) {
+                    Some(result.into())
+                } else {
+                    None
+                }
+            }
+            (N::NegInt(n1), N::NegInt(n2)) => {
+                if let Some(result) = n1.checked_sub(n2) {
+                    Some(result.into())
+                } else {
+                    None
+                }
+            }
+            _ => unimplemented!(),
+        }
+    }
+}
+
+impl CheckedMul for Number {
+    fn checked_mul(&self, other: &Self) -> Option<Self> {
+        match (&self.n, &other.n) {
+            (N::PosInt(n1), N::PosInt(n2)) => {
+                if let Some(result) = n1.checked_mul(n2) {
+                    Some(result.into())
+                } else {
+                    None
+                }
+            }
+            (N::NegInt(n1), N::NegInt(n2)) => {
+                if let Some(result) = n1.checked_mul(n2) {
+                    Some(result.into())
+                } else {
+                    None
+                }
+            }
+            _ => unimplemented!(),
+        }
     }
 }
