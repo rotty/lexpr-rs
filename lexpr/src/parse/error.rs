@@ -72,6 +72,7 @@ impl Error {
             | ErrorCode::InvalidEscape
             | ErrorCode::InvalidNumber
             | ErrorCode::InvalidCharacterConstant
+            | ErrorCode::InvalidSymbol
             | ErrorCode::NumberOutOfRange
             | ErrorCode::InvalidUnicodeCodePoint
             | ErrorCode::TrailingCharacters
@@ -224,6 +225,9 @@ pub(crate) enum ErrorCode {
     /// Invalid number.
     InvalidNumber,
 
+    /// Invalid symbol.
+    InvalidSymbol,
+
     /// Number is bigger than the maximum value of its type.
     NumberOutOfRange,
 
@@ -257,6 +261,7 @@ impl Display for ErrorCode {
             ErrorCode::ExpectedOctet => f.write_str("expected octet"),
             ErrorCode::InvalidEscape => f.write_str("invalid escape"),
             ErrorCode::InvalidNumber => f.write_str("invalid number"),
+            ErrorCode::InvalidSymbol => f.write_str("invalid symbol"),
             ErrorCode::MismatchedParenthesis => f.write_str("mismatched parenthesis"),
             ErrorCode::NumberOutOfRange => f.write_str("number out of range"),
             ErrorCode::InvalidUnicodeCodePoint => f.write_str("invalid unicode code point"),

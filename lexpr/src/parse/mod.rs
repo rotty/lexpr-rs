@@ -446,9 +446,22 @@ impl<'de, R: Read<'de>> Parser<R> {
                 }
             }
             b'-' => {
-                // FIXME: might be a symbol instead
                 self.eat_char();
-                Ok(Value::from(self.parse_integer(false)?))
+                let next = self.peek_or_null()?;
+                if next == 0 || is_delimiter(next) || is_sign_subsequent(next) {
+                    Ok(Value::symbol(self.parse_symbol_suffix("-")?))
+                } else {
+                    Ok(Value::from(self.parse_integer(false)?))
+                }
+            }
+            b'+' => {
+                self.eat_char();
+                let next = self.peek_or_null()?;
+                if next == 0 || is_delimiter(next) || is_sign_subsequent(next) {
+                    Ok(Value::symbol(self.parse_symbol_suffix("+")?))
+                } else {
+                    Ok(Value::from(self.parse_integer(true)?))
+                }
             }
             b'0'...b'9' => Ok(Value::from(self.parse_integer(true)?)),
             b'"' => {
@@ -572,6 +585,15 @@ impl<'de, R: Read<'de>> Parser<R> {
         }
     }
 
+    fn parse_symbol_suffix(&mut self, prefix: &str) -> Result<String> {
+        self.scratch.clear();
+        self.scratch.extend(prefix.as_bytes());
+        match self.read.parse_symbol(&mut self.scratch)? {
+            Reference::Borrowed(s) => Ok(s.into()),
+            Reference::Copied(s) => Ok(s.into()),
+        }
+    }
+
     fn expect_ident(&mut self, ident: &[u8]) -> Result<()> {
         for c in ident {
             if Some(*c) != self.next_char()? {
@@ -635,11 +657,26 @@ impl<'de, R: Read<'de>> Parser<R> {
                     }
                     b'.' => {
                         self.eat_char();
-                        pair.set_cdr(self.parse_value()?);
-                        match self.parse_whitespace()? {
-                            Some(b')') => return Ok(Value::Cons(list)),
-                            Some(_) => return Err(self.peek_error(ErrorCode::TrailingCharacters)),
-                            None => return Err(self.peek_error(ErrorCode::EofWhileParsingList)),
+                        let next = self.peek_or_null()?;
+                        if next == 0 || is_delimiter(next) {
+                            if !have_value {
+                                return Err(self.peek_error(ErrorCode::ExpectedSomeValue));
+                            }
+                            pair.set_cdr(self.parse_value()?);
+                            match self.parse_whitespace()? {
+                                Some(b')') => return Ok(Value::Cons(list)),
+                                Some(_) => {
+                                    return Err(self.peek_error(ErrorCode::TrailingCharacters))
+                                }
+                                None => return Err(self.peek_error(ErrorCode::EofWhileParsingList)),
+                            }
+                        } else {
+                            if have_value {
+                                pair.set_cdr(Value::from((Value::Nil, Value::Null)));
+                                pair = pair.cdr_mut().as_cons_mut().unwrap();
+                            }
+                            pair.set_car(Value::symbol(self.parse_symbol_suffix(".")?));
+                            have_value = true;
                         }
                     }
                     _ => {
@@ -931,10 +968,18 @@ impl<'de, R: Read<'de>> Parser<R> {
 }
 
 // This could probably profit from being a `u8 -> bool` LUT instead.
-static SYMBOL_EXTENDED: [u8; 17] = [
-    b'!', b'$', b'%', b'&', b'*', b'+', /* | b'-' FIXME, */ b'.', b'/', b':', b'<', b'=',
-    b'>', b'?', b'@', b'^', b'_', b'~',
+static SYMBOL_EXTENDED: [u8; 16] = [
+    b'!', b'$', b'%', b'&', b'*', b'.', b'/', b':', b'<', b'=', b'>', b'?', b'@', b'^', b'_', b'~',
 ];
+
+fn is_delimiter(c: u8) -> bool {
+    c.is_ascii_whitespace() || b"|()\"".contains(&c)
+}
+
+// This implements the <sign subsequent> nonterminal of R7RS 7.1.1
+fn is_sign_subsequent(c: u8) -> bool {
+    c.is_ascii_alphabetic() || b"!$%&*/:<=>?@^_~-+@".contains(&c)
+}
 
 #[cfg(feature = "fast-float-parsing")]
 #[rustfmt::skip]

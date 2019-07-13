@@ -28,6 +28,23 @@ fn test_symbol() {
     check_roundtrip_default(sexp!(#"$?:!"), "$?:!");
 }
 
+static SPECIAL_INITIALS: &str = "!$%&*/:<=>?@^_~";
+
+#[test]
+fn test_special_symbols() {
+    for initial in SPECIAL_INITIALS.chars() {
+        let s = initial.to_string();
+        check_roundtrip_default(Value::symbol(s.as_ref()), &s);
+    }
+}
+
+#[test]
+fn test_peculiar_symbols() {
+    for &peculiar in &["+", "+foo", "-", "-foo", "..", ".foo"] {
+        check_roundtrip_default(Value::symbol(peculiar), peculiar);
+    }
+}
+
 #[test]
 fn test_keyword_default() {
     check_roundtrip_default(sexp!(#:foo), "#:foo");
