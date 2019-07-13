@@ -313,6 +313,11 @@
 <span id="313">313</span>
 <span id="314">314</span>
 <span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! When parsing S-expressions goes wrong.</span>
 
@@ -388,6 +393,7 @@
             <span class="op">|</span> <span class="ident">ErrorCode</span>::<span class="ident">InvalidEscape</span>
             <span class="op">|</span> <span class="ident">ErrorCode</span>::<span class="ident">InvalidNumber</span>
             <span class="op">|</span> <span class="ident">ErrorCode</span>::<span class="ident">InvalidCharacterConstant</span>
+            <span class="op">|</span> <span class="ident">ErrorCode</span>::<span class="ident">InvalidSymbol</span>
             <span class="op">|</span> <span class="ident">ErrorCode</span>::<span class="ident">NumberOutOfRange</span>
             <span class="op">|</span> <span class="ident">ErrorCode</span>::<span class="ident">InvalidUnicodeCodePoint</span>
             <span class="op">|</span> <span class="ident">ErrorCode</span>::<span class="ident">TrailingCharacters</span>
@@ -540,6 +546,9 @@
     <span class="doccomment">/// Invalid number.</span>
     <span class="ident">InvalidNumber</span>,
 
+    <span class="doccomment">/// Invalid symbol.</span>
+    <span class="ident">InvalidSymbol</span>,
+
     <span class="doccomment">/// Number is bigger than the maximum value of its type.</span>
     <span class="ident">NumberOutOfRange</span>,
 
@@ -573,6 +582,7 @@
             <span class="ident">ErrorCode</span>::<span class="ident">ExpectedOctet</span> <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;expected octet&quot;</span>),
             <span class="ident">ErrorCode</span>::<span class="ident">InvalidEscape</span> <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;invalid escape&quot;</span>),
             <span class="ident">ErrorCode</span>::<span class="ident">InvalidNumber</span> <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;invalid number&quot;</span>),
+            <span class="ident">ErrorCode</span>::<span class="ident">InvalidSymbol</span> <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;invalid symbol&quot;</span>),
             <span class="ident">ErrorCode</span>::<span class="ident">MismatchedParenthesis</span> <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;mismatched parenthesis&quot;</span>),
             <span class="ident">ErrorCode</span>::<span class="ident">NumberOutOfRange</span> <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;number out of range&quot;</span>),
             <span class="ident">ErrorCode</span>::<span class="ident">InvalidUnicodeCodePoint</span> <span class="op">=&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;invalid unicode code point&quot;</span>),
