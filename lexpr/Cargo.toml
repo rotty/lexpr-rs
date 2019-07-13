@@ -27,6 +27,7 @@ criterion = "0.2"
 quickcheck = "0.8.2"
 quickcheck_macros = "0.8.0"
 rand = "0.6.5"
+gc = "0.3"
 
 [[bench]]
 name = "bench"
