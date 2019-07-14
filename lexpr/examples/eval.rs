@@ -426,8 +426,12 @@ mod prim {
 
     pub fn lt(args: &[Gc<Value>]) -> OpResult {
         for w in args.windows(2) {
-            let n1 = w[0].as_number().ok_or_else(|| invalid_argument(&w[0], "number"))?;
-            let n2 = w[1].as_number().ok_or_else(|| invalid_argument(&w[1], "number"))?;
+            let n1 = w[0]
+                .as_number()
+                .ok_or_else(|| invalid_argument(&w[0], "number"))?;
+            let n2 = w[1]
+                .as_number()
+                .ok_or_else(|| invalid_argument(&w[1], "number"))?;
             if !(n1 < n2) {
                 return Ok(Gc::new(Value::from(false)));
             }
@@ -498,10 +502,25 @@ fn syntax_error(e: SyntaxError) -> Gc<Value> {
 }
 
 pub fn eval(expr: &lexpr::Value, env: Gc<GcCell<Env>>) -> OpResult {
+    let mut expr = expr.clone(); // TODO: unfortunate clone of `expr` here
+    let mut env = env;
+    loop {
+        match eval_step(&expr, env)? {
+            Thunk::Resolved(v) => break Ok(v),
+            Thunk::Eval(thunk_expr, thunk_env) => {
+                expr = thunk_expr;
+                env = thunk_env;
+            }
+        }
+    }
+}
+
+pub fn eval_step(expr: &lexpr::Value, env: Gc<GcCell<Env>>) -> Result<Thunk, Gc<Value>> {
     match expr {
         lexpr::Value::Symbol(sym) => env
             .borrow_mut()
             .lookup(&sym)
+            .map(Thunk::Resolved)
             .ok_or_else(|| make_error!("unbound identifier `{}'", sym)),
         lexpr::Value::Cons(cell) => {
             let (first, rest) = cell.as_pair();
@@ -511,7 +530,7 @@ pub fn eval(expr: &lexpr::Value, env: Gc<GcCell<Env>>) -> OpResult {
                     if args.len() != 1 {
                         return Err(make_error!("`quote' expects a single form"));
                     }
-                    Ok(Gc::new(args[0].into()))
+                    Ok(Thunk::Resolved(Gc::new(args[0].into())))
                 }
                 Some("lambda") => {
                     let args = proper_list(rest).map_err(syntax_error)?;
@@ -525,7 +544,7 @@ pub fn eval(expr: &lexpr::Value, env: Gc<GcCell<Env>>) -> OpResult {
                         body,
                         env: env.clone(),
                     };
-                    Ok(Gc::new(closure))
+                    Ok(Thunk::Resolved(Gc::new(closure)))
                 }
                 Some("define") => {
                     let args = proper_list(rest).map_err(syntax_error)?;
@@ -541,7 +560,7 @@ pub fn eval(expr: &lexpr::Value, env: Gc<GcCell<Env>>) -> OpResult {
                             }
                             let value = eval(&args[1], env.clone())?;
                             env.borrow_mut().bind(&sym, value);
-                            Ok(Gc::new(Value::Null))
+                            Ok(Thunk::Resolved(Gc::new(Value::Null)))
                         }
                         lexpr::Value::Cons(cell) => {
                             let ident = cell.car().as_symbol().ok_or_else(|| {
@@ -557,9 +576,9 @@ pub fn eval(expr: &lexpr::Value, env: Gc<GcCell<Env>>) -> OpResult {
                                     env: env.clone(),
                                 },
                             );
-                            Ok(Gc::new(Value::Null))
+                            Ok(Thunk::Resolved(Gc::new(Value::Null)))
                         }
-                        _ => return Err(make_error!("invalid `define' form")),
+                        _ => Err(make_error!("invalid `define' form")),
                     }
                 }
                 Some("if") => {
@@ -569,9 +588,9 @@ pub fn eval(expr: &lexpr::Value, env: Gc<GcCell<Env>>) -> OpResult {
                     }
                     let cond = eval(args[0], env.clone())?;
                     if cond.is_true() {
-                        eval(args[1], env.clone())
+                        Ok(Thunk::Eval(args[1].clone(), env.clone()))
                     } else {
-                        eval(args[2], env.clone())
+                        Ok(Thunk::Eval(args[2].clone(), env.clone()))
                     }
                 }
                 _ => {
@@ -581,24 +600,30 @@ pub fn eval(expr: &lexpr::Value, env: Gc<GcCell<Env>>) -> OpResult {
                         .into_iter()
                         .map(|arg| eval(arg, env.clone()))
                         .collect::<Result<Vec<_>, _>>()?;
-                    apply(op, &args)
+                    apply(&op, &args)
                 }
             }
         }
-        lexpr::Value::Number(n) => Ok(Value::Number(n.clone()).into()),
-        lexpr::Value::String(s) => Ok(Value::String(s.clone()).into()),
+        lexpr::Value::Number(n) => Ok(Thunk::Resolved(Value::Number(n.clone()).into())),
+        lexpr::Value::String(s) => Ok(Thunk::Resolved(Value::String(s.clone()).into())),
         _ => unimplemented!(),
     }
 }
 
-pub fn apply(op: Gc<Value>, args: &[Gc<Value>]) -> OpResult {
-    match &*op {
-        Value::PrimOp(ref op) => op(args),
+pub enum Thunk {
+    Resolved(Gc<Value>),
+    Eval(lexpr::Value, Gc<GcCell<Env>>),
+}
+
+pub fn apply(op: &Value, args: &[Gc<Value>]) -> Result<Thunk, Gc<Value>> {
+    match op {
+        Value::PrimOp(ref op) => Ok(Thunk::Resolved(op(args)?)),
         Value::Closure { params, body, env } => {
             let env = params.bind(args, env.clone())?;
             for (i, expr) in body.into_iter().enumerate() {
                 if i + 1 == body.len() {
-                    return eval(expr, env.clone());
+                    // TODO: unfortunate clone of `expr` here
+                    return Ok(Thunk::Eval(expr.clone(), env.clone()));
                 }
                 eval(expr, env.clone())?;
             }
