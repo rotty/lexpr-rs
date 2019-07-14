@@ -424,7 +424,10 @@ mod prim {
         }
     }
 
-    pub fn lt(args: &[Gc<Value>]) -> OpResult {
+    fn num_cmp<F>(args: &[Gc<Value>], cmp: F) -> OpResult
+    where
+        F: Fn(&Number, &Number) -> bool,
+    {
         for w in args.windows(2) {
             let n1 = w[0]
                 .as_number()
@@ -432,11 +435,31 @@ mod prim {
             let n2 = w[1]
                 .as_number()
                 .ok_or_else(|| invalid_argument(&w[1], "number"))?;
-            if !(n1 < n2) {
+            if !cmp(n1, n2) {
                 return Ok(Gc::new(Value::from(false)));
             }
         }
         Ok(Gc::new(Value::from(true)))
+    }
+
+    pub fn eq(args: &[Gc<Value>]) -> OpResult {
+        num_cmp(args, Number::ge)
+    }
+
+    pub fn lt(args: &[Gc<Value>]) -> OpResult {
+        num_cmp(args, Number::lt)
+    }
+
+    pub fn le(args: &[Gc<Value>]) -> OpResult {
+        num_cmp(args, Number::le)
+    }
+
+    pub fn gt(args: &[Gc<Value>]) -> OpResult {
+        num_cmp(args, Number::gt)
+    }
+
+    pub fn ge(args: &[Gc<Value>]) -> OpResult {
+        num_cmp(args, Number::ge)
     }
 }
 
@@ -642,6 +665,10 @@ fn main() -> io::Result<()> {
     env.bind("-", Value::prim_op(prim::minus));
     env.bind("*", Value::prim_op(prim::times));
     env.bind("<", Value::prim_op(prim::lt));
+    env.bind("<=", Value::prim_op(prim::le));
+    env.bind(">", Value::prim_op(prim::gt));
+    env.bind(">=", Value::prim_op(prim::ge));
+    env.bind("==", Value::prim_op(prim::eq));
     let env = Gc::new(GcCell::new(env));
     let input = io::BufReader::new(io::stdin());
     for line in input.lines() {
