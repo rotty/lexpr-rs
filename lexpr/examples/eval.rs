@@ -1,8 +1,11 @@
 /// A simple S-expression evaluator.
 use std::{
     collections::HashMap,
+    env,
     fmt::{self, Display, Write},
+    fs,
     io::{self, BufRead},
+    path::Path,
 };
 
 use gc::{Finalize, Gc, GcCell};
@@ -342,6 +345,8 @@ unsafe impl gc::Trace for Env {
 
 /// Primitives.
 mod prim {
+    use std::io::{self, Write};
+
     use gc::Gc;
     use num_traits::{CheckedAdd, CheckedMul, CheckedSub};
 
@@ -353,6 +358,23 @@ mod prim {
 
     fn too_few_arguments(procedure: &str) -> Gc<Value> {
         make_error!("too few arguments to `{}'", procedure)
+    }
+
+    fn wrong_number_of_arguments(
+        procedure: &str,
+        expected: usize,
+        args: &[Gc<Value>],
+    ) -> Gc<Value> {
+        make_error!(
+            "wrong number of arguments to `{}': expected {}, got {}",
+            procedure,
+            expected,
+            args.len()
+        )
+    }
+
+    fn io_error(e: io::Error) -> Gc<Value> {
+        make_error!("I/O error: {}", e)
     }
 
     fn arithmetic_overflow(operation: &str, arg1: &Number, arg2: &Number) -> Gc<Value> {
@@ -460,6 +482,26 @@ mod prim {
 
     pub fn ge(args: &[Gc<Value>]) -> OpResult {
         num_cmp(args, Number::ge)
+    }
+
+    pub fn display(args: &[Gc<Value>]) -> OpResult {
+        if args.len() != 1 {
+            // TODO: support ports
+            return Err(wrong_number_of_arguments("display", 1, args));
+        }
+        // TODO: we use the `Display` trait of `Value` here, which currently
+        // uses `write` notation, not `display` notation.
+        write!(io::stdout(), "{}", args[0]).map_err(io_error)?;
+        Ok(Gc::new(Value::Null))
+    }
+
+    pub fn newline(args: &[Gc<Value>]) -> OpResult {
+        if args.len() != 0 {
+            // TODO: support ports
+            return Err(wrong_number_of_arguments("newline", 0, args));
+        }
+        write!(io::stdout(), "\n").map_err(io_error)?;
+        Ok(Gc::new(Value::Null))
     }
 }
 
@@ -659,8 +701,65 @@ pub fn apply(op: &Value, args: &[Gc<Value>]) -> Result<Thunk, Gc<Value>> {
     }
 }
 
-fn main() -> io::Result<()> {
+#[derive(Debug)]
+pub enum EvalError {
+    Io(io::Error),
+    Parse(lexpr::parse::Error),
+    Runtime(Gc<Value>),
+}
+
+impl Display for EvalError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use EvalError::*;
+        match self {
+            Io(e) => write!(f, "I/O error: {}", e),
+            Parse(e) => write!(f, "parse error: {}", e),
+            Runtime(e) => write!(f, "runtime error: {}", e),
+        }
+    }
+}
+
+impl std::error::Error for EvalError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        use EvalError::*;
+        match self {
+            Io(e) => Some(e),
+            Parse(e) => Some(e),
+            Runtime(_) => None,
+        }
+    }
+}
+
+impl From<lexpr::parse::Error> for EvalError {
+    fn from(e: lexpr::parse::Error) -> Self {
+        EvalError::Parse(e)
+    }
+}
+
+impl From<io::Error> for EvalError {
+    fn from(e: io::Error) -> Self {
+        EvalError::Io(e)
+    }
+}
+
+impl From<Gc<Value>> for EvalError {
+    fn from(e: Gc<Value>) -> Self {
+        EvalError::Runtime(e)
+    }
+}
+
+pub fn load(path: impl AsRef<Path>, env: Gc<GcCell<Env>>) -> Result<(), EvalError> {
+    let file = fs::File::open(path)?;
+    let mut parser = lexpr::Parser::from_reader(file);
+    while let Some(expr) = parser.parse()? {
+        eval(&expr, env.clone())?;
+    }
+    Ok(())
+}
+
+fn main() -> Result<(), EvalError> {
     let mut env = Env::default();
+
     env.bind("+", Value::prim_op(prim::plus));
     env.bind("-", Value::prim_op(prim::minus));
     env.bind("*", Value::prim_op(prim::times));
@@ -669,13 +768,23 @@ fn main() -> io::Result<()> {
     env.bind(">", Value::prim_op(prim::gt));
     env.bind(">=", Value::prim_op(prim::ge));
     env.bind("==", Value::prim_op(prim::eq));
+    env.bind("display", Value::prim_op(prim::display));
+    env.bind("newline", Value::prim_op(prim::newline));
+
     let env = Gc::new(GcCell::new(env));
-    let input = io::BufReader::new(io::stdin());
-    for line in input.lines() {
-        let line = line?;
-        match eval(&line.parse().unwrap(), env.clone()) {
-            Ok(value) => println!("{}", value),
-            Err(e) => println!("; error: {}", e),
+    let args: Vec<_> = env::args_os().skip(1).collect();
+    if args.len() == 0 {
+        let input = io::BufReader::new(io::stdin());
+        for line in input.lines() {
+            let line = line?;
+            match eval(&line.parse().unwrap(), env.clone()) {
+                Ok(value) => println!("{}", value),
+                Err(e) => println!("; error: {}", e),
+            }
+        }
+    } else {
+        for filename in &args {
+            load(filename, env.clone())?;
         }
     }
     Ok(())
