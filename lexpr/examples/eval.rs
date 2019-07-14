@@ -158,6 +158,13 @@ impl From<&lexpr::Value> for Value {
     }
 }
 
+impl fmt::Debug for Value {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Should probably use a more "Rusty" representation
+        fmt::Display::fmt(self, f)
+    }
+}
+
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -478,6 +485,20 @@ pub fn eval(expr: &lexpr::Value, env: Gc<GcCell<Env>>) -> OpResult {
                         return Err(make_error!("`quote' expects a single form"));
                     }
                     Ok(Gc::new(args[0].into()))
+                }
+                Some("lambda") => {
+                    let args = proper_list(rest).map_err(syntax_error)?;
+                    if args.len() < 2 {
+                        return Err(make_error!("`lambda` expects at least two forms"));
+                    }
+                    let params = Params::new(args[0]).map_err(syntax_error)?;
+                    let body = args[1..].into_iter().map(|e| (*e).clone()).collect();
+                    let closure = Value::Closure {
+                        params,
+                        body,
+                        env: env.clone(),
+                    };
+                    Ok(Gc::new(closure))
                 }
                 Some("define") => {
                     let args = proper_list(rest).map_err(syntax_error)?;
