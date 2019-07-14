@@ -99,6 +99,7 @@ fn param_rest(rest: &lexpr::Value) -> Result<Box<str>, SyntaxError> {
 pub enum Value {
     Number(Number),
     String(Box<str>),
+    Bool(bool),
     Null,
     Cons(Box<[Gc<Value>; 2]>),
     Symbol(Box<str>), // TODO: interning
@@ -139,6 +140,20 @@ impl Value {
             _ => None,
         }
     }
+
+    fn is_true(&self) -> bool {
+        if let Value::Bool(v) = self {
+            *v
+        } else {
+            true
+        }
+    }
+}
+
+impl From<bool> for Value {
+    fn from(b: bool) -> Self {
+        Value::Bool(b)
+    }
 }
 
 impl From<&lexpr::Value> for Value {
@@ -170,6 +185,7 @@ impl fmt::Display for Value {
         match self {
             Value::Number(n) => write!(f, "{}", n),
             Value::Symbol(s) => write!(f, "{}", s),
+            Value::Bool(b) => f.write_str(if *b { "#t" } else { "#f" }),
             Value::PrimOp(_) => write!(f, "#<prim-op>"),
             Value::Closure { .. } => write!(f, "#<closure>"),
             Value::Null => write!(f, "()"),
@@ -407,6 +423,17 @@ mod prim {
             Ok(Value::number(1).into())
         }
     }
+
+    pub fn lt(args: &[Gc<Value>]) -> OpResult {
+        for w in args.windows(2) {
+            let n1 = w[0].as_number().ok_or_else(|| invalid_argument(&w[0], "number"))?;
+            let n2 = w[1].as_number().ok_or_else(|| invalid_argument(&w[1], "number"))?;
+            if !(n1 < n2) {
+                return Ok(Gc::new(Value::from(false)));
+            }
+        }
+        Ok(Gc::new(Value::from(true)))
+    }
 }
 
 #[derive(Debug)]
@@ -535,6 +562,18 @@ pub fn eval(expr: &lexpr::Value, env: Gc<GcCell<Env>>) -> OpResult {
                         _ => return Err(make_error!("invalid `define' form")),
                     }
                 }
+                Some("if") => {
+                    let args = proper_list(rest).map_err(syntax_error)?;
+                    if args.len() != 3 {
+                        return Err(make_error!("`if` expects at exactly three forms"));
+                    }
+                    let cond = eval(args[0], env.clone())?;
+                    if cond.is_true() {
+                        eval(args[1], env.clone())
+                    } else {
+                        eval(args[2], env.clone())
+                    }
+                }
                 _ => {
                     let op = eval(first, env.clone())?;
                     let arg_exprs = proper_list(rest).map_err(syntax_error)?;
@@ -577,6 +616,7 @@ fn main() -> io::Result<()> {
     env.bind("+", Value::prim_op(prim::plus));
     env.bind("-", Value::prim_op(prim::minus));
     env.bind("*", Value::prim_op(prim::times));
+    env.bind("<", Value::prim_op(prim::lt));
     let env = Gc::new(GcCell::new(env));
     let input = io::BufReader::new(io::stdin());
     for line in input.lines() {
