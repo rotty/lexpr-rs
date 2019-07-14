@@ -283,22 +283,34 @@ impl gc::Finalize for Env {
 
 unsafe impl gc::Trace for Env {
     unsafe fn trace(&self) {
+        if let Some(parent) = &self.parent {
+            parent.trace();
+        }
         for value in self.bindings.values() {
             value.trace()
         }
     }
     unsafe fn root(&self) {
+        if let Some(parent) = &self.parent {
+            parent.root();
+        }
         for value in self.bindings.values() {
             value.root()
         }
     }
     unsafe fn unroot(&self) {
+        if let Some(parent) = &self.parent {
+            parent.unroot();
+        }
         for value in self.bindings.values() {
             value.unroot()
         }
     }
     fn finalize_glue(&self) {
         self.finalize();
+        if let Some(parent) = &self.parent {
+            parent.finalize();
+        }
         for value in self.bindings.values() {
             value.finalize()
         }
