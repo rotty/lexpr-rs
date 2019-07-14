@@ -1,6 +1,7 @@
 //! Dynamically typed number type.
 
 use std::{
+    cmp::Ordering,
     fmt::{self, Debug, Display},
     ops,
 };
@@ -329,6 +330,16 @@ impl ops::Mul for Number {
     fn mul(self, other: Self) -> Self {
         self.checked_mul(&other)
             .unwrap_or_else(|| unimplemented!("bignums not supported yet"))
+    }
+}
+
+impl PartialOrd for Number {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (&self.n, &other.n) {
+            (N::PosInt(n1), N::PosInt(n2)) => n1.partial_cmp(n2),
+            (N::NegInt(n1), N::NegInt(n2)) => n1.partial_cmp(n2),
+            _ => unimplemented!()
+        }
     }
 }
 
