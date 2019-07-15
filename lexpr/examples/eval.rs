@@ -6,6 +6,7 @@ use std::{
     fs,
     io::{self, BufRead},
     path::Path,
+    rc::Rc,
 };
 
 use gc::{Finalize, Gc, GcCell};
@@ -19,6 +20,7 @@ macro_rules! make_error {
 /// Operations produce either a success or an error value.
 type OpResult = Result<Gc<Value>, Gc<Value>>;
 
+#[derive(Debug)]
 pub enum Params {
     Any(Box<str>),
     Exact(Vec<Box<str>>),
@@ -108,8 +110,8 @@ pub enum Value {
     Symbol(Box<str>), // TODO: interning
     PrimOp(Box<Fn(&[Gc<Value>]) -> OpResult>),
     Closure {
-        params: Params,
-        body: Vec<lexpr::Value>,
+        params: Rc<Params>,
+        body: Gc<Ast>,
         env: Gc<GcCell<Env>>,
     },
 }
@@ -227,55 +229,219 @@ impl gc::Finalize for Value {
     fn finalize(&self) {}
 }
 
+macro_rules! impl_value_trace_body {
+    ($this:ident, $method:ident) => {
+        match $this {
+            Value::Cons(cell) => {
+                cell[0].$method();
+                cell[1].$method();
+            }
+            Value::Closure { env, body, .. } => {
+                body.$method();
+                env.$method();
+            }
+            _ => {}
+        }
+    }
+}
+
 unsafe impl gc::Trace for Value {
     unsafe fn trace(&self) {
-        match self {
-            Value::Cons(cell) => {
-                cell[0].trace();
-                cell[1].trace();
-            }
-            Value::Closure { env, .. } => {
-                env.trace();
-            }
-            _ => {}
-        }
+        impl_value_trace_body!(self, trace);
     }
     unsafe fn root(&self) {
-        match self {
-            Value::Cons(cell) => {
-                cell[0].root();
-                cell[1].root();
-            }
-            Value::Closure { env, .. } => {
-                env.root();
-            }
-            _ => {}
-        }
+        impl_value_trace_body!(self, root);
     }
     unsafe fn unroot(&self) {
-        match self {
-            Value::Cons(cell) => {
-                cell[0].unroot();
-                cell[1].unroot();
-            }
-            Value::Closure { env, .. } => {
-                env.unroot();
-            }
-            _ => {}
-        }
+        impl_value_trace_body!(self, unroot);
     }
     fn finalize_glue(&self) {
         self.finalize();
-        match self {
-            Value::Cons(cell) => {
-                cell[0].finalize();
-                cell[1].finalize();
+        impl_value_trace_body!(self, finalize_glue);
+    }
+}
+
+// TODO: This should not need to contain `Gc` values; we could turn these into
+// `Rc`, if we find some solution for the `Datum`, which currently contains a
+// `Gc`, requiring all other `Ast` smart pointers into being `Gc` as well.
+#[derive(Debug)]
+pub enum Ast {
+    Datum(Gc<Value>),
+    Lambda {
+        params: Rc<Params>,
+        body: Gc<Ast>,
+    },
+    Define {
+        ident: Box<str>,
+        expr: Gc<Ast>,
+    },
+    If {
+        cond: Gc<Ast>,
+        consequent: Gc<Ast>,
+        alternative: Gc<Ast>,
+    },
+    Begin(Vec<Gc<Ast>>),
+    Apply {
+        op: Gc<Ast>,
+        operands: Vec<Gc<Ast>>,
+    },
+    EnvRef(Box<str>),
+}
+
+impl Ast {
+    pub fn new(expr: &lexpr::Value) -> Result<Ast, Gc<Value>> {
+        match expr {
+            lexpr::Value::Null => Err(make_error!("empty application")),
+            lexpr::Value::Nil => Err(make_error!("#nil unsupported")),
+            lexpr::Value::Char(_) => Err(make_error!("characters are currently unsupported")),
+            lexpr::Value::Keyword(_) => Err(make_error!("keywords are currently unsupported")),
+            lexpr::Value::Bytes(_) => Err(make_error!("byte vectors are currently unsupported")),
+            lexpr::Value::Vector(_) => Err(make_error!("vectors are currently unsupported")),
+            lexpr::Value::Bool(b) => Ok(Ast::Datum(Value::Bool(*b).into())),
+            lexpr::Value::Number(n) => Ok(Ast::Datum(Value::Number(n.clone()).into())),
+            lexpr::Value::String(s) => Ok(Ast::Datum(Value::String(s.clone()).into())),
+            lexpr::Value::Symbol(sym) => Ok(Ast::env_ref(sym.clone())),
+            lexpr::Value::Cons(cell) => {
+                let (first, rest) = cell.as_pair();
+                match first.as_symbol() {
+                    Some("quote") => {
+                        let args = proper_list(rest).map_err(syntax_error)?;
+                        if args.len() != 1 {
+                            return Err(make_error!("`quote' expects a single form"));
+                        }
+                        Ok(Ast::Datum(Gc::new(args[0].into())))
+                    }
+                    Some("lambda") => {
+                        let args = proper_list(rest).map_err(syntax_error)?;
+                        if args.len() < 2 {
+                            return Err(make_error!("`lambda` expects at least two forms"));
+                        }
+                        Ok(Ast::Lambda {
+                            params: Rc::new(Params::new(args[0]).map_err(syntax_error)?),
+                            body: Gc::new(Ast::begin(&args[1..])?),
+                        })
+                    }
+                    Some("define") => {
+                        let args = proper_list(rest).map_err(syntax_error)?;
+                        if args.len() < 2 {
+                            return Err(make_error!("`define` expects at least two forms"));
+                        }
+                        match args[0] {
+                            lexpr::Value::Symbol(sym) => {
+                                if args.len() != 2 {
+                                    return Err(make_error!(
+                                        "`define` for variable expects one value form"
+                                    ));
+                                }
+                                Ok(Ast::Define {
+                                    ident: sym.clone(),
+                                    expr: Gc::new(Ast::new(&args[1])?),
+                                })
+                            }
+                            lexpr::Value::Cons(cell) => {
+                                let ident = cell.car().as_symbol().ok_or_else(|| {
+                                    make_error!("invalid function `define': non-identifier")
+                                })?;
+                                Ok(Ast::Define {
+                                    ident: ident.into(),
+                                    expr: Ast::lambda(cell.cdr(), &args[1..])?.into(),
+                                })
+                            }
+                            _ => Err(make_error!("invalid `define' form")),
+                        }
+                    }
+                    Some("if") => {
+                        let args = proper_list(rest).map_err(syntax_error)?;
+                        if args.len() != 3 {
+                            return Err(make_error!("`if` expects at exactly three forms"));
+                        }
+                        Ok(Ast::If {
+                            cond: Ast::new(&args[0])?.into(),
+                            consequent: Ast::new(&args[1])?.into(),
+                            alternative: Ast::new(&args[2])?.into(),
+                        })
+                    }
+                    _ => {
+                        let arg_exprs = proper_list(rest).map_err(syntax_error)?;
+                        Ok(Ast::Apply {
+                            op: Ast::new(first)?.into(),
+                            operands: arg_exprs
+                                .into_iter()
+                                .map(|arg| Ok(Ast::new(arg)?.into()))
+                                .collect::<Result<Vec<Gc<Ast>>, Gc<Value>>>()?,
+                        })
+                    }
+                }
             }
-            Value::Closure { env, .. } => {
-                env.finalize();
-            }
-            _ => {}
         }
+    }
+
+    fn begin(exprs: &[&lexpr::Value]) -> Result<Self, Gc<Value>> {
+        let ast_exprs = exprs
+            .into_iter()
+            .map(|e| Ok(Gc::new(Ast::new(*e)?)))
+            .collect::<Result<_, Gc<Value>>>()?;
+        Ok(Ast::Begin(ast_exprs))
+    }
+
+    fn env_ref(sym: impl Into<Box<str>>) -> Self {
+        Ast::EnvRef(sym.into())
+    }
+
+    fn lambda(params: &lexpr::Value, body: &[&lexpr::Value]) -> Result<Self, Gc<Value>> {
+        Ok(Ast::Lambda {
+            params: Params::new(params).map_err(syntax_error)?.into(),
+            body: Ast::begin(body)?.into(),
+        })
+    }
+}
+
+impl gc::Finalize for Ast {
+    fn finalize(&self) {}
+}
+
+macro_rules! impl_ast_trace_body {
+    ($this:ident, $method:ident) => {
+        use Ast::*;
+        match $this {
+            Datum(value) => value.$method(),
+            Lambda { body, .. } => body.$method(),
+            Define { expr, .. } => expr.$method(),
+            If { cond, consequent, alternative } => {
+                cond.$method();
+                consequent.$method();
+                alternative.$method();
+            }
+            Begin(body) => {
+                for expr in body {
+                    expr.$method();
+                }
+            }
+            Apply { op, operands } => {
+                op.$method();
+                for operand in operands {
+                    operand.$method();
+                }
+            }
+            EnvRef(_) => {},
+
+        }
+    }
+}
+
+unsafe impl gc::Trace for Ast {
+    unsafe fn trace(&self) {
+        impl_ast_trace_body!(self, trace);
+    }
+    unsafe fn root(&self) {
+        impl_ast_trace_body!(self, root);
+    }
+    unsafe fn unroot(&self) {
+        impl_ast_trace_body!(self, unroot);
+    }
+    fn finalize_glue(&self) {
+        self.finalize();
+        impl_ast_trace_body!(self, finalize_glue);
     }
 }
 
@@ -566,118 +732,82 @@ fn syntax_error(e: SyntaxError) -> Gc<Value> {
     make_error!("syntax error: {}", e)
 }
 
-pub fn eval(expr: &lexpr::Value, env: Gc<GcCell<Env>>) -> OpResult {
-    let mut expr = expr.clone(); // TODO: unfortunate clone of `expr` here
+fn eval_ast(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> OpResult {
     let mut env = env;
+    let mut ast = ast;
     loop {
-        match eval_step(&expr, env)? {
+        match eval_step(ast, env)? {
             Thunk::Resolved(v) => break Ok(v),
-            Thunk::Eval(thunk_expr, thunk_env) => {
-                expr = thunk_expr;
+            Thunk::Eval(thunk_ast, thunk_env) => {
+                ast = thunk_ast;
                 env = thunk_env;
             }
         }
     }
 }
 
-pub fn eval_step(expr: &lexpr::Value, env: Gc<GcCell<Env>>) -> Result<Thunk, Gc<Value>> {
-    match expr {
-        lexpr::Value::Symbol(sym) => env
+pub fn eval(expr: &lexpr::Value, env: Gc<GcCell<Env>>) -> OpResult {
+    let ast = Ast::new(expr)?;
+    eval_ast(Gc::new(ast), env)
+}
+
+fn eval_step(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> Result<Thunk, Gc<Value>> {
+    match &*ast {
+        Ast::EnvRef(ident) => env
             .borrow_mut()
-            .lookup(&sym)
+            .lookup(ident)
             .map(Thunk::Resolved)
-            .ok_or_else(|| make_error!("unbound identifier `{}'", sym)),
-        lexpr::Value::Cons(cell) => {
-            let (first, rest) = cell.as_pair();
-            match first.as_symbol() {
-                Some("quote") => {
-                    let args = proper_list(rest).map_err(syntax_error)?;
-                    if args.len() != 1 {
-                        return Err(make_error!("`quote' expects a single form"));
-                    }
-                    Ok(Thunk::Resolved(Gc::new(args[0].into())))
-                }
-                Some("lambda") => {
-                    let args = proper_list(rest).map_err(syntax_error)?;
-                    if args.len() < 2 {
-                        return Err(make_error!("`lambda` expects at least two forms"));
-                    }
-                    let params = Params::new(args[0]).map_err(syntax_error)?;
-                    let body = args[1..].into_iter().map(|e| (*e).clone()).collect();
-                    let closure = Value::Closure {
-                        params,
-                        body,
-                        env: env.clone(),
-                    };
-                    Ok(Thunk::Resolved(Gc::new(closure)))
-                }
-                Some("define") => {
-                    let args = proper_list(rest).map_err(syntax_error)?;
-                    if args.len() < 2 {
-                        return Err(make_error!("`define` expects at least two forms"));
-                    }
-                    match args[0] {
-                        lexpr::Value::Symbol(sym) => {
-                            if args.len() != 2 {
-                                return Err(make_error!(
-                                    "`define` for variable expects one value form"
-                                ));
-                            }
-                            let value = eval(&args[1], env.clone())?;
-                            env.borrow_mut().bind(&sym, value);
-                            Ok(Thunk::Resolved(Gc::new(Value::Null)))
-                        }
-                        lexpr::Value::Cons(cell) => {
-                            let ident = cell.car().as_symbol().ok_or_else(|| {
-                                make_error!("invalid function `define': non-identifier")
-                            })?;
-                            let params = Params::new(cell.cdr()).map_err(syntax_error)?;
-                            let body = args[1..].into_iter().map(|e| (*e).clone()).collect();
-                            env.borrow_mut().bind(
-                                &ident,
-                                Value::Closure {
-                                    params,
-                                    body,
-                                    env: env.clone(),
-                                },
-                            );
-                            Ok(Thunk::Resolved(Gc::new(Value::Null)))
-                        }
-                        _ => Err(make_error!("invalid `define' form")),
-                    }
-                }
-                Some("if") => {
-                    let args = proper_list(rest).map_err(syntax_error)?;
-                    if args.len() != 3 {
-                        return Err(make_error!("`if` expects at exactly three forms"));
-                    }
-                    let cond = eval(args[0], env.clone())?;
-                    if cond.is_true() {
-                        Ok(Thunk::Eval(args[1].clone(), env.clone()))
-                    } else {
-                        Ok(Thunk::Eval(args[2].clone(), env.clone()))
-                    }
-                }
-                _ => {
-                    let op = eval(first, env.clone())?;
-                    let arg_exprs = proper_list(rest).map_err(syntax_error)?;
-                    let args = arg_exprs
-                        .into_iter()
-                        .map(|arg| eval(arg, env.clone()))
-                        .collect::<Result<Vec<_>, _>>()?;
-                    apply(&op, &args)
-                }
+            .ok_or_else(|| make_error!("unbound identifier `{}'", ident)),
+        Ast::Datum(value) => Ok(Thunk::Resolved(value.clone())),
+        Ast::Lambda { params, body } => {
+            let closure = Value::Closure {
+                params: Rc::clone(params),
+                body: Gc::clone(body),
+                env: env.clone(),
+            };
+            Ok(Thunk::Resolved(Gc::new(closure)))
+        }
+        Ast::Define { ident, expr } => {
+            let value = eval_ast(Gc::clone(expr), env.clone())?;
+            env.borrow_mut().bind(ident, value);
+            Ok(Thunk::Resolved(Gc::new(Value::Null)))
+        }
+        Ast::If {
+            cond,
+            consequent,
+            alternative,
+        } => {
+            let cond = eval_ast(Gc::clone(cond), env.clone())?;
+            if cond.is_true() {
+                Ok(Thunk::Eval(Gc::clone(consequent), env))
+            } else {
+                Ok(Thunk::Eval(Gc::clone(alternative), env))
             }
         }
-        lexpr::Value::Number(n) => Ok(Thunk::Resolved(Value::Number(n.clone()).into())),
-        lexpr::Value::String(s) => Ok(Thunk::Resolved(Value::String(s.clone()).into())),
-        _ => unimplemented!(),
+        Ast::Apply { op, operands } => {
+            let op = eval_ast(Gc::clone(op), env.clone())?;
+            let operands = operands
+                .into_iter()
+                .map(|operand| eval_ast(Gc::clone(operand), env.clone()))
+                .collect::<Result<Vec<_>, _>>()?;
+            apply(&op, &operands)
+        }
+        Ast::Begin(body) => {
+            for (i, expr) in body.into_iter().enumerate() {
+                if i + 1 == body.len() {
+                    // TODO: unfortunate clone of `expr` here
+                    return Ok(Thunk::Eval(expr.clone(), env.clone()));
+                }
+                eval_ast(Gc::clone(expr), env.clone())?;
+            }
+            unreachable!()
+        }
     }
 }
 
 pub enum Thunk {
     Resolved(Gc<Value>),
-    Eval(lexpr::Value, Gc<GcCell<Env>>),
+    Eval(Gc<Ast>, Gc<GcCell<Env>>),
 }
 
 pub fn apply(op: &Value, args: &[Gc<Value>]) -> Result<Thunk, Gc<Value>> {
@@ -685,14 +815,7 @@ pub fn apply(op: &Value, args: &[Gc<Value>]) -> Result<Thunk, Gc<Value>> {
         Value::PrimOp(ref op) => Ok(Thunk::Resolved(op(args)?)),
         Value::Closure { params, body, env } => {
             let env = params.bind(args, env.clone())?;
-            for (i, expr) in body.into_iter().enumerate() {
-                if i + 1 == body.len() {
-                    // TODO: unfortunate clone of `expr` here
-                    return Ok(Thunk::Eval(expr.clone(), env.clone()));
-                }
-                eval(expr, env.clone())?;
-            }
-            unreachable!()
+            eval_step(Gc::clone(body), env)
         }
         _ => Err(make_error!(
             "non-applicable object in operator position: {}",
