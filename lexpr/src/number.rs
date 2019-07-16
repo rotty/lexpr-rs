@@ -360,6 +360,13 @@ impl CheckedAdd for Number {
                     None
                 }
             }
+            (N::PosInt(n1), N::NegInt(n2)) => {
+                if let Some(result) = n1.checked_sub(&(n2.abs() as u64)) {
+                    Some(result.into())
+                } else {
+                    None
+                }
+            }
             _ => unimplemented!(),
         }
     }
