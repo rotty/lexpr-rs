@@ -463,7 +463,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                     Ok(Value::from(self.parse_integer(true)?))
                 }
             }
-            b'0'...b'9' => Ok(Value::from(self.parse_integer(true)?)),
+            b'0'..=b'9' => Ok(Value::from(self.parse_integer(true)?)),
             b'"' => {
                 self.eat_char();
                 self.scratch.clear();
@@ -542,7 +542,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                     Ok(Value::symbol(self.parse_symbol()?))
                 }
             }
-            b'a'...b'z' | b'A'...b'Z' => {
+            b'a'..=b'z' | b'A'..=b'Z' => {
                 let mut name = self.parse_symbol()?;
                 if self.options.keyword_syntax(KeywordSyntax::ColonPostfix) && name.ends_with(':') {
                     name.pop();
@@ -717,16 +717,16 @@ impl<'de, R: Read<'de>> Parser<R> {
             b'0' => {
                 // There can be only one leading '0'.
                 match self.peek_or_null()? {
-                    b'0'...b'9' => Err(self.peek_error(ErrorCode::InvalidNumber)),
+                    b'0'..=b'9' => Err(self.peek_error(ErrorCode::InvalidNumber)),
                     _ => self.parse_number(pos, 0),
                 }
             }
-            c @ b'1'...b'9' => {
+            c @ b'1'..=b'9' => {
                 let mut res = u64::from(c - b'0');
 
                 loop {
                     match self.peek_or_null()? {
-                        c @ b'0'...b'9' => {
+                        c @ b'0'..=b'9' => {
                             self.eat_char();
                             let digit = u64::from(c - b'0');
 
@@ -759,7 +759,7 @@ impl<'de, R: Read<'de>> Parser<R> {
     ) -> Result<f64> {
         loop {
             match self.peek_or_null()? {
-                b'0'...b'9' => {
+                b'0'..=b'9' => {
                     self.eat_char();
                     // This could overflow... if your integer is gigabytes long.
                     // Ignore that possibility.
@@ -803,7 +803,7 @@ impl<'de, R: Read<'de>> Parser<R> {
         self.eat_char();
 
         let mut at_least_one_digit = false;
-        while let c @ b'0'...b'9' = self.peek_or_null()? {
+        while let c @ b'0'..=b'9' = self.peek_or_null()? {
             self.eat_char();
             let digit = u64::from(c - b'0');
             at_least_one_digit = true;
@@ -811,7 +811,7 @@ impl<'de, R: Read<'de>> Parser<R> {
             if overflow!(significand * 10 + digit, u64::MAX) {
                 // The next multiply/add would overflow, so just ignore all
                 // further digits.
-                while let b'0'...b'9' = self.peek_or_null()? {
+                while let b'0'..=b'9' = self.peek_or_null()? {
                     self.eat_char();
                 }
                 break;
@@ -853,13 +853,13 @@ impl<'de, R: Read<'de>> Parser<R> {
 
         // Make sure a digit follows the exponent place.
         let mut exp = match self.next_char_or_null()? {
-            c @ b'0'...b'9' => i32::from(c - b'0'),
+            c @ b'0'..=b'9' => i32::from(c - b'0'),
             _ => {
                 return Err(self.error(ErrorCode::InvalidNumber));
             }
         };
 
-        while let c @ b'0'...b'9' = self.peek_or_null()? {
+        while let c @ b'0'..=b'9' = self.peek_or_null()? {
             self.eat_char();
             let digit = i32::from(c - b'0');
 
@@ -894,7 +894,7 @@ impl<'de, R: Read<'de>> Parser<R> {
             return Err(self.error(ErrorCode::NumberOutOfRange));
         }
 
-        while let b'0'...b'9' = self.peek_or_null()? {
+        while let b'0'..=b'9' = self.peek_or_null()? {
             self.eat_char();
         }
         Ok(if positive { 0.0 } else { -0.0 })
