@@ -152,7 +152,7 @@ impl de::Error for Error {
         Error(Box::new(ErrorImpl::Message(msg.to_string(), None)))
     }
 
-    fn invalid_type(unexp: de::Unexpected, exp: &de::Expected) -> Self {
+    fn invalid_type(unexp: de::Unexpected, exp: &dyn de::Expected) -> Self {
         if let de::Unexpected::Unit = unexp {
             Error::custom(format_args!("invalid type: null, expected {}", exp))
         } else {

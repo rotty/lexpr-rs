@@ -78,7 +78,7 @@ impl Arbitrary for Value {
     fn arbitrary<G: Gen>(g: &mut G) -> Self {
         gen_value(g, 0)
     }
-    fn shrink(&self) -> Box<Iterator<Item = Value>> {
+    fn shrink(&self) -> Box<dyn Iterator<Item = Value>> {
         let nothing = || Box::new(None.into_iter());
         // TODO
         nothing()

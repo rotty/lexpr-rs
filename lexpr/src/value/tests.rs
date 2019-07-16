@@ -5,7 +5,7 @@ use crate::{Cons, Number, Value};
 type Predicate = fn(&Value) -> bool;
 
 // Type predicates for disjoint types
-static TYPE_PREDICATES: &[(&'static str, Predicate)] = &[
+static TYPE_PREDICATES: &[(&str, Predicate)] = &[
     ("string", Value::is_string),
     ("symbol", Value::is_symbol),
     ("keyword", Value::is_keyword),
