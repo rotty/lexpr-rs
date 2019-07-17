@@ -51,7 +51,16 @@ impl Parser {
         match self.token()? {
             TokenTree::Punct(punct) => match punct.as_char() {
                 '#' => self.parse_octothorpe(),
-                ',' => Ok(Value::Unquoted(self.token()?.clone())),
+                ',' => {
+                    let next = self.token()?;
+                    match next {
+                        TokenTree::Punct(punct) => match punct.as_char() {
+                            '@' => Ok(Value::UnquoteSplicing(self.token()?.clone())),
+                            _ => Ok(Value::Unquoted(next.clone())),
+                        }
+                        _ => Ok(Value::Unquoted(next.clone())),
+                    }
+                }
                 '-' => Ok(Value::Negated(self.parse_literal()?)),
                 c => Err(ParseError::UnexpectedChar(c)),
             },

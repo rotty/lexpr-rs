@@ -7,6 +7,7 @@ pub enum Value {
     Symbol(String),
     Keyword(String),
     Unquoted(proc_macro2::TokenTree),
+    UnquoteSplicing(proc_macro2::TokenTree),
     List(Vec<Value>),
     ImproperList(Vec<Value>, Box<Value>),
     Vector(Vec<Value>),

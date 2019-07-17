@@ -13,6 +13,7 @@ impl ToTokens for Value {
             Value::Symbol(name) => quote! { ::lexpr::Value::symbol(#name) },
             Value::Keyword(name) => quote! { ::lexpr::Value::keyword(#name) },
             Value::Unquoted(tt) => quote! { ::lexpr::Value::from(#tt) },
+            Value::UnquoteSplicing(tt) => quote! { ::lexpr::Value::from(#tt) },
             Value::List(elements) => {
                 if elements.is_empty() {
                     quote! { ::lexpr::Value::Null }
