@@ -27,7 +27,7 @@ pub enum Value {
 #[derive(Clone)]
 pub struct Closure {
     pub params: Rc<Params>,
-    pub body: Gc<Ast>,
+    pub body: Rc<Ast>,
     pub env: Gc<GcCell<Env>>,
 }
 
@@ -147,8 +147,7 @@ macro_rules! impl_value_trace_body {
                 cell[1].$method();
             }
             Value::Closure(boxed) => {
-                let Closure  { env, body, .. } = boxed.as_ref();
-                body.$method();
+                let Closure  { env, .. } = boxed.as_ref();
                 env.$method();
             }
             _ => {}

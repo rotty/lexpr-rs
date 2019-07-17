@@ -4,7 +4,7 @@ use std::{
     rc::Rc,
 };
 
-use gc::{Finalize, Gc, GcCell};
+use gc::{Gc, GcCell};
 
 use crate::{eval, value::Value};
 
@@ -75,10 +75,10 @@ impl EnvStack {
         }
     }
 
-    pub fn pop(&mut self) -> Vec<Gc<Ast>> {
+    pub fn pop(&mut self) -> Vec<Rc<Ast>> {
         assert!(self.frames.len() > 1);
         let frame = self.frames.pop().unwrap();
-        frame.rec_bodies.into_iter().map(Gc::new).collect()
+        frame.rec_bodies.into_iter().map(Rc::new).collect()
     }
 
     pub fn lookup(&self, name: &str) -> Option<EnvIndex> {
@@ -117,7 +117,7 @@ impl EnvStack {
     pub fn resolve_rec(&mut self, env: Gc<GcCell<eval::Env>>) -> Result<(), Value> {
         let pos = env.borrow_mut().init_rec(self.last_frame().rec_bodies.len());
         for (i, body) in self.last_frame().rec_bodies.drain(0..).enumerate() {
-            let value = eval(Gc::new(body), env.clone())?;
+            let value = eval(Rc::new(body), env.clone())?;
             env.borrow_mut().resolve_rec(pos + i, value);
         }
         Ok(())
@@ -194,28 +194,25 @@ fn param_rest(rest: &lexpr::Value) -> Result<Box<str>, SyntaxError> {
         .map(Into::into)
 }
 
-// TODO: This should not need to contain `Gc` values; we could turn these into
-// `Rc`, if we find some solution for the `Datum`, which currently contains a
-// `Gc`, requiring all other `Ast` smart pointers into being `Gc` as well.
 #[derive(Debug)]
 pub enum Ast {
-    Datum(Value),
+    Datum(lexpr::Value),
     Lambda {
         params: Rc<Params>,
-        body: Gc<Ast>,
+        body: Rc<Ast>,
     },
     If {
-        cond: Gc<Ast>,
-        consequent: Gc<Ast>,
-        alternative: Gc<Ast>,
+        cond: Rc<Ast>,
+        consequent: Rc<Ast>,
+        alternative: Rc<Ast>,
     },
     LetRec {
-        bound_exprs: Vec<Gc<Ast>>,
-        exprs: Vec<Gc<Ast>>,
+        bound_exprs: Vec<Rc<Ast>>,
+        exprs: Vec<Rc<Ast>>,
     },
     Apply {
-        op: Gc<Ast>,
-        operands: Vec<Gc<Ast>>,
+        op: Rc<Ast>,
+        operands: Vec<Rc<Ast>>,
     },
     EnvRef(EnvIndex),
 }
@@ -229,9 +226,9 @@ impl Ast {
             lexpr::Value::Keyword(_) => Err(make_error!("keywords are currently unsupported")),
             lexpr::Value::Bytes(_) => Err(make_error!("byte vectors are currently unsupported")),
             lexpr::Value::Vector(_) => Err(make_error!("vectors are currently unsupported")),
-            lexpr::Value::Bool(b) => Ok(Ast::Datum(Value::Bool(*b).into())),
-            lexpr::Value::Number(n) => Ok(Ast::Datum(Value::Number(n.clone()).into())),
-            lexpr::Value::String(s) => Ok(Ast::Datum(Value::String(s.clone()).into())),
+            lexpr::Value::Bool(_) => Ok(Ast::Datum(expr.clone())),
+            lexpr::Value::Number(_) => Ok(Ast::Datum(expr.clone())),
+            lexpr::Value::String(_) => Ok(Ast::Datum(expr.clone())),
             lexpr::Value::Symbol(ident) => stack
                 .lookup(ident)
                 .map(Ast::EnvRef)
@@ -244,7 +241,7 @@ impl Ast {
                         if args.len() != 1 {
                             return Err(make_error!("`quote' expects a single form"));
                         }
-                        Ok(Ast::Datum(args[0].into()))
+                        Ok(Ast::Datum(args[0].clone()))
                     }
                     Some("lambda") => {
                         let args = proper_list(rest).map_err(syntax_error)?;
@@ -274,7 +271,7 @@ impl Ast {
                             operands: arg_exprs
                                 .into_iter()
                                 .map(|arg| Ok(Ast::expr(arg, stack)?.into()))
-                                .collect::<Result<Vec<Gc<Ast>>, Value>>()?,
+                                .collect::<Result<Vec<Rc<Ast>>, Value>>()?,
                         })
                     }
                 }
@@ -335,11 +332,11 @@ impl Ast {
         for expr in exprs {
             if definitions {
                 if let Some(ast) = Ast::definition(expr, stack)? {
-                    body_exprs.push(Gc::new(ast));
+                    body_exprs.push(Rc::new(ast));
                     definitions = false;
                 }
             } else {
-                body_exprs.push(Gc::new(Ast::expr(expr, stack)?));
+                body_exprs.push(Rc::new(Ast::expr(expr, stack)?));
             }
         }
         Ok(Ast::LetRec {
@@ -354,64 +351,11 @@ impl Ast {
         stack: &mut EnvStack,
     ) -> Result<Self, Value> {
         let params = Params::new(params).map_err(syntax_error)?;
-        let body = Gc::new(Ast::let_rec(&params, body, stack)?);
+        let body = Rc::new(Ast::let_rec(&params, body, stack)?);
         Ok(Ast::Lambda {
             params: Rc::new(params),
             body,
         })
-    }
-}
-
-impl gc::Finalize for Ast {
-    fn finalize(&self) {}
-}
-
-macro_rules! impl_ast_trace_body {
-    ($this:ident, $method:ident) => {
-        use Ast::*;
-        match $this {
-            Datum(value) => value.$method(),
-            Lambda { body, .. } => body.$method(),
-            If {
-                cond,
-                consequent,
-                alternative,
-            } => {
-                cond.$method();
-                consequent.$method();
-                alternative.$method();
-            }
-            LetRec {
-                bound_exprs, exprs, ..
-            } => {
-                for expr in bound_exprs.into_iter().chain(exprs) {
-                    expr.$method();
-                }
-            }
-            Apply { op, operands } => {
-                op.$method();
-                for operand in operands {
-                    operand.$method();
-                }
-            }
-            EnvRef(_) => {}
-        }
-    };
-}
-
-unsafe impl gc::Trace for Ast {
-    unsafe fn trace(&self) {
-        impl_ast_trace_body!(self, trace);
-    }
-    unsafe fn root(&self) {
-        impl_ast_trace_body!(self, root);
-    }
-    unsafe fn unroot(&self) {
-        impl_ast_trace_body!(self, unroot);
-    }
-    fn finalize_glue(&self) {
-        self.finalize();
-        impl_ast_trace_body!(self, finalize_glue);
     }
 }
 

@@ -107,7 +107,7 @@ unsafe impl gc::Trace for Env {
     }
 }
 
-pub fn eval(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> OpResult {
+pub fn eval(ast: Rc<Ast>, env: Gc<GcCell<Env>>) -> OpResult {
     let mut env = env;
     let mut ast = ast;
     loop {
@@ -121,14 +121,14 @@ pub fn eval(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> OpResult {
     }
 }
 
-fn eval_step(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> Result<Thunk, Value> {
+fn eval_step(ast: Rc<Ast>, env: Gc<GcCell<Env>>) -> Result<Thunk, Value> {
     match &*ast {
         Ast::EnvRef(idx) => Ok(Thunk::Resolved(env.borrow_mut().lookup(idx))),
-        Ast::Datum(value) => Ok(Thunk::Resolved(value.clone())),
+        Ast::Datum(value) => Ok(Thunk::Resolved(value.into())),
         Ast::Lambda { params, body } => {
             let closure = Value::Closure(Box::new(Closure {
                 params: Rc::clone(params),
-                body: Gc::clone(body),
+                body: Rc::clone(body),
                 env: env.clone(),
             }));
             Ok(Thunk::Resolved(closure))
@@ -138,33 +138,33 @@ fn eval_step(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> Result<Thunk, Value> {
             consequent,
             alternative,
         } => {
-            let cond = eval(Gc::clone(cond), env.clone())?;
+            let cond = eval(Rc::clone(cond), env.clone())?;
             if cond.is_true() {
-                Ok(Thunk::Eval(Gc::clone(consequent), env))
+                Ok(Thunk::Eval(Rc::clone(consequent), env))
             } else {
-                Ok(Thunk::Eval(Gc::clone(alternative), env))
+                Ok(Thunk::Eval(Rc::clone(alternative), env))
             }
         }
         Ast::Apply { op, operands } => {
-            let op = eval(Gc::clone(op), env.clone())?;
+            let op = eval(Rc::clone(op), env.clone())?;
             let operands = operands
                 .into_iter()
-                .map(|operand| eval(Gc::clone(operand), env.clone()))
+                .map(|operand| eval(Rc::clone(operand), env.clone()))
                 .collect::<Result<Vec<_>, _>>()?;
-            apply(&op, &operands)
+            apply(op, &operands)
         }
         Ast::LetRec { bound_exprs, exprs } => {
             // TODO: This code is duplicated in `resolve_rec`
             let pos = env.borrow_mut().init_rec(bound_exprs.len());
             for (i, expr) in bound_exprs.into_iter().enumerate() {
-                let value = eval(Gc::clone(expr), env.clone())?;
+                let value = eval(Rc::clone(expr), env.clone())?;
                 env.borrow_mut().resolve_rec(pos + i, value);
             }
             for (i, expr) in exprs.into_iter().enumerate() {
                 if i + 1 == exprs.len() {
-                    return Ok(Thunk::Eval(expr.clone(), env.clone()));
+                    return Ok(Thunk::Eval(Rc::clone(expr), env.clone()));
                 }
-                eval(Gc::clone(expr), env.clone())?;
+                eval(Rc::clone(expr), env.clone())?;
             }
             unreachable!()
         }
@@ -174,16 +174,16 @@ fn eval_step(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> Result<Thunk, Value> {
 #[derive(Debug)]
 pub enum Thunk {
     Resolved(Value),
-    Eval(Gc<Ast>, Gc<GcCell<Env>>),
+    Eval(Rc<Ast>, Gc<GcCell<Env>>),
 }
 
-pub fn apply(op: &Value, args: &[Value]) -> Result<Thunk, Value> {
+pub fn apply(op: Value, args: &[Value]) -> Result<Thunk, Value> {
     match op {
         Value::PrimOp(_, ref op) => Ok(Thunk::Resolved(op(args)?)),
         Value::Closure(boxed) => {
             let Closure { params, body, env } = boxed.as_ref();
             let env = params.bind(args, env.clone())?;
-            eval_step(Gc::clone(body), env)
+            eval_step(Rc::clone(body), env)
         }
         _ => Err(make_error!(
             "non-applicable object in operator position: {}",

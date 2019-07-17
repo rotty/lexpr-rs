@@ -2,6 +2,7 @@ use std::{
     env, fs,
     io::{self, BufRead},
     iter,
+    rc::Rc,
     path::Path,
 };
 
@@ -57,7 +58,7 @@ where
             let res = stack
                 .resolve_rec(env.clone())
                 .map_err(Into::into)
-                .and_then(|_| ast.and_then(|ast| Ok(eval(Gc::new(ast), env.clone())?)));
+                .and_then(|_| ast.and_then(|ast| Ok(eval(Rc::new(ast), env.clone())?)));
             sink(res)?;
         }
     }
