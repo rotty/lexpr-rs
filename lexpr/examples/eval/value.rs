@@ -19,7 +19,7 @@ pub enum Value {
     Null,
     Cons(Box<[Gc<Value>; 2]>),
     Symbol(Box<str>), // TODO: interning
-    PrimOp(Box<Fn(&[Gc<Value>]) -> OpResult>),
+    PrimOp(&'static str, Box<Fn(&[Gc<Value>]) -> OpResult>),
     Closure {
         params: Rc<Params>,
         body: Gc<Ast>,
@@ -28,11 +28,11 @@ pub enum Value {
 }
 
 impl Value {
-    pub fn prim_op<F>(f: F) -> Self
+    pub fn prim_op<F>(name: &'static str, f: F) -> Self
     where
         F: Fn(&[Gc<Value>]) -> OpResult + 'static,
     {
-        Value::PrimOp(Box::new(f))
+        Value::PrimOp(name, Box::new(f))
     }
 
     pub fn list<I>(elts: I) -> Self
@@ -102,7 +102,7 @@ impl fmt::Display for Value {
             Value::Number(n) => write!(f, "{}", n),
             Value::Symbol(s) => write!(f, "{}", s),
             Value::Bool(b) => f.write_str(if *b { "#t" } else { "#f" }),
-            Value::PrimOp(_) => write!(f, "#<prim-op>"),
+            Value::PrimOp(name, _) => write!(f, "#<prim-op {}>", name),
             Value::Closure { .. } => write!(f, "#<closure>"),
             Value::Null => write!(f, "()"),
             Value::Cons(cell) => write_cons(f, cell),

@@ -1,30 +1,70 @@
-use std::{collections::HashMap, fmt, io, rc::Rc};
+use std::{fmt, io, rc::Rc};
 
-use gc::{Gc, GcCell, Finalize};
+use gc::{Finalize, Gc, GcCell};
 
-use crate::{ast::Ast, value::Value, OpResult};
+use crate::{
+    ast::{Ast, EnvIndex, EnvStack},
+    value::Value,
+    OpResult,
+};
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct Env {
     parent: Option<Gc<GcCell<Env>>>,
-    bindings: HashMap<Box<str>, Gc<Value>>,
+    values: Vec<Gc<Value>>,
 }
 
 impl Env {
-    pub fn new(parent: Gc<GcCell<Env>>) -> Self {
+    pub fn new(parent: Gc<GcCell<Env>>, values: Vec<Gc<Value>>) -> Self {
         Env {
             parent: Some(parent),
-            bindings: Default::default(),
+            values,
         }
     }
-    pub fn bind(&mut self, name: &str, value: impl Into<Gc<Value>>) {
-        self.bindings.insert(name.into(), value.into());
+
+    pub fn init_rec(&mut self, n: usize) -> usize {
+        let pos = self.values.len();
+        for _ in 0..n {
+            // TODO: use better value here
+            self.values.push(Gc::new(Value::Null));
+        }
+        pos
     }
-    pub fn lookup(&self, name: &str) -> Option<Gc<Value>> {
-        self.bindings
-            .get(name)
-            .cloned()
-            .or_else(|| self.parent.as_ref().and_then(|p| p.borrow().lookup(name)))
+
+    pub fn resolve_rec(&mut self, offset: usize, value: Gc<Value>) {
+        self.values[offset] = value;
+    }
+
+    pub fn new_root(bindings: Vec<(&str, Value)>) -> (Self, EnvStack) {
+        let (idents, values): (Vec<_>, _) = bindings
+            .into_iter()
+            .map(|(ident, value)| (ident, Gc::new(value)))
+            .unzip();
+        let env = Env {
+            parent: None,
+            values: values,
+        };
+        let stack = EnvStack::initial(idents);
+        (env, stack)
+    }
+
+    pub fn lookup(&self, idx: &EnvIndex) -> Gc<Value> {
+        self.lookup_internal(idx.level(), idx.slot())
+    }
+
+    fn lookup_internal(&self, level: usize, slot: usize) -> Gc<Value> {
+        // Use recursion to get arround the borrow checker here. Should be
+        // turned into an iterative solution, but should not matter too much for
+        // now.
+        if level == 0 {
+            self.values[slot].clone()
+        } else {
+            self.parent
+                .as_ref()
+                .unwrap()
+                .borrow()
+                .lookup_internal(level - 1, slot)
+        }
     }
 }
 
@@ -37,7 +77,7 @@ unsafe impl gc::Trace for Env {
         if let Some(parent) = &self.parent {
             parent.trace();
         }
-        for value in self.bindings.values() {
+        for value in &self.values {
             value.trace()
         }
     }
@@ -45,7 +85,7 @@ unsafe impl gc::Trace for Env {
         if let Some(parent) = &self.parent {
             parent.root();
         }
-        for value in self.bindings.values() {
+        for value in &self.values {
             value.root()
         }
     }
@@ -53,7 +93,7 @@ unsafe impl gc::Trace for Env {
         if let Some(parent) = &self.parent {
             parent.unroot();
         }
-        for value in self.bindings.values() {
+        for value in &self.values {
             value.unroot()
         }
     }
@@ -62,13 +102,13 @@ unsafe impl gc::Trace for Env {
         if let Some(parent) = &self.parent {
             parent.finalize();
         }
-        for value in self.bindings.values() {
+        for value in &self.values {
             value.finalize()
         }
     }
 }
 
-fn eval_ast(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> OpResult {
+pub fn eval(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> OpResult {
     let mut env = env;
     let mut ast = ast;
     loop {
@@ -82,18 +122,9 @@ fn eval_ast(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> OpResult {
     }
 }
 
-pub fn eval(expr: &lexpr::Value, env: Gc<GcCell<Env>>) -> OpResult {
-    let ast = Ast::new(expr)?;
-    eval_ast(Gc::new(ast), env)
-}
-
 fn eval_step(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> Result<Thunk, Gc<Value>> {
     match &*ast {
-        Ast::EnvRef(ident) => env
-            .borrow_mut()
-            .lookup(ident)
-            .map(Thunk::Resolved)
-            .ok_or_else(|| make_error!("unbound identifier `{}'", ident)),
+        Ast::EnvRef(idx) => Ok(Thunk::Resolved(env.borrow_mut().lookup(idx))),
         Ast::Datum(value) => Ok(Thunk::Resolved(value.clone())),
         Ast::Lambda { params, body } => {
             let closure = Value::Closure {
@@ -103,17 +134,12 @@ fn eval_step(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> Result<Thunk, Gc<Value>> {
             };
             Ok(Thunk::Resolved(Gc::new(closure)))
         }
-        Ast::Define { ident, expr } => {
-            let value = eval_ast(Gc::clone(expr), env.clone())?;
-            env.borrow_mut().bind(ident, value);
-            Ok(Thunk::Resolved(Gc::new(Value::Null)))
-        }
         Ast::If {
             cond,
             consequent,
             alternative,
         } => {
-            let cond = eval_ast(Gc::clone(cond), env.clone())?;
+            let cond = eval(Gc::clone(cond), env.clone())?;
             if cond.is_true() {
                 Ok(Thunk::Eval(Gc::clone(consequent), env))
             } else {
@@ -121,26 +147,32 @@ fn eval_step(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> Result<Thunk, Gc<Value>> {
             }
         }
         Ast::Apply { op, operands } => {
-            let op = eval_ast(Gc::clone(op), env.clone())?;
+            let op = eval(Gc::clone(op), env.clone())?;
             let operands = operands
                 .into_iter()
-                .map(|operand| eval_ast(Gc::clone(operand), env.clone()))
+                .map(|operand| eval(Gc::clone(operand), env.clone()))
                 .collect::<Result<Vec<_>, _>>()?;
             apply(&op, &operands)
         }
-        Ast::Begin(body) => {
-            for (i, expr) in body.into_iter().enumerate() {
-                if i + 1 == body.len() {
-                    // TODO: unfortunate clone of `expr` here
+        Ast::LetRec { bound_exprs, exprs } => {
+            // TODO: This code is duplicated in `resolve_rec`
+            let pos = env.borrow_mut().init_rec(bound_exprs.len());
+            for (i, expr) in bound_exprs.into_iter().enumerate() {
+                let value = eval(Gc::clone(expr), env.clone())?;
+                env.borrow_mut().resolve_rec(pos + i, value);
+            }
+            for (i, expr) in exprs.into_iter().enumerate() {
+                if i + 1 == exprs.len() {
                     return Ok(Thunk::Eval(expr.clone(), env.clone()));
                 }
-                eval_ast(Gc::clone(expr), env.clone())?;
+                eval(Gc::clone(expr), env.clone())?;
             }
             unreachable!()
         }
     }
 }
 
+#[derive(Debug)]
 pub enum Thunk {
     Resolved(Gc<Value>),
     Eval(Gc<Ast>, Gc<GcCell<Env>>),
@@ -148,7 +180,7 @@ pub enum Thunk {
 
 pub fn apply(op: &Value, args: &[Gc<Value>]) -> Result<Thunk, Gc<Value>> {
     match op {
-        Value::PrimOp(ref op) => Ok(Thunk::Resolved(op(args)?)),
+        Value::PrimOp(_, ref op) => Ok(Thunk::Resolved(op(args)?)),
         Value::Closure { params, body, env } => {
             let env = params.bind(args, env.clone())?;
             eval_step(Gc::clone(body), env)

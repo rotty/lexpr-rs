@@ -1,17 +1,127 @@
 use std::{
     fmt::{self, Write},
+    iter,
     rc::Rc,
 };
 
 use gc::{Finalize, Gc, GcCell};
 
-use crate::{eval::Env, value::Value};
+use crate::{eval, value::Value};
 
 #[derive(Debug)]
 pub enum Params {
     Any(Box<str>),
     Exact(Vec<Box<str>>),
     AtLeast(Vec<Box<str>>, Box<str>),
+}
+
+#[derive(Debug)]
+struct EnvFrame {
+    idents: Vec<Box<str>>,
+    rec_bodies: Vec<Ast>,
+}
+
+impl EnvFrame {
+    fn new(idents: Vec<Box<str>>) -> Self {
+        EnvFrame {
+            idents,
+            rec_bodies: Vec::new(),
+        }
+    }
+}
+
+#[derive(Default, Debug, Clone)]
+pub struct EnvIndex(usize, usize);
+
+impl EnvIndex {
+    pub fn level(&self) -> usize {
+        self.0
+    }
+
+    pub fn slot(&self) -> usize {
+        self.1
+    }
+}
+
+#[derive(Debug)]
+pub struct EnvStack {
+    frames: Vec<EnvFrame>,
+}
+
+impl EnvStack {
+    pub fn initial<T>(idents: impl IntoIterator<Item = T>) -> Self
+    where
+        T: Into<Box<str>>,
+    {
+        EnvStack {
+            frames: vec![EnvFrame {
+                idents: idents.into_iter().map(Into::into).collect(),
+                rec_bodies: Vec::new(),
+            }],
+        }
+    }
+
+    pub fn push(&mut self, params: &Params) {
+        match params {
+            Params::Any(ident) => self.frames.push(EnvFrame::new(vec![ident.clone()])),
+            Params::Exact(idents) => self
+                .frames
+                .push(EnvFrame::new(idents.into_iter().cloned().collect())),
+            Params::AtLeast(idents, rest) => {
+                let mut idents: Vec<_> = idents.into_iter().cloned().collect();
+                idents.push(rest.clone());
+                self.frames.push(EnvFrame::new(idents));
+            }
+        }
+    }
+
+    pub fn pop(&mut self) -> Vec<Gc<Ast>> {
+        assert!(self.frames.len() > 1);
+        let frame = self.frames.pop().unwrap();
+        frame.rec_bodies.into_iter().map(Gc::new).collect()
+    }
+
+    pub fn lookup(&self, name: &str) -> Option<EnvIndex> {
+        for (level, frame) in self.frames.iter().rev().enumerate() {
+            if let Some(i) = frame.idents.iter().position(|ident| ident.as_ref() == name) {
+                return Some(EnvIndex(level, i));
+            }
+        }
+        None
+    }
+
+    pub fn bind_rec<F>(&mut self, name: &str, make_ast: F) -> Result<(), Gc<Value>>
+    where
+        F: FnOnce(&mut EnvStack) -> Result<Ast, Gc<Value>>,
+    {
+        let last = self.frames.len() - 1;
+        self.frames[last].idents.push(name.into());
+        let ast = make_ast(self);
+        // Ensure `make_ast` did not unbalance the stack
+        assert!(last + 1 == self.frames.len());
+        match ast {
+            Ok(ast) => self.frames[last].rec_bodies.push(ast),
+            Err(e) => {
+                self.frames[last].idents.pop();
+                return Err(e);
+            }
+        }
+        Ok(())
+    }
+
+    fn last_frame(&mut self) -> &mut EnvFrame {
+        let last = self.frames.len() - 1;
+        &mut self.frames[last]
+    }
+
+    pub fn resolve_rec(&mut self, env: Gc<GcCell<eval::Env>>) -> Result<(), Gc<Value>> {
+        let pos = env.borrow_mut().init_rec(self.last_frame().rec_bodies.len());
+        for (i, body) in self.last_frame().rec_bodies.drain(0..).enumerate() {
+            let value = eval(Gc::new(body), env.clone())?;
+            env.borrow_mut().resolve_rec(pos + i, value);
+        }
+        Ok(())
+    }
 }
 
 impl Params {
@@ -28,46 +138,42 @@ impl Params {
     pub fn bind(
         &self,
         args: &[Gc<Value>],
-        env: Gc<GcCell<Env>>,
-    ) -> Result<Gc<GcCell<Env>>, Gc<Value>> {
-        match self {
-            Params::Any(rest_name) => {
-                let mut env = Env::new(env);
-                env.bind(rest_name, Value::list(args.into_iter().cloned()));
-                Ok(Gc::new(GcCell::new(env)))
+        parent: Gc<GcCell<eval::Env>>,
+    ) -> Result<Gc<GcCell<eval::Env>>, Gc<Value>> {
+        let env = match self {
+            Params::Any(_) => {
+                eval::Env::new(parent, vec![Value::list(args.into_iter().cloned()).into()])
             }
             Params::Exact(names) => {
                 if names.len() != args.len() {
-                    Err(make_error!(
+                    return Err(make_error!(
                         "parameter length mismatch; got ({}), expected ({})",
                         ShowSlice(args),
                         ShowSlice(names)
-                    ))
+                    ));
                 } else {
-                    let mut env = Env::new(env);
-                    for (name, value) in names.iter().zip(args) {
-                        env.bind(name, value.clone());
-                    }
-                    Ok(Gc::new(GcCell::new(env)))
+                    eval::Env::new(parent, args.into_iter().cloned().collect())
                 }
             }
-            Params::AtLeast(names, rest_name) => {
+            Params::AtLeast(names, _) => {
                 if names.len() > args.len() {
-                    Err(make_error!(
+                    return Err(make_error!(
                         "too few parameters; got ({}), expected ({})",
                         ShowSlice(args),
                         ShowSlice(names)
-                    ))
+                    ));
                 } else {
-                    let mut env = Env::new(env);
-                    env.bind(rest_name, Value::list(args.into_iter().cloned()));
-                    for (name, value) in names.iter().zip(args) {
-                        env.bind(name, value.clone());
-                    }
-                    Ok(Gc::new(GcCell::new(env)))
+                    let (named, rest) = args.split_at(names.len());
+                    let values = named
+                        .into_iter()
+                        .cloned()
+                        .chain(iter::once(Value::list(rest.into_iter().cloned()).into()))
+                        .collect();
+                    eval::Env::new(parent, values)
                 }
             }
-        }
+        };
+        Ok(Gc::new(GcCell::new(env)))
     }
 }
 
@@ -98,25 +204,24 @@ pub enum Ast {
         params: Rc<Params>,
         body: Gc<Ast>,
     },
-    Define {
-        ident: Box<str>,
-        expr: Gc<Ast>,
-    },
     If {
         cond: Gc<Ast>,
         consequent: Gc<Ast>,
         alternative: Gc<Ast>,
     },
-    Begin(Vec<Gc<Ast>>),
+    LetRec {
+        bound_exprs: Vec<Gc<Ast>>,
+        exprs: Vec<Gc<Ast>>,
+    },
     Apply {
         op: Gc<Ast>,
         operands: Vec<Gc<Ast>>,
     },
-    EnvRef(Box<str>),
+    EnvRef(EnvIndex),
 }
 
 impl Ast {
-    pub fn new(expr: &lexpr::Value) -> Result<Ast, Gc<Value>> {
+    pub fn expr(expr: &lexpr::Value, stack: &mut EnvStack) -> Result<Ast, Gc<Value>> {
         match expr {
             lexpr::Value::Null => Err(make_error!("empty application")),
             lexpr::Value::Nil => Err(make_error!("#nil unsupported")),
@@ -127,7 +232,10 @@ impl Ast {
             lexpr::Value::Bool(b) => Ok(Ast::Datum(Value::Bool(*b).into())),
             lexpr::Value::Number(n) => Ok(Ast::Datum(Value::Number(n.clone()).into())),
             lexpr::Value::String(s) => Ok(Ast::Datum(Value::String(s.clone()).into())),
-            lexpr::Value::Symbol(sym) => Ok(Ast::env_ref(sym.clone())),
+            lexpr::Value::Symbol(ident) => stack
+                .lookup(ident)
+                .map(Ast::EnvRef)
+                .ok_or_else(|| make_error!("unbound identifier `{}'", ident)),
             lexpr::Value::Cons(cell) => {
                 let (first, rest) = cell.as_pair();
                 match first.as_symbol() {
@@ -143,39 +251,10 @@ impl Ast {
                         if args.len() < 2 {
                             return Err(make_error!("`lambda` expects at least two forms"));
                         }
-                        Ok(Ast::Lambda {
-                            params: Rc::new(Params::new(args[0]).map_err(syntax_error)?),
-                            body: Gc::new(Ast::begin(&args[1..])?),
-                        })
+                        Ast::lambda(args[0], &args[1..], stack)
                     }
                     Some("define") => {
-                        let args = proper_list(rest).map_err(syntax_error)?;
-                        if args.len() < 2 {
-                            return Err(make_error!("`define` expects at least two forms"));
-                        }
-                        match args[0] {
-                            lexpr::Value::Symbol(sym) => {
-                                if args.len() != 2 {
-                                    return Err(make_error!(
-                                        "`define` for variable expects one value form"
-                                    ));
-                                }
-                                Ok(Ast::Define {
-                                    ident: sym.clone(),
-                                    expr: Gc::new(Ast::new(&args[1])?),
-                                })
-                            }
-                            lexpr::Value::Cons(cell) => {
-                                let ident = cell.car().as_symbol().ok_or_else(|| {
-                                    make_error!("invalid function `define': non-identifier")
-                                })?;
-                                Ok(Ast::Define {
-                                    ident: ident.into(),
-                                    expr: Ast::lambda(cell.cdr(), &args[1..])?.into(),
-                                })
-                            }
-                            _ => Err(make_error!("invalid `define' form")),
-                        }
+                        return Err(make_error!("`define` not allowed in expression context"));
                     }
                     Some("if") => {
                         let args = proper_list(rest).map_err(syntax_error)?;
@@ -183,18 +262,18 @@ impl Ast {
                             return Err(make_error!("`if` expects at exactly three forms"));
                         }
                         Ok(Ast::If {
-                            cond: Ast::new(&args[0])?.into(),
-                            consequent: Ast::new(&args[1])?.into(),
-                            alternative: Ast::new(&args[2])?.into(),
+                            cond: Ast::expr(&args[0], stack)?.into(),
+                            consequent: Ast::expr(&args[1], stack)?.into(),
+                            alternative: Ast::expr(&args[2], stack)?.into(),
                         })
                     }
                     _ => {
                         let arg_exprs = proper_list(rest).map_err(syntax_error)?;
                         Ok(Ast::Apply {
-                            op: Ast::new(first)?.into(),
+                            op: Ast::expr(first, stack)?.into(),
                             operands: arg_exprs
                                 .into_iter()
-                                .map(|arg| Ok(Ast::new(arg)?.into()))
+                                .map(|arg| Ok(Ast::expr(arg, stack)?.into()))
                                 .collect::<Result<Vec<Gc<Ast>>, Gc<Value>>>()?,
                         })
                     }
@@ -203,22 +282,82 @@ impl Ast {
         }
     }
 
-    fn begin(exprs: &[&lexpr::Value]) -> Result<Self, Gc<Value>> {
-        let ast_exprs = exprs
-            .into_iter()
-            .map(|e| Ok(Gc::new(Ast::new(*e)?)))
-            .collect::<Result<_, Gc<Value>>>()?;
-        Ok(Ast::Begin(ast_exprs))
+    pub fn definition(expr: &lexpr::Value, stack: &mut EnvStack) -> Result<Option<Ast>, Gc<Value>> {
+        // Check for definition, return `Ok(None)` if found
+        match expr {
+            lexpr::Value::Cons(cell) => {
+                let (first, rest) = cell.as_pair();
+                match first.as_symbol() {
+                    Some("define") => {
+                        let args = proper_list(rest).map_err(syntax_error)?;
+                        if args.len() < 2 {
+                            return Err(make_error!("`define` expects at least two forms"));
+                        }
+                        match args[0] {
+                            lexpr::Value::Symbol(ident) => {
+                                if args.len() != 2 {
+                                    return Err(make_error!(
+                                        "`define` for variable expects one value form"
+                                    ));
+                                }
+                                stack.bind_rec(ident, |stack| Ast::expr(&args[1], stack))?;
+                                return Ok(None);
+                            }
+                            lexpr::Value::Cons(cell) => {
+                                let ident = cell.car().as_symbol().ok_or_else(|| {
+                                    make_error!("invalid function `define': non-identifier")
+                                })?;
+                                stack.bind_rec(ident, |stack| {
+                                    Ast::lambda(cell.cdr(), &args[1..], stack)
+                                })?;
+                                return Ok(None);
+                            }
+                            _ => return Err(make_error!("invalid `define' form")),
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+        // Otherwise, it's must be an expression
+        Ok(Some(Ast::expr(expr, stack)?))
     }
 
-    fn env_ref(sym: impl Into<Box<str>>) -> Self {
-        Ast::EnvRef(sym.into())
+    fn let_rec(
+        params: &Params,
+        exprs: &[&lexpr::Value],
+        stack: &mut EnvStack,
+    ) -> Result<Self, Gc<Value>> {
+        stack.push(params);
+        let mut body_exprs = Vec::with_capacity(exprs.len());
+        let mut definitions = true;
+        for expr in exprs {
+            if definitions {
+                if let Some(ast) = Ast::definition(expr, stack)? {
+                    body_exprs.push(Gc::new(ast));
+                    definitions = false;
+                }
+            } else {
+                body_exprs.push(Gc::new(Ast::expr(expr, stack)?));
+            }
+        }
+        Ok(Ast::LetRec {
+            bound_exprs: stack.pop(),
+            exprs: body_exprs,
+        })
     }
 
-    fn lambda(params: &lexpr::Value, body: &[&lexpr::Value]) -> Result<Self, Gc<Value>> {
+    fn lambda(
+        params: &lexpr::Value,
+        body: &[&lexpr::Value],
+        stack: &mut EnvStack,
+    ) -> Result<Self, Gc<Value>> {
+        let params = Params::new(params).map_err(syntax_error)?;
+        let body = Gc::new(Ast::let_rec(&params, body, stack)?);
         Ok(Ast::Lambda {
-            params: Params::new(params).map_err(syntax_error)?.into(),
-            body: Ast::begin(body)?.into(),
+            params: Rc::new(params),
+            body,
         })
     }
 }
@@ -233,7 +372,6 @@ macro_rules! impl_ast_trace_body {
         match $this {
             Datum(value) => value.$method(),
             Lambda { body, .. } => body.$method(),
-            Define { expr, .. } => expr.$method(),
             If {
                 cond,
                 consequent,
@@ -243,8 +381,10 @@ macro_rules! impl_ast_trace_body {
                 consequent.$method();
                 alternative.$method();
             }
-            Begin(body) => {
-                for expr in body {
+            LetRec {
+                bound_exprs, exprs, ..
+            } => {
+                for expr in bound_exprs.into_iter().chain(exprs) {
                     expr.$method();
                 }
             }
