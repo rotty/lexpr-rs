@@ -5,6 +5,7 @@ use std::{
 };
 
 use gc::{Gc, GcCell};
+use smallvec::{smallvec, SmallVec};
 
 use crate::{eval, value::Value};
 
@@ -137,12 +138,12 @@ impl Params {
     }
     pub fn bind(
         &self,
-        args: Vec<Value>,
+        args: SmallVec<[Value; 8]>,
         parent: Gc<GcCell<eval::Env>>,
     ) -> Result<Gc<GcCell<eval::Env>>, Value> {
         let env = match self {
             Params::Any(_) => {
-                eval::Env::new(parent, vec![Value::list(args)])
+                eval::Env::new(parent, smallvec![Value::list(args)])
             }
             Params::Exact(names) => {
                 if names.len() != args.len() {

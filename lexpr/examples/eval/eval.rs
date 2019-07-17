@@ -1,6 +1,7 @@
 use std::{fmt, io, rc::Rc};
 
 use gc::{Finalize, Gc, GcCell};
+use smallvec::SmallVec;
 
 use crate::{
     ast::{Ast, EnvIndex, EnvStack},
@@ -11,11 +12,11 @@ use crate::{
 #[derive(Default, Clone, Debug)]
 pub struct Env {
     parent: Option<Gc<GcCell<Env>>>,
-    values: Vec<Value>,
+    values: SmallVec<[Value; 8]>,
 }
 
 impl Env {
-    pub fn new(parent: Gc<GcCell<Env>>, values: Vec<Value>) -> Self {
+    pub fn new(parent: Gc<GcCell<Env>>, values: SmallVec<[Value; 8]>) -> Self {
         Env {
             parent: Some(parent),
             values,
@@ -150,7 +151,7 @@ fn eval_step(ast: Rc<Ast>, env: Gc<GcCell<Env>>) -> Result<Thunk, Value> {
             let operands = operands
                 .into_iter()
                 .map(|operand| eval(Rc::clone(operand), env.clone()))
-                .collect::<Result<Vec<_>, _>>()?;
+                .collect::<Result<SmallVec<_>, _>>()?;
             apply(op, operands)
         }
         Ast::LetRec { bound_exprs, exprs } => {
@@ -177,7 +178,7 @@ pub enum Thunk {
     Eval(Rc<Ast>, Gc<GcCell<Env>>),
 }
 
-pub fn apply(op: Value, args: Vec<Value>) -> Result<Thunk, Value> {
+pub fn apply(op: Value, args: SmallVec<[Value; 8]>) -> Result<Thunk, Value> {
     match op {
         Value::PrimOp(_, ref op) => Ok(Thunk::Resolved(op(&args)?)),
         Value::Closure(boxed) => {
