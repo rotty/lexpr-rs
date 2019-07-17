@@ -19,9 +19,11 @@ mod eval;
 mod prim;
 mod value;
 
-use ast::Ast;
+use ast::{Ast, TailPosition};
 use eval::{eval, Env, EvalError};
 use value::Value;
+
+use TailPosition::*;
 
 /// Operations produce either a success or an error value.
 type OpResult = Result<Value, Value>;
@@ -53,7 +55,7 @@ where
     let env = Gc::new(GcCell::new(env));
 
     for expr in source {
-        let res = expr.and_then(|expr| Ok(Ast::definition(&expr, &mut stack)?));
+        let res = expr.and_then(|expr| Ok(Ast::definition(&expr, &mut stack, NonTail)?));
         if let Some(ast) = res.transpose() {
             let res = stack
                 .resolve_rec(env.clone())

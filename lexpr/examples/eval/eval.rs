@@ -52,6 +52,13 @@ impl Env {
         self.lookup_internal(idx.level(), idx.slot())
     }
 
+    pub fn reset(&mut self, parent: Gc<GcCell<Env>>, values: SmallVec<[Value; 8]>) {
+        self.parent = Some(parent);
+        // Not sure if cloning here is a good idea vs. re-assigning, but let's
+        // see.
+        self.values = values;
+    }
+
     fn lookup_internal(&self, level: usize, slot: usize) -> Value {
         // Use recursion to get arround the borrow checker here. Should be
         // turned into an iterative solution, but should not matter too much for
@@ -154,6 +161,10 @@ fn eval_step(ast: Rc<Ast>, env: Gc<GcCell<Env>>) -> Result<Thunk, Value> {
                 .collect::<Result<SmallVec<_>, _>>()?;
             apply(op, operands)
         }
+        Ast::TailCall { op, operands } => {
+            let op = eval(Rc::clone(op), env.clone())?;
+            tail_call(op, operands, env)
+        }
         Ast::LetRec { bound_exprs, exprs } => {
             // TODO: This code is duplicated in `resolve_rec`
             let pos = env.borrow_mut().init_rec(bound_exprs.len());
@@ -185,6 +196,32 @@ pub fn apply(op: Value, args: SmallVec<[Value; 8]>) -> Result<Thunk, Value> {
             let Closure { params, body, env } = boxed.as_ref();
             let env = params.bind(args, env.clone())?;
             eval_step(Rc::clone(body), env)
+        }
+        _ => Err(make_error!(
+            "non-applicable object in operator position: {}",
+            op
+        )),
+    }
+}
+
+pub fn tail_call(op: Value, operands: &[Rc<Ast>], parent_env: Gc<GcCell<Env>>) -> Result<Thunk, Value> {
+    match op {
+        Value::PrimOp(_, ref op) => {
+            let args = operands
+                .into_iter()
+                .map(|operand| eval(Rc::clone(operand), parent_env.clone()))
+                .collect::<Result<SmallVec<[Value; 8]>, _>>()?;
+            Ok(Thunk::Resolved(op(&args)?))
+        }
+        Value::Closure(boxed) => {
+            let Closure { params, body, env } = boxed.as_ref();
+            let args = operands
+                .into_iter()
+                .map(|operand| eval(Rc::clone(operand), parent_env.clone()))
+                .collect::<Result<SmallVec<[Value; 8]>, _>>()?;
+            let values = params.values(args)?;
+            parent_env.borrow_mut().reset(Gc::clone(env), values);
+            Ok(Thunk::Eval(Rc::clone(body), parent_env))
         }
         _ => Err(make_error!(
             "non-applicable object in operator position: {}",
