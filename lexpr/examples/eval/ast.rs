@@ -5,6 +5,8 @@ use std::{
 };
 
 use gc::{Gc, GcCell};
+use lexpr::sexp;
+use log::debug;
 use smallvec::{smallvec, SmallVec};
 
 use crate::{eval, value::Value};
@@ -19,7 +21,7 @@ pub enum Params {
 #[derive(Debug)]
 struct EnvFrame {
     idents: Vec<Box<str>>,
-    rec_bodies: Vec<Ast>,
+    rec_bodies: Vec<lexpr::Value>,
 }
 
 impl EnvFrame {
@@ -62,7 +64,10 @@ impl EnvStack {
         }
     }
 
-    pub fn push(&mut self, params: &Params) {
+    pub fn with_pushed<T, F>(&mut self, params: &Params, f: F) -> Result<(Vec<Rc<Ast>>, T), Value>
+    where
+        F: FnOnce(&mut Self) -> Result<T, Value>,
+    {
         match params {
             Params::Any(ident) => self.frames.push(EnvFrame::new(vec![ident.clone()])),
             Params::Exact(idents) => self
@@ -74,12 +79,28 @@ impl EnvStack {
                 self.frames.push(EnvFrame::new(idents));
             }
         }
+        debug!("extended env-stack {:?}", self);
+        match f(self) {
+            Ok(v) => {
+                let bodies = self.last_frame_mut().rec_bodies.split_off(0);
+                let bodies = bodies
+                    .into_iter()
+                    .map(|b| Ok(Rc::new(Ast::expr(&b, self, NonTail)?)))
+                    .collect::<Result<_, Value>>()?;
+                self.pop();
+                debug!("done with extended env-stack {:?} -> {:?}", self, bodies);
+                Ok((bodies, v))
+            }
+            Err(e) => {
+                self.pop();
+                Err(e)
+            }
+        }
     }
 
-    pub fn pop(&mut self) -> Vec<Rc<Ast>> {
+    fn pop(&mut self) {
         assert!(self.frames.len() > 1);
-        let frame = self.frames.pop().unwrap();
-        frame.rec_bodies.into_iter().map(Rc::new).collect()
+        self.frames.pop().unwrap();
     }
 
     pub fn lookup(&self, name: &str) -> Option<EnvIndex> {
@@ -91,26 +112,14 @@ impl EnvStack {
         None
     }
 
-    pub fn bind_rec<F>(&mut self, name: &str, make_ast: F) -> Result<(), Value>
-    where
-        F: FnOnce(&mut EnvStack) -> Result<Ast, Value>,
-    {
+    pub fn bind_rec(&mut self, name: &str, body: lexpr::Value) {
         let last = self.frames.len() - 1;
         self.frames[last].idents.push(name.into());
-        let ast = make_ast(self);
-        // Ensure `make_ast` did not unbalance the stack
-        assert!(last + 1 == self.frames.len());
-        match ast {
-            Ok(ast) => self.frames[last].rec_bodies.push(ast),
-            Err(e) => {
-                self.frames[last].idents.pop();
-                return Err(e);
-            }
-        }
-        Ok(())
+        self.frames[last].rec_bodies.push(body);
+        debug!("bound {} recursively -> {:?}", name, self);
     }
 
-    fn last_frame(&mut self) -> &mut EnvFrame {
+    fn last_frame_mut(&mut self) -> &mut EnvFrame {
         let last = self.frames.len() - 1;
         &mut self.frames[last]
     }
@@ -118,9 +127,10 @@ impl EnvStack {
     pub fn resolve_rec(&mut self, env: Gc<GcCell<eval::Env>>) -> Result<(), Value> {
         let pos = env
             .borrow_mut()
-            .init_rec(self.last_frame().rec_bodies.len());
-        for (i, body) in self.last_frame().rec_bodies.drain(0..).enumerate() {
-            let value = eval(Rc::new(body), env.clone())?;
+            .init_rec(self.last_frame_mut().rec_bodies.len());
+        let bodies = self.last_frame_mut().rec_bodies.split_off(0);
+        for (i, body) in bodies.into_iter().enumerate() {
+            let value = eval(Rc::new(Ast::expr(&body, self, NonTail)?), env.clone())?;
             env.borrow_mut().resolve_rec(pos + i, value);
         }
         Ok(())
@@ -131,6 +141,7 @@ impl Params {
     pub fn new(v: &lexpr::Value) -> Result<Self, SyntaxError> {
         use lexpr::Value::*;
         match v {
+            Null => Ok(Params::Exact(vec![])),
             Cons(cell) => match cell.to_ref_vec() {
                 (params, Null) => Ok(Params::Exact(param_list(&params)?)),
                 (params, rest) => Ok(Params::AtLeast(param_list(&params)?, param_rest(rest)?)),
@@ -244,6 +255,7 @@ impl Ast {
         stack: &mut EnvStack,
         tail: TailPosition,
     ) -> Result<Ast, Value> {
+        debug!("forming AST for {} in {:?}", expr, stack);
         match expr {
             lexpr::Value::Null => Err(make_error!("empty application")),
             lexpr::Value::Nil => Err(make_error!("#nil unsupported")),
@@ -329,17 +341,20 @@ impl Ast {
                                         "`define` for variable expects one value form"
                                     ));
                                 }
-                                stack
-                                    .bind_rec(ident, |stack| Ast::expr(&args[1], stack, NonTail))?;
+                                stack.bind_rec(ident, args[1].clone()); // TODO: clone
                                 return Ok(None);
                             }
                             lexpr::Value::Cons(cell) => {
                                 let ident = cell.car().as_symbol().ok_or_else(|| {
-                                    make_error!("invalid function `define': non-identifier")
+                                    make_error!("invalid use of `define': non-identifier")
                                 })?;
-                                stack.bind_rec(ident, |stack| {
-                                    Ast::lambda(cell.cdr(), &args[1..], stack)
-                                })?;
+                                let body =
+                                    lexpr::Value::list(args[1..].into_iter().map(|e| (*e).clone()));
+                                let lambda = lexpr::Value::cons(
+                                    sexp!(lambda),
+                                    lexpr::Value::cons(cell.cdr().clone(), body),
+                                );
+                                stack.bind_rec(ident, lambda);
                                 return Ok(None);
                             }
                             _ => return Err(make_error!("invalid `define' form")),
@@ -360,22 +375,24 @@ impl Ast {
         stack: &mut EnvStack,
         tail: TailPosition,
     ) -> Result<Self, Value> {
-        stack.push(params);
-        let mut body_exprs = Vec::with_capacity(exprs.len());
-        let mut definitions = true;
-        for (i, expr) in exprs.into_iter().enumerate() {
-            let tail = if i + 1 == exprs.len() { tail } else { NonTail };
-            if definitions {
-                if let Some(ast) = Ast::definition(expr, stack, tail)? {
-                    body_exprs.push(Rc::new(ast));
-                    definitions = false;
+        let (bound_exprs, body_exprs) = stack.with_pushed(params, |stack| -> Result<_, Value> {
+            let mut body_exprs = Vec::with_capacity(exprs.len());
+            let mut definitions = true;
+            for (i, expr) in exprs.into_iter().enumerate() {
+                let tail = if i + 1 == exprs.len() { tail } else { NonTail };
+                if definitions {
+                    if let Some(ast) = Ast::definition(expr, stack, tail)? {
+                        body_exprs.push(Rc::new(ast));
+                        definitions = false;
+                    }
+                } else {
+                    body_exprs.push(Rc::new(Ast::expr(expr, stack, tail)?));
                 }
-            } else {
-                body_exprs.push(Rc::new(Ast::expr(expr, stack, tail)?));
             }
-        }
+            Ok(body_exprs)
+        })?;
         Ok(Ast::LetRec {
-            bound_exprs: stack.pop(),
+            bound_exprs,
             exprs: body_exprs,
         })
     }

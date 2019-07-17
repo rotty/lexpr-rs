@@ -81,6 +81,8 @@ fn load(path: impl AsRef<Path>) -> Result<(), EvalError> {
 }
 
 fn main() -> Result<(), EvalError> {
+    env_logger::init();
+
     let args: Vec<_> = env::args_os().skip(1).collect();
     if args.len() == 0 {
         let input = io::BufReader::new(io::stdin());

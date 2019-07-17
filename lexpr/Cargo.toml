@@ -31,6 +31,8 @@ rand = "0.6.5"
 # For `eval` example
 gc = "0.3"
 smallvec = "0.6.10"
+log = "0.4.7"
+env_logger = "0.6.2"
 
 [[bench]]
 name = "bench"
