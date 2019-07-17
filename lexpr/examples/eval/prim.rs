@@ -1,19 +1,18 @@
 use std::io::{self, Write};
 
-use gc::Gc;
 use num_traits::{CheckedAdd, CheckedMul, CheckedSub};
 
 use crate::{Number, OpResult, Value};
 
-fn invalid_argument(arg: &Value, expected: &str) -> Gc<Value> {
+fn invalid_argument(arg: &Value, expected: &str) -> Value {
     make_error!("invalid argument: {}, expected {}", arg, expected)
 }
 
-fn too_few_arguments(procedure: &str) -> Gc<Value> {
+fn too_few_arguments(procedure: &str) -> Value {
     make_error!("too few arguments to `{}'", procedure)
 }
 
-fn wrong_number_of_arguments(procedure: &str, expected: usize, args: &[Gc<Value>]) -> Gc<Value> {
+fn wrong_number_of_arguments(procedure: &str, expected: usize, args: &[Value]) -> Value {
     make_error!(
         "wrong number of arguments to `{}': expected {}, got {}",
         procedure,
@@ -22,11 +21,11 @@ fn wrong_number_of_arguments(procedure: &str, expected: usize, args: &[Gc<Value>
     )
 }
 
-fn io_error(e: io::Error) -> Gc<Value> {
+fn io_error(e: io::Error) -> Value {
     make_error!("I/O error: {}", e)
 }
 
-fn arithmetic_overflow(operation: &str, arg1: &Number, arg2: &Number) -> Gc<Value> {
+fn arithmetic_overflow(operation: &str, arg1: &Number, arg2: &Number) -> Value {
     make_error!(
         "arithmetic overflow in {} of {} and {}",
         operation,
@@ -35,7 +34,7 @@ fn arithmetic_overflow(operation: &str, arg1: &Number, arg2: &Number) -> Gc<Valu
     )
 }
 
-pub fn plus(args: &[Gc<Value>]) -> OpResult {
+pub fn plus(args: &[Value]) -> OpResult {
     if let Some((first, rest)) = args.split_first() {
         let mut sum = first
             .as_number()
@@ -55,7 +54,7 @@ pub fn plus(args: &[Gc<Value>]) -> OpResult {
     }
 }
 
-pub fn minus(args: &[Gc<Value>]) -> OpResult {
+pub fn minus(args: &[Value]) -> OpResult {
     if let Some((first, rest)) = args.split_first() {
         let mut sum = first
             .as_number()
@@ -75,7 +74,7 @@ pub fn minus(args: &[Gc<Value>]) -> OpResult {
     }
 }
 
-pub fn times(args: &[Gc<Value>]) -> OpResult {
+pub fn times(args: &[Value]) -> OpResult {
     if let Some((first, rest)) = args.split_first() {
         let mut sum = first
             .as_number()
@@ -95,7 +94,7 @@ pub fn times(args: &[Gc<Value>]) -> OpResult {
     }
 }
 
-fn num_cmp<F>(args: &[Gc<Value>], cmp: F) -> OpResult
+fn num_cmp<F>(args: &[Value], cmp: F) -> OpResult
 where
     F: Fn(&Number, &Number) -> bool,
 {
@@ -107,33 +106,33 @@ where
             .as_number()
             .ok_or_else(|| invalid_argument(&w[1], "number"))?;
         if !cmp(n1, n2) {
-            return Ok(Gc::new(Value::from(false)));
+            return Ok(Value::from(false));
         }
     }
-    Ok(Gc::new(Value::from(true)))
+    Ok(Value::from(true))
 }
 
-pub fn eq(args: &[Gc<Value>]) -> OpResult {
+pub fn eq(args: &[Value]) -> OpResult {
     num_cmp(args, Number::ge)
 }
 
-pub fn lt(args: &[Gc<Value>]) -> OpResult {
+pub fn lt(args: &[Value]) -> OpResult {
     num_cmp(args, Number::lt)
 }
 
-pub fn le(args: &[Gc<Value>]) -> OpResult {
+pub fn le(args: &[Value]) -> OpResult {
     num_cmp(args, Number::le)
 }
 
-pub fn gt(args: &[Gc<Value>]) -> OpResult {
+pub fn gt(args: &[Value]) -> OpResult {
     num_cmp(args, Number::gt)
 }
 
-pub fn ge(args: &[Gc<Value>]) -> OpResult {
+pub fn ge(args: &[Value]) -> OpResult {
     num_cmp(args, Number::ge)
 }
 
-pub fn display(args: &[Gc<Value>]) -> OpResult {
+pub fn display(args: &[Value]) -> OpResult {
     if args.len() != 1 {
         // TODO: support ports
         return Err(wrong_number_of_arguments("display", 1, args));
@@ -141,14 +140,14 @@ pub fn display(args: &[Gc<Value>]) -> OpResult {
     // TODO: we use the `Display` trait of `Value` here, which currently
     // uses `write` notation, not `display` notation.
     write!(io::stdout(), "{}", args[0]).map_err(io_error)?;
-    Ok(Gc::new(Value::Null))
+    Ok(Value::Null)
 }
 
-pub fn newline(args: &[Gc<Value>]) -> OpResult {
+pub fn newline(args: &[Value]) -> OpResult {
     if args.len() != 0 {
         // TODO: support ports
         return Err(wrong_number_of_arguments("newline", 0, args));
     }
     write!(io::stdout(), "\n").map_err(io_error)?;
-    Ok(Gc::new(Value::Null))
+    Ok(Value::Null)
 }

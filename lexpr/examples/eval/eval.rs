@@ -4,18 +4,18 @@ use gc::{Finalize, Gc, GcCell};
 
 use crate::{
     ast::{Ast, EnvIndex, EnvStack},
-    value::Value,
+    value::{Value, Closure},
     OpResult,
 };
 
 #[derive(Default, Clone, Debug)]
 pub struct Env {
     parent: Option<Gc<GcCell<Env>>>,
-    values: Vec<Gc<Value>>,
+    values: Vec<Value>,
 }
 
 impl Env {
-    pub fn new(parent: Gc<GcCell<Env>>, values: Vec<Gc<Value>>) -> Self {
+    pub fn new(parent: Gc<GcCell<Env>>, values: Vec<Value>) -> Self {
         Env {
             parent: Some(parent),
             values,
@@ -26,19 +26,18 @@ impl Env {
         let pos = self.values.len();
         for _ in 0..n {
             // TODO: use better value here
-            self.values.push(Gc::new(Value::Null));
+            self.values.push(Value::Null);
         }
         pos
     }
 
-    pub fn resolve_rec(&mut self, offset: usize, value: Gc<Value>) {
+    pub fn resolve_rec(&mut self, offset: usize, value: Value) {
         self.values[offset] = value;
     }
 
     pub fn new_root(bindings: Vec<(&str, Value)>) -> (Self, EnvStack) {
         let (idents, values): (Vec<_>, _) = bindings
             .into_iter()
-            .map(|(ident, value)| (ident, Gc::new(value)))
             .unzip();
         let env = Env {
             parent: None,
@@ -48,11 +47,11 @@ impl Env {
         (env, stack)
     }
 
-    pub fn lookup(&self, idx: &EnvIndex) -> Gc<Value> {
+    pub fn lookup(&self, idx: &EnvIndex) -> Value {
         self.lookup_internal(idx.level(), idx.slot())
     }
 
-    fn lookup_internal(&self, level: usize, slot: usize) -> Gc<Value> {
+    fn lookup_internal(&self, level: usize, slot: usize) -> Value {
         // Use recursion to get arround the borrow checker here. Should be
         // turned into an iterative solution, but should not matter too much for
         // now.
@@ -122,17 +121,17 @@ pub fn eval(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> OpResult {
     }
 }
 
-fn eval_step(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> Result<Thunk, Gc<Value>> {
+fn eval_step(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> Result<Thunk, Value> {
     match &*ast {
         Ast::EnvRef(idx) => Ok(Thunk::Resolved(env.borrow_mut().lookup(idx))),
         Ast::Datum(value) => Ok(Thunk::Resolved(value.clone())),
         Ast::Lambda { params, body } => {
-            let closure = Value::Closure {
+            let closure = Value::Closure(Box::new(Closure {
                 params: Rc::clone(params),
                 body: Gc::clone(body),
                 env: env.clone(),
-            };
-            Ok(Thunk::Resolved(Gc::new(closure)))
+            }));
+            Ok(Thunk::Resolved(closure))
         }
         Ast::If {
             cond,
@@ -174,14 +173,15 @@ fn eval_step(ast: Gc<Ast>, env: Gc<GcCell<Env>>) -> Result<Thunk, Gc<Value>> {
 
 #[derive(Debug)]
 pub enum Thunk {
-    Resolved(Gc<Value>),
+    Resolved(Value),
     Eval(Gc<Ast>, Gc<GcCell<Env>>),
 }
 
-pub fn apply(op: &Value, args: &[Gc<Value>]) -> Result<Thunk, Gc<Value>> {
+pub fn apply(op: &Value, args: &[Value]) -> Result<Thunk, Value> {
     match op {
         Value::PrimOp(_, ref op) => Ok(Thunk::Resolved(op(args)?)),
-        Value::Closure { params, body, env } => {
+        Value::Closure(boxed) => {
+            let Closure { params, body, env } = boxed.as_ref();
             let env = params.bind(args, env.clone())?;
             eval_step(Gc::clone(body), env)
         }
@@ -196,7 +196,7 @@ pub fn apply(op: &Value, args: &[Gc<Value>]) -> Result<Thunk, Gc<Value>> {
 pub enum EvalError {
     Io(io::Error),
     Parse(lexpr::parse::Error),
-    Runtime(Gc<Value>),
+    Runtime(Value),
 }
 
 impl fmt::Display for EvalError {
@@ -233,8 +233,8 @@ impl From<io::Error> for EvalError {
     }
 }
 
-impl From<Gc<Value>> for EvalError {
-    fn from(e: Gc<Value>) -> Self {
+impl From<Value> for EvalError {
+    fn from(e: Value) -> Self {
         EvalError::Runtime(e)
     }
 }

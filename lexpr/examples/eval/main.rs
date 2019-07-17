@@ -9,8 +9,8 @@ use gc::{Gc, GcCell};
 use lexpr::Number;
 
 macro_rules! make_error {
-    ($fmt:literal) => { Gc::new(Value::String($fmt.into())) };
-    ($fmt:literal, $($args:expr),*) => { Gc::new($crate::Value::String(format!($fmt, $($args),*).into())) }
+    ($fmt:literal) => { Value::String($fmt.into()) };
+    ($fmt:literal, $($args:expr),*) => { $crate::Value::String(format!($fmt, $($args),*).into()) }
 }
 
 mod ast;
@@ -23,7 +23,7 @@ use eval::{eval, Env, EvalError};
 use value::Value;
 
 /// Operations produce either a success or an error value.
-type OpResult = Result<Gc<Value>, Gc<Value>>;
+type OpResult = Result<Value, Value>;
 
 macro_rules! prim_op {
     ($name:tt, $func:expr) => {
@@ -34,7 +34,7 @@ macro_rules! prim_op {
 fn eval_toplevel<I, F>(source: I, mut sink: F) -> Result<(), EvalError>
 where
     I: Iterator<Item = Result<lexpr::Value, EvalError>>,
-    F: FnMut(Result<Gc<Value>, EvalError>) -> Result<(), EvalError>,
+    F: FnMut(Result<Value, EvalError>) -> Result<(), EvalError>,
 {
     let env = vec![
         prim_op!("+", prim::plus),

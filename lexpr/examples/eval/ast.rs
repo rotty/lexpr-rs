@@ -90,9 +90,9 @@ impl EnvStack {
         None
     }
 
-    pub fn bind_rec<F>(&mut self, name: &str, make_ast: F) -> Result<(), Gc<Value>>
+    pub fn bind_rec<F>(&mut self, name: &str, make_ast: F) -> Result<(), Value>
     where
-        F: FnOnce(&mut EnvStack) -> Result<Ast, Gc<Value>>,
+        F: FnOnce(&mut EnvStack) -> Result<Ast, Value>,
     {
         let last = self.frames.len() - 1;
         self.frames[last].idents.push(name.into());
@@ -114,7 +114,7 @@ impl EnvStack {
         &mut self.frames[last]
     }
 
-    pub fn resolve_rec(&mut self, env: Gc<GcCell<eval::Env>>) -> Result<(), Gc<Value>> {
+    pub fn resolve_rec(&mut self, env: Gc<GcCell<eval::Env>>) -> Result<(), Value> {
         let pos = env.borrow_mut().init_rec(self.last_frame().rec_bodies.len());
         for (i, body) in self.last_frame().rec_bodies.drain(0..).enumerate() {
             let value = eval(Gc::new(body), env.clone())?;
@@ -137,9 +137,9 @@ impl Params {
     }
     pub fn bind(
         &self,
-        args: &[Gc<Value>],
+        args: &[Value],
         parent: Gc<GcCell<eval::Env>>,
-    ) -> Result<Gc<GcCell<eval::Env>>, Gc<Value>> {
+    ) -> Result<Gc<GcCell<eval::Env>>, Value> {
         let env = match self {
             Params::Any(_) => {
                 eval::Env::new(parent, vec![Value::list(args.into_iter().cloned()).into()])
@@ -199,7 +199,7 @@ fn param_rest(rest: &lexpr::Value) -> Result<Box<str>, SyntaxError> {
 // `Gc`, requiring all other `Ast` smart pointers into being `Gc` as well.
 #[derive(Debug)]
 pub enum Ast {
-    Datum(Gc<Value>),
+    Datum(Value),
     Lambda {
         params: Rc<Params>,
         body: Gc<Ast>,
@@ -221,7 +221,7 @@ pub enum Ast {
 }
 
 impl Ast {
-    pub fn expr(expr: &lexpr::Value, stack: &mut EnvStack) -> Result<Ast, Gc<Value>> {
+    pub fn expr(expr: &lexpr::Value, stack: &mut EnvStack) -> Result<Ast, Value> {
         match expr {
             lexpr::Value::Null => Err(make_error!("empty application")),
             lexpr::Value::Nil => Err(make_error!("#nil unsupported")),
@@ -244,7 +244,7 @@ impl Ast {
                         if args.len() != 1 {
                             return Err(make_error!("`quote' expects a single form"));
                         }
-                        Ok(Ast::Datum(Gc::new(args[0].into())))
+                        Ok(Ast::Datum(args[0].into()))
                     }
                     Some("lambda") => {
                         let args = proper_list(rest).map_err(syntax_error)?;
@@ -274,7 +274,7 @@ impl Ast {
                             operands: arg_exprs
                                 .into_iter()
                                 .map(|arg| Ok(Ast::expr(arg, stack)?.into()))
-                                .collect::<Result<Vec<Gc<Ast>>, Gc<Value>>>()?,
+                                .collect::<Result<Vec<Gc<Ast>>, Value>>()?,
                         })
                     }
                 }
@@ -282,7 +282,7 @@ impl Ast {
         }
     }
 
-    pub fn definition(expr: &lexpr::Value, stack: &mut EnvStack) -> Result<Option<Ast>, Gc<Value>> {
+    pub fn definition(expr: &lexpr::Value, stack: &mut EnvStack) -> Result<Option<Ast>, Value> {
         // Check for definition, return `Ok(None)` if found
         match expr {
             lexpr::Value::Cons(cell) => {
@@ -328,7 +328,7 @@ impl Ast {
         params: &Params,
         exprs: &[&lexpr::Value],
         stack: &mut EnvStack,
-    ) -> Result<Self, Gc<Value>> {
+    ) -> Result<Self, Value> {
         stack.push(params);
         let mut body_exprs = Vec::with_capacity(exprs.len());
         let mut definitions = true;
@@ -352,7 +352,7 @@ impl Ast {
         params: &lexpr::Value,
         body: &[&lexpr::Value],
         stack: &mut EnvStack,
-    ) -> Result<Self, Gc<Value>> {
+    ) -> Result<Self, Value> {
         let params = Params::new(params).map_err(syntax_error)?;
         let body = Gc::new(Ast::let_rec(&params, body, stack)?);
         Ok(Ast::Lambda {
@@ -472,6 +472,6 @@ fn proper_list(expr: &lexpr::Value) -> Result<Vec<&lexpr::Value>, SyntaxError> {
     }
 }
 
-fn syntax_error(e: SyntaxError) -> Gc<Value> {
+fn syntax_error(e: SyntaxError) -> Value {
     make_error!("syntax error: {}", e)
 }

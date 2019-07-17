@@ -12,33 +12,34 @@ use crate::{
     OpResult,
 };
 
+#[derive(Clone)]
 pub enum Value {
     Number(Number),
     String(Box<str>),
     Bool(bool),
     Null,
-    Cons(Box<[Gc<Value>; 2]>),
+    Cons(Gc<[Value; 2]>),
     Symbol(Box<str>), // TODO: interning
-    PrimOp(&'static str, Box<Fn(&[Gc<Value>]) -> OpResult>),
-    Closure {
-        params: Rc<Params>,
-        body: Gc<Ast>,
-        env: Gc<GcCell<Env>>,
-    },
+    PrimOp(&'static str, fn(&[Value]) -> OpResult),
+    Closure(Box<Closure>),
+}
+
+#[derive(Clone)]
+pub struct Closure {
+    pub params: Rc<Params>,
+    pub body: Gc<Ast>,
+    pub env: Gc<GcCell<Env>>,
 }
 
 impl Value {
-    pub fn prim_op<F>(name: &'static str, f: F) -> Self
-    where
-        F: Fn(&[Gc<Value>]) -> OpResult + 'static,
-    {
-        Value::PrimOp(name, Box::new(f))
+    pub fn prim_op(name: &'static str, f: fn(&[Value]) -> OpResult) -> Self {
+        Value::PrimOp(name, f)
     }
 
-    pub fn list<I>(elts: I) -> Self
+    pub fn list<I>(_elts: I) -> Self
     where
         I: IntoIterator,
-        I::Item: Into<Gc<Value>>,
+        I::Item: Into<Value>,
     {
         unimplemented!()
     }
@@ -81,7 +82,7 @@ impl From<&lexpr::Value> for Value {
             Symbol(s) => Value::Symbol(s.clone()),
             Cons(cell) => {
                 let (car, cdr) = cell.as_pair();
-                Value::Cons(Box::new([Gc::new(car.into()), Gc::new(cdr.into())]))
+                Value::Cons(Gc::new([car.into(), cdr.into()]))
             }
             Null => Value::Null,
             _ => unimplemented!(),
@@ -111,14 +112,12 @@ impl fmt::Display for Value {
     }
 }
 
-fn write_cons(f: &mut fmt::Formatter, cell: &[Gc<Value>; 2]) -> fmt::Result {
-    use std::ops::Deref;
-
+fn write_cons(f: &mut fmt::Formatter, cell: &[Value; 2]) -> fmt::Result {
     f.write_char('(')?;
     cell[0].fmt(f)?;
     let mut next = &cell[1];
     loop {
-        match next.deref() {
+        match next {
             Value::Null => break,
             Value::Cons(cell) => {
                 f.write_char(' ')?;
@@ -147,7 +146,8 @@ macro_rules! impl_value_trace_body {
                 cell[0].$method();
                 cell[1].$method();
             }
-            Value::Closure { env, body, .. } => {
+            Value::Closure(boxed) => {
+                let Closure  { env, body, .. } = boxed.as_ref();
                 body.$method();
                 env.$method();
             }
