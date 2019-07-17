@@ -151,7 +151,7 @@ fn eval_step(ast: Rc<Ast>, env: Gc<GcCell<Env>>) -> Result<Thunk, Value> {
                 .into_iter()
                 .map(|operand| eval(Rc::clone(operand), env.clone()))
                 .collect::<Result<Vec<_>, _>>()?;
-            apply(op, &operands)
+            apply(op, operands)
         }
         Ast::LetRec { bound_exprs, exprs } => {
             // TODO: This code is duplicated in `resolve_rec`
@@ -177,9 +177,9 @@ pub enum Thunk {
     Eval(Rc<Ast>, Gc<GcCell<Env>>),
 }
 
-pub fn apply(op: Value, args: &[Value]) -> Result<Thunk, Value> {
+pub fn apply(op: Value, args: Vec<Value>) -> Result<Thunk, Value> {
     match op {
-        Value::PrimOp(_, ref op) => Ok(Thunk::Resolved(op(args)?)),
+        Value::PrimOp(_, ref op) => Ok(Thunk::Resolved(op(&args)?)),
         Value::Closure(boxed) => {
             let Closure { params, body, env } = boxed.as_ref();
             let env = params.bind(args, env.clone())?;

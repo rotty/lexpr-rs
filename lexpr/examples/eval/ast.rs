@@ -137,29 +137,29 @@ impl Params {
     }
     pub fn bind(
         &self,
-        args: &[Value],
+        args: Vec<Value>,
         parent: Gc<GcCell<eval::Env>>,
     ) -> Result<Gc<GcCell<eval::Env>>, Value> {
         let env = match self {
             Params::Any(_) => {
-                eval::Env::new(parent, vec![Value::list(args.into_iter().cloned()).into()])
+                eval::Env::new(parent, vec![Value::list(args)])
             }
             Params::Exact(names) => {
                 if names.len() != args.len() {
                     return Err(make_error!(
                         "parameter length mismatch; got ({}), expected ({})",
-                        ShowSlice(args),
+                        ShowSlice(&args),
                         ShowSlice(names)
                     ));
                 } else {
-                    eval::Env::new(parent, args.into_iter().cloned().collect())
+                    eval::Env::new(parent, args)
                 }
             }
             Params::AtLeast(names, _) => {
                 if names.len() > args.len() {
                     return Err(make_error!(
                         "too few parameters; got ({}), expected ({})",
-                        ShowSlice(args),
+                        ShowSlice(&args),
                         ShowSlice(names)
                     ));
                 } else {
