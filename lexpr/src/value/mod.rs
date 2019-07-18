@@ -290,6 +290,9 @@ impl Value {
     /// Create a list value from elements convertible into `Value`, using a
     /// given value as a tail.
     ///
+    /// This operation is somewhat similar to `append` in Standard Scheme and
+    /// `cons*` from SRFI-1.
+    ///
     /// ```
     /// # use lexpr::{sexp, Value};
     /// assert_eq!(Value::append(vec![1u32, 2], 3), sexp!((1 2 . 3)));
