@@ -1,3 +1,20 @@
+# 0.2.2
+
+New features:
+
+- The `Value` type now implements `FromStr` using the default syntax.
+
+Parser bugfixes:
+
+- "Peculiar identifiers", i.e. those starting with "+", "-" or ".",
+  should now be handled properly.
+
+- Number literals that start with a "+" are no longer erroneously
+  parsed as symbols.
+
+- The handling of dots inside lists should now be more robust,
+  detecting invalid syntax that was accepted before.
+
 # 0.2.1
 
 Fix version number in README; no other changes.
