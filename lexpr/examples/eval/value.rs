@@ -3,7 +3,7 @@ use std::{
     rc::Rc,
 };
 
-use gc::{Gc, GcCell, Finalize};
+use gc::{Gc, GcCell, Finalize, GcCellRefMut};
 use lexpr::Number;
 
 use crate::{
@@ -18,7 +18,8 @@ pub enum Value {
     String(Box<str>),
     Bool(bool),
     Null,
-    Cons(Gc<[Value; 2]>),
+    Undefined,
+    Cons(Gc<GcCell<[Value; 2]>>),
     Symbol(Box<str>), // TODO: interning
     PrimOp(&'static str, fn(&[Value]) -> OpResult),
     Closure(Box<Closure>),
@@ -65,6 +66,16 @@ impl Value {
             true
         }
     }
+
+    pub fn as_cons_mut(&mut self) -> Option<GcCellRefMut<[Value; 2]>> {
+        match self {
+            Value::Cons(cell) => {
+                let inner: &mut [Value; 2] = cell.borrow_mut();
+                Some(inner)
+            }
+            _ => None,
+        }
+    }
 }
 
 impl From<bool> for Value {
@@ -90,6 +101,12 @@ impl From<&lexpr::Value> for Value {
     }
 }
 
+impl From<(Value, Value)> for Value {
+    fn from((car, cdr): (Value, Value)) -> Self {
+        Value::Cons([car, cdr].into())
+    }
+}
+
 impl fmt::Debug for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Should probably use a more "Rusty" representation
@@ -105,6 +122,7 @@ impl fmt::Display for Value {
             Value::Bool(b) => f.write_str(if *b { "#t" } else { "#f" }),
             Value::PrimOp(name, _) => write!(f, "#<prim-op {}>", name),
             Value::Closure { .. } => write!(f, "#<closure>"),
+            Value::Undefined => write!(f, "#<undefined>"),
             Value::Null => write!(f, "()"),
             Value::Cons(cell) => write_cons(f, cell),
             Value::String(s) => lexpr::Value::string(s.as_ref()).fmt(f),

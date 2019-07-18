@@ -132,6 +132,25 @@ pub fn ge(args: &[Value]) -> OpResult {
     num_cmp(args, Number::ge)
 }
 
+pub fn list(args: &[Value]) -> OpResult {
+    let mut list = [Value::Undefined, Value::Null];
+    let mut pair = &mut list;
+    let mut have_value = false;
+    for item in args {
+        if have_value {
+            pair[1] = (Value::Undefined, Value::Null).into();
+            pair = pair[1].as_cons_mut().unwrap();
+        }
+        pair[0] = item.clone();
+        have_value = true;
+    }
+    if have_value {
+        Ok(Value::Cons(list.into()))
+    } else {
+        Ok(Value::Null)
+    }
+}
+
 pub fn display(args: &[Value]) -> OpResult {
     if args.len() != 1 {
         // TODO: support ports
