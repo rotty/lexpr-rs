@@ -3,6 +3,10 @@
   (define y x)
   bar)
 
-(define captured (foo (list 1)))
+(define captured (foo 1))
 (display (captured))
 (newline)
+
+(define (x y) (y x))
+(define (y x) (x y))
+(x y)
