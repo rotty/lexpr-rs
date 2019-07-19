@@ -1,3 +1,11 @@
+# 0.2.3 (unreleased)
+
+New features:
+
+- The `Parser` type now implements `Iterator`. This should make
+  reading multiple S-expressions from a single source considerably
+  more ergonomic.
+
 # 0.2.2
 
 New features:
