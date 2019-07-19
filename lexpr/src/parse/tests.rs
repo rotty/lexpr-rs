@@ -418,3 +418,13 @@ fn test_options_size() {
     // Parser options should fit in 2 machine words on 32-bit architectures.
     assert!(std::mem::size_of::<Options>() <= std::mem::size_of::<u32>() * 2);
 }
+
+#[test]
+fn test_parser_iterator() {
+    assert_eq!(
+        Parser::from_str("1 (2 3) 4")
+            .collect::<Result<Vec<_>>>()
+            .unwrap(),
+        vec![1.into(), Value::list(vec![2i32, 3]), 4.into()],
+    );
+}

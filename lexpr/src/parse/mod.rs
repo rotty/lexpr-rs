@@ -1027,6 +1027,20 @@ where
     Ok(value)
 }
 
+impl<'de, R: Read<'de>> Iterator for Parser<R> {
+    type Item = Result<Value>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // TODO: This is just `Result::transpose`, which go introduced in 1.33,
+        // so update this when bumping MSRV
+        match self.parse() {
+            Ok(Some(item)) => Some(Ok(item)),
+            Ok(None) => None,
+            Err(e) => Some(Err(e)),
+        }
+    }
+}
+
 /// Parse a value from an IO stream containing a single S-expression.
 ///
 /// The content of the IO stream is parsed directly from the stream
