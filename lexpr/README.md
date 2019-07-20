@@ -54,8 +54,6 @@ Currently, `lexpr` focuses on Scheme, mostly based on R6RS and R7RS
 syntax, with some extensions, and Emacs Lisp. The following features,
 common across dialects, are not yet implemented:
 
-- Comments. These are not high-priority, as the primary use-case for
-  `lexpr` is for data exchange between Lisp and Rust programs.
 - Syntactic shorthands for `quote`, `quasiquote`, `unquote` and
   `unquote-splicing`. Again, these are not usually important when
   using S-expressions as a data exchange format.
@@ -70,6 +68,7 @@ fixed in the future, and deliberate ones, are listed below.
 
 - For strings, continuation line syntax (using a trailing slash) is
   not yet implemented.
+- Block comments.
 - Directives, such as `#!fold-case` and `#!no-fold-case` are not
   implemented. It's not clear if these will be implemented at all.
 

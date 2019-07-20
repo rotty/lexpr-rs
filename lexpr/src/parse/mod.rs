@@ -354,6 +354,13 @@ impl<'de, R: Read<'de>> Parser<R> {
     fn parse_whitespace(&mut self) -> Result<Option<u8>> {
         loop {
             match self.peek()? {
+                Some(b';') => loop {
+                    match self.next_char()? {
+                        Some(b'\n') => break,
+                        Some(_) => {}
+                        None => return Ok(None),
+                    }
+                },
                 Some(b' ') | Some(b'\n') | Some(b'\t') | Some(b'\r') | Some(0x0C) => {
                     self.eat_char();
                 }

@@ -2,6 +2,7 @@
 
 New features:
 
+- Line comments are now recognized (and ignored) by the parser.
 - The `Parser` type now implements `Iterator`. This should make
   reading multiple S-expressions from a single source considerably
   more ergonomic.
