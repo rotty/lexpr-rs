@@ -27,6 +27,17 @@ fn test_atoms_default() {
 }
 
 #[test]
+fn test_comments() {
+    let input = r"1 (2 3)
+;; A comment
+4";
+    assert_eq!(
+        Parser::from_str(input).collect::<Result<Vec<_>>>().unwrap(),
+        vec![1.into(), Value::list(vec![2i32, 3]), 4.into()],
+    );
+}
+
+#[test]
 fn test_symbols() {
     assert!(from_str(".").is_err());
 }
