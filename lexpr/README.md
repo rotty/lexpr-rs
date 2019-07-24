@@ -7,7 +7,7 @@
 
 ```toml
 [dependencies]
-lexpr = "0.2.1"
+lexpr = "0.2.3"
 ```
 
 You may be looking for:
