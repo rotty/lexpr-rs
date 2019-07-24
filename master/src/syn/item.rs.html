@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/travis/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-0.15.39/src/item.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>item.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../syn/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/travis/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-0.15.42/src/item.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>item.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../syn/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -2748,6 +2748,27 @@
 <span id="2748">2748</span>
 <span id="2749">2749</span>
 <span id="2750">2750</span>
+<span id="2751">2751</span>
+<span id="2752">2752</span>
+<span id="2753">2753</span>
+<span id="2754">2754</span>
+<span id="2755">2755</span>
+<span id="2756">2756</span>
+<span id="2757">2757</span>
+<span id="2758">2758</span>
+<span id="2759">2759</span>
+<span id="2760">2760</span>
+<span id="2761">2761</span>
+<span id="2762">2762</span>
+<span id="2763">2763</span>
+<span id="2764">2764</span>
+<span id="2765">2765</span>
+<span id="2766">2766</span>
+<span id="2767">2767</span>
+<span id="2768">2768</span>
+<span id="2769">2769</span>
+<span id="2770">2770</span>
+<span id="2771">2771</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">derive</span>::{<span class="ident">Data</span>, <span class="ident">DeriveInput</span>};
@@ -2770,6 +2791,9 @@
     <span class="doccomment">/// This type is a [syntax tree enum].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [syntax tree enum]: enum.Expr.html#syntax-tree-enums</span>
+    <span class="comment">//</span>
+    <span class="comment">// TODO: change syntax-tree-enum link to an intra rustdoc link, currently</span>
+    <span class="comment">// blocked on https://github.com/rust-lang/rust/issues/62833</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Item</span> {
         <span class="doccomment">/// An `extern crate` item: `extern crate serde`.</span>
         <span class="doccomment">///</span>
@@ -3112,6 +3136,9 @@
     <span class="doccomment">/// This type is a [syntax tree enum].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [syntax tree enum]: enum.Expr.html#syntax-tree-enums</span>
+    <span class="comment">//</span>
+    <span class="comment">// TODO: change syntax-tree-enum link to an intra rustdoc link, currently</span>
+    <span class="comment">// blocked on https://github.com/rust-lang/rust/issues/62833</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">UseTree</span> {
         <span class="doccomment">/// A path prefix of imports in a `use` item: `std::...`.</span>
         <span class="doccomment">///</span>
@@ -3165,6 +3192,9 @@
     <span class="doccomment">/// This type is a [syntax tree enum].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [syntax tree enum]: enum.Expr.html#syntax-tree-enums</span>
+    <span class="comment">//</span>
+    <span class="comment">// TODO: change syntax-tree-enum link to an intra rustdoc link, currently</span>
+    <span class="comment">// blocked on https://github.com/rust-lang/rust/issues/62833</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ForeignItem</span> {
         <span class="doccomment">/// A foreign function in an `extern` block.</span>
         <span class="doccomment">///</span>
@@ -3250,6 +3280,9 @@
     <span class="doccomment">/// This type is a [syntax tree enum].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [syntax tree enum]: enum.Expr.html#syntax-tree-enums</span>
+    <span class="comment">//</span>
+    <span class="comment">// TODO: change syntax-tree-enum link to an intra rustdoc link, currently</span>
+    <span class="comment">// blocked on https://github.com/rust-lang/rust/issues/62833</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TraitItem</span> {
         <span class="doccomment">/// An associated constant within the definition of a trait.</span>
         <span class="doccomment">///</span>
@@ -3336,6 +3369,9 @@
     <span class="doccomment">/// This type is a [syntax tree enum].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [syntax tree enum]: enum.Expr.html#syntax-tree-enums</span>
+    <span class="comment">//</span>
+    <span class="comment">// TODO: change syntax-tree-enum link to an intra rustdoc link, currently</span>
+    <span class="comment">// blocked on https://github.com/rust-lang/rust/issues/62833</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ImplItem</span> {
         <span class="doccomment">/// An associated constant within an impl block.</span>
         <span class="doccomment">///</span>
@@ -3470,6 +3506,9 @@
     <span class="doccomment">/// This type is a [syntax tree enum].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [syntax tree enum]: enum.Expr.html#syntax-tree-enums</span>
+    <span class="comment">//</span>
+    <span class="comment">// TODO: change syntax-tree-enum link to an intra rustdoc link, currently</span>
+    <span class="comment">// blocked on https://github.com/rust-lang/rust/issues/62833</span>
     <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">FnArg</span> {
         <span class="doccomment">/// Self captured by reference in a function signature: `&amp;self` or `&amp;mut</span>
         <span class="doccomment">/// self`.</span>
@@ -4467,7 +4506,8 @@
                 <span class="kw">let</span> <span class="ident">lookahead</span> <span class="op">=</span> <span class="ident">ahead</span>.<span class="ident">lookahead1</span>();
                 <span class="kw">if</span> <span class="ident">lookahead</span>.<span class="ident">peek</span>(<span class="ident">Ident</span>) {
                     <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">TraitItem</span>::<span class="ident">Const</span>)
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">lookahead</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">unsafe</span>])
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">lookahead</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="ident">async</span>])
+                    <span class="op">||</span> <span class="ident">lookahead</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">unsafe</span>])
                     <span class="op">||</span> <span class="ident">lookahead</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">extern</span>])
                     <span class="op">||</span> <span class="ident">lookahead</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">fn</span>])
                 {
@@ -4475,7 +4515,8 @@
                 } <span class="kw">else</span> {
                     <span class="prelude-val">Err</span>(<span class="ident">lookahead</span>.<span class="ident">error</span>())
                 }
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">lookahead</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">unsafe</span>])
+            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">lookahead</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="ident">async</span>])
+                <span class="op">||</span> <span class="ident">lookahead</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">unsafe</span>])
                 <span class="op">||</span> <span class="ident">lookahead</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">extern</span>])
                 <span class="op">||</span> <span class="ident">lookahead</span>.<span class="ident">peek</span>(<span class="macro">Token</span><span class="macro">!</span>[<span class="kw">fn</span>])
             {
@@ -4536,6 +4577,7 @@
         <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">outer_attrs</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">call</span>(<span class="ident">Attribute</span>::<span class="ident">parse_outer</span>)<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">constness</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro">Token</span><span class="macro">!</span>[<span class="kw">const</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">asyncness</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro">Token</span><span class="macro">!</span>[<span class="ident">async</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">unsafety</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro">Token</span><span class="macro">!</span>[<span class="kw">unsafe</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">abi</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Abi</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">fn_token</span>: <span class="macro">Token</span><span class="macro">!</span>[<span class="kw">fn</span>] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
@@ -4567,7 +4609,7 @@
                 <span class="ident">attrs</span>: <span class="ident">private</span>::<span class="ident">attrs</span>(<span class="ident">outer_attrs</span>, <span class="ident">inner_attrs</span>),
                 <span class="ident">sig</span>: <span class="ident">MethodSig</span> {
                     <span class="ident">constness</span>: <span class="ident">constness</span>,
-                    <span class="ident">asyncness</span>: <span class="prelude-val">None</span>,
+                    <span class="ident">asyncness</span>: <span class="ident">asyncness</span>,
                     <span class="ident">unsafety</span>: <span class="ident">unsafety</span>,
                     <span class="ident">abi</span>: <span class="ident">abi</span>,
                     <span class="ident">ident</span>: <span class="ident">ident</span>,
