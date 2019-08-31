@@ -89,12 +89,12 @@
 
 <span class="kw">impl</span> <span class="ident">KeywordSyntax</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">to_flag</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">u8</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">to_flag</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u8</span> {
         <span class="kw">use</span> <span class="ident">KeywordSyntax</span>::<span class="kw-2">*</span>;
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">ColonPrefix</span> <span class="op">=&gt;</span> <span class="number">1</span>,
-            <span class="ident">ColonPostfix</span> <span class="op">=&gt;</span> <span class="number">2</span>,
-            <span class="ident">Octothorpe</span> <span class="op">=&gt;</span> <span class="number">4</span>,
+            <span class="ident">ColonPrefix</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="ident">ColonPostfix</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="ident">Octothorpe</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">4</span>,
         }
     }
 }

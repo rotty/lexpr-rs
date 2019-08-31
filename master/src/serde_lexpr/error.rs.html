@@ -204,11 +204,11 @@
 
 <span class="kw">impl</span> <span class="ident">Error</span> {
     <span class="doccomment">/// Location of the error in the input stream.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">location</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Location</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">location</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Location</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="number">0</span> {
-            <span class="ident">ErrorImpl</span>::<span class="ident">Message</span>(<span class="kw">_</span>, <span class="ident">loc</span>) <span class="op">=&gt;</span> <span class="kw-2">*</span><span class="ident">loc</span>,
-            <span class="ident">ErrorImpl</span>::<span class="ident">Parse</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> <span class="ident">e</span>.<span class="ident">location</span>(),
-            <span class="ident">ErrorImpl</span>::<span class="ident">Io</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="prelude-val">None</span>,
+            <span class="ident">ErrorImpl</span>::<span class="ident">Message</span>(<span class="kw">_</span>, <span class="ident">loc</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">loc</span>,
+            <span class="ident">ErrorImpl</span>::<span class="ident">Parse</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">e</span>.<span class="ident">location</span>(),
+            <span class="ident">ErrorImpl</span>::<span class="ident">Io</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
     }
     <span class="doccomment">/// Categorizes the cause of this error.</span>
@@ -217,14 +217,14 @@
     <span class="doccomment">/// - `Category::Syntax` - input that is not a syntactically valid S-expression</span>
     <span class="doccomment">/// - `Category::Data` - input data that is semantically incorrect</span>
     <span class="doccomment">/// - `Category::Eof` - unexpected end of the input data</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">classify</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">Category</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">classify</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Category</span> {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="number">0</span> {
-            <span class="ident">ErrorImpl</span>::<span class="ident">Message</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">Category</span>::<span class="ident">Data</span>,
-            <span class="ident">ErrorImpl</span>::<span class="ident">Io</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">Category</span>::<span class="ident">Io</span>,
-            <span class="ident">ErrorImpl</span>::<span class="ident">Parse</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">e</span>.<span class="ident">classify</span>() {
-                <span class="ident">parse</span>::<span class="ident">error</span>::<span class="ident">Category</span>::<span class="ident">Syntax</span> <span class="op">=&gt;</span> <span class="ident">Category</span>::<span class="ident">Syntax</span>,
-                <span class="ident">parse</span>::<span class="ident">error</span>::<span class="ident">Category</span>::<span class="ident">Io</span> <span class="op">=&gt;</span> <span class="ident">Category</span>::<span class="ident">Io</span>,
-                <span class="ident">parse</span>::<span class="ident">error</span>::<span class="ident">Category</span>::<span class="ident">Eof</span> <span class="op">=&gt;</span> <span class="ident">Category</span>::<span class="ident">Eof</span>,
+            <span class="ident">ErrorImpl</span>::<span class="ident">Message</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Category</span>::<span class="ident">Data</span>,
+            <span class="ident">ErrorImpl</span>::<span class="ident">Io</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Category</span>::<span class="ident">Io</span>,
+            <span class="ident">ErrorImpl</span>::<span class="ident">Parse</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">e</span>.<span class="ident">classify</span>() {
+                <span class="ident">parse</span>::<span class="ident">error</span>::<span class="ident">Category</span>::<span class="ident">Syntax</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Category</span>::<span class="ident">Syntax</span>,
+                <span class="ident">parse</span>::<span class="ident">error</span>::<span class="ident">Category</span>::<span class="ident">Io</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Category</span>::<span class="ident">Io</span>,
+                <span class="ident">parse</span>::<span class="ident">error</span>::<span class="ident">Category</span>::<span class="ident">Eof</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Category</span>::<span class="ident">Eof</span>,
             },
         }
     }
@@ -281,59 +281,59 @@
     <span class="doccomment">///     }</span>
     <span class="doccomment">/// }</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">l</span>: <span class="ident">Error</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">l</span>: <span class="ident">Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">ErrorImpl</span>::<span class="ident">Io</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="kw-2">*</span><span class="ident">l</span>.<span class="number">0</span> {
             <span class="ident">err</span>
         } <span class="kw">else</span> {
             <span class="kw">match</span> <span class="ident">l</span>.<span class="ident">classify</span>() {
-                <span class="ident">Category</span>::<span class="ident">Io</span> <span class="op">=&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
-                <span class="ident">Category</span>::<span class="ident">Syntax</span> <span class="op">|</span> <span class="ident">Category</span>::<span class="ident">Data</span> <span class="op">=&gt;</span> <span class="ident">io</span>::<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">InvalidData</span>, <span class="ident">l</span>),
-                <span class="ident">Category</span>::<span class="ident">Eof</span> <span class="op">=&gt;</span> <span class="ident">io</span>::<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">UnexpectedEof</span>, <span class="ident">l</span>),
+                <span class="ident">Category</span>::<span class="ident">Io</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                <span class="ident">Category</span>::<span class="ident">Syntax</span> <span class="op">|</span> <span class="ident">Category</span>::<span class="ident">Data</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">InvalidData</span>, <span class="ident">l</span>),
+                <span class="ident">Category</span>::<span class="ident">Eof</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">UnexpectedEof</span>, <span class="ident">l</span>),
             }
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">error</span>::<span class="ident">Error</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">source</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>(<span class="kw">dyn</span> <span class="ident">error</span>::<span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>)<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">source</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>(<span class="kw">dyn</span> <span class="ident">error</span>::<span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>)<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="number">0</span> {
-            <span class="ident">ErrorImpl</span>::<span class="ident">Io</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">e</span>),
-            <span class="ident">ErrorImpl</span>::<span class="ident">Parse</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">e</span>),
-            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="prelude-val">None</span>,
+            <span class="ident">ErrorImpl</span>::<span class="ident">Io</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">e</span>),
+            <span class="ident">ErrorImpl</span>::<span class="ident">Parse</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">e</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="number">0</span> {
-            <span class="ident">ErrorImpl</span>::<span class="ident">Message</span>(<span class="ident">msg</span>, <span class="kw">_</span>) <span class="op">=&gt;</span> <span class="ident">Display</span>::<span class="ident">fmt</span>(<span class="ident">msg</span>, <span class="ident">f</span>),
-            <span class="ident">ErrorImpl</span>::<span class="ident">Io</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> <span class="ident">Display</span>::<span class="ident">fmt</span>(<span class="ident">e</span>, <span class="ident">f</span>),
-            <span class="ident">ErrorImpl</span>::<span class="ident">Parse</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> <span class="ident">Display</span>::<span class="ident">fmt</span>(<span class="ident">e</span>, <span class="ident">f</span>),
+            <span class="ident">ErrorImpl</span>::<span class="ident">Message</span>(<span class="ident">msg</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Display</span>::<span class="ident">fmt</span>(<span class="ident">msg</span>, <span class="ident">f</span>),
+            <span class="ident">ErrorImpl</span>::<span class="ident">Io</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Display</span>::<span class="ident">fmt</span>(<span class="ident">e</span>, <span class="ident">f</span>),
+            <span class="ident">ErrorImpl</span>::<span class="ident">Parse</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Display</span>::<span class="ident">fmt</span>(<span class="ident">e</span>, <span class="ident">f</span>),
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="number">0</span> {
-            <span class="ident">ErrorImpl</span>::<span class="ident">Message</span>(<span class="ident">msg</span>, <span class="ident">loc</span>) <span class="op">=&gt;</span> <span class="ident">formatter</span>
+            <span class="ident">ErrorImpl</span>::<span class="ident">Message</span>(<span class="ident">msg</span>, <span class="ident">loc</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">formatter</span>
                 .<span class="ident">debug_tuple</span>(<span class="string">&quot;Message&quot;</span>)
                 .<span class="ident">field</span>(<span class="ident">msg</span>)
                 .<span class="ident">field</span>(<span class="ident">loc</span>)
                 .<span class="ident">finish</span>(),
-            <span class="ident">ErrorImpl</span>::<span class="ident">Io</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> <span class="ident">formatter</span>.<span class="ident">debug_tuple</span>(<span class="string">&quot;Io&quot;</span>).<span class="ident">field</span>(<span class="ident">e</span>).<span class="ident">finish</span>(),
-            <span class="ident">ErrorImpl</span>::<span class="ident">Parse</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> <span class="ident">formatter</span>.<span class="ident">debug_tuple</span>(<span class="string">&quot;Parse&quot;</span>).<span class="ident">field</span>(<span class="ident">e</span>).<span class="ident">finish</span>(),
+            <span class="ident">ErrorImpl</span>::<span class="ident">Io</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">formatter</span>.<span class="ident">debug_tuple</span>(<span class="string">&quot;Io&quot;</span>).<span class="ident">field</span>(<span class="ident">e</span>).<span class="ident">finish</span>(),
+            <span class="ident">ErrorImpl</span>::<span class="ident">Parse</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">formatter</span>.<span class="ident">debug_tuple</span>(<span class="string">&quot;Parse&quot;</span>).<span class="ident">field</span>(<span class="ident">e</span>).<span class="ident">finish</span>(),
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">de</span>::<span class="ident">Error</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">custom</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Display</span><span class="op">&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="ident">Error</span> {
+    <span class="kw">fn</span> <span class="ident">custom</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Display</span><span class="op">&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Error</span> {
         <span class="ident">Error</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ErrorImpl</span>::<span class="ident">Message</span>(<span class="ident">msg</span>.<span class="ident">to_string</span>(), <span class="prelude-val">None</span>)))
     }
 
-    <span class="kw">fn</span> <span class="ident">invalid_type</span>(<span class="ident">unexp</span>: <span class="ident">de</span>::<span class="ident">Unexpected</span>, <span class="ident">exp</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">de</span>::<span class="ident">Expected</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">invalid_type</span>(<span class="ident">unexp</span>: <span class="ident">de</span>::<span class="ident">Unexpected</span>, <span class="ident">exp</span>: <span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">de</span>::<span class="ident">Expected</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">de</span>::<span class="ident">Unexpected</span>::<span class="ident">Unit</span> <span class="op">=</span> <span class="ident">unexp</span> {
             <span class="ident">Error</span>::<span class="ident">custom</span>(<span class="macro">format_args</span><span class="macro">!</span>(<span class="string">&quot;invalid type: null, expected {}&quot;</span>, <span class="ident">exp</span>))
         } <span class="kw">else</span> {
@@ -343,19 +343,19 @@
 }
 
 <span class="kw">impl</span> <span class="ident">ser</span>::<span class="ident">Error</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">custom</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Display</span><span class="op">&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="ident">Error</span> {
+    <span class="kw">fn</span> <span class="ident">custom</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Display</span><span class="op">&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Error</span> {
         <span class="ident">Error</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ErrorImpl</span>::<span class="ident">Message</span>(<span class="ident">msg</span>.<span class="ident">to_string</span>(), <span class="prelude-val">None</span>)))
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">io</span>::<span class="ident">Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">io</span>::<span class="ident">Error</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">io</span>::<span class="ident">Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Error</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ErrorImpl</span>::<span class="ident">Io</span>(<span class="ident">e</span>)))
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">parse</span>::<span class="ident">Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">parse</span>::<span class="ident">Error</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">parse</span>::<span class="ident">Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Error</span>(<span class="ident">Box</span>::<span class="ident">new</span>(<span class="ident">ErrorImpl</span>::<span class="ident">Parse</span>(<span class="ident">e</span>)))
     }
 }

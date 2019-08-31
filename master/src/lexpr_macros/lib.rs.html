@@ -45,19 +45,19 @@
 <span class="kw">use</span> <span class="ident">quote</span>::<span class="ident">quote</span>;
 
 <span class="attribute">#[<span class="ident">proc_macro_hack</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sexp</span>(<span class="ident">input</span>: <span class="ident">proc_macro</span>::<span class="ident">TokenStream</span>) <span class="op">-&gt;</span> <span class="ident">proc_macro</span>::<span class="ident">TokenStream</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sexp</span>(<span class="ident">input</span>: <span class="ident">proc_macro</span>::<span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">proc_macro</span>::<span class="ident">TokenStream</span> {
     <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">expand</span>(<span class="ident">TokenStream</span>::<span class="ident">from</span>(<span class="ident">input</span>)) {
-        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> {
+        <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;could not parse s-expression: {:?}&quot;</span>, <span class="ident">e</span>);
             <span class="macro">quote</span><span class="macro">!</span> { <span class="macro">compile_error</span><span class="macro">!</span>(#<span class="ident">msg</span>) }
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">output</span>) <span class="op">=&gt;</span> <span class="ident">output</span>,
+        <span class="prelude-val">Ok</span>(<span class="ident">output</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">output</span>,
     };
 
     <span class="ident">proc_macro</span>::<span class="ident">TokenStream</span>::<span class="ident">from</span>(<span class="ident">output</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TokenStream</span>, <span class="ident">parser</span>::<span class="ident">ParseError</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TokenStream</span>, <span class="ident">parser</span>::<span class="ident">ParseError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">parser</span>::<span class="ident">parse</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="ident">generator</span>::<span class="ident">generate</span>(<span class="ident">value</span>))
 }

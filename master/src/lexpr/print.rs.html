@@ -982,7 +982,7 @@
     <span class="doccomment">/// Keywords will use prefix notation (i.e. `:some-keyword`), the</span>
     <span class="doccomment">/// special nil value will be represented as a symbol, and</span>
     <span class="doccomment">/// booleans will be represented by `nil` and `t`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">elisp</span>() <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">elisp</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Options</span> {
             <span class="ident">keyword_syntax</span>: <span class="ident">KeywordSyntax</span>::<span class="ident">ColonPrefix</span>,
             <span class="ident">nil_syntax</span>: <span class="ident">NilSyntax</span>::<span class="ident">Symbol</span>,
@@ -995,50 +995,50 @@
     }
 
     <span class="doccomment">/// Set the syntax to use for printing keywords.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_keyword_syntax</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">syntax</span>: <span class="ident">KeywordSyntax</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_keyword_syntax</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">syntax</span>: <span class="ident">KeywordSyntax</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">keyword_syntax</span> <span class="op">=</span> <span class="ident">syntax</span>;
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Set the syntax to use to print the special nil value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_nil_syntax</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">syntax</span>: <span class="ident">NilSyntax</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_nil_syntax</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">syntax</span>: <span class="ident">NilSyntax</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">nil_syntax</span> <span class="op">=</span> <span class="ident">syntax</span>;
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Set the syntax to use to print boolean values.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_bool_syntax</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">syntax</span>: <span class="ident">BoolSyntax</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_bool_syntax</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">syntax</span>: <span class="ident">BoolSyntax</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">bool_syntax</span> <span class="op">=</span> <span class="ident">syntax</span>;
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Set the syntax for printing vectors.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_vector_syntax</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">syntax</span>: <span class="ident">VectorSyntax</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_vector_syntax</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">syntax</span>: <span class="ident">VectorSyntax</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">vector_syntax</span> <span class="op">=</span> <span class="ident">syntax</span>;
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Set the syntax to use for printing byte vectors.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_bytes_syntax</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">syntax</span>: <span class="ident">BytesSyntax</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_bytes_syntax</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">syntax</span>: <span class="ident">BytesSyntax</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">bytes_syntax</span> <span class="op">=</span> <span class="ident">syntax</span>;
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Set the syntax used for printing strings.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_string_syntax</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">syntax</span>: <span class="ident">StringSyntax</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_string_syntax</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">syntax</span>: <span class="ident">StringSyntax</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">string_syntax</span> <span class="op">=</span> <span class="ident">syntax</span>;
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Set the syntax used for printing characters.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_char_syntax</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">syntax</span>: <span class="ident">CharSyntax</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_char_syntax</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">syntax</span>: <span class="ident">CharSyntax</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">char_syntax</span> <span class="op">=</span> <span class="ident">syntax</span>;
         <span class="self">self</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Options</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Options</span> {
             <span class="ident">keyword_syntax</span>: <span class="ident">KeywordSyntax</span>::<span class="ident">Octothorpe</span>,
             <span class="ident">nil_syntax</span>: <span class="ident">NilSyntax</span>::<span class="ident">Token</span>,
@@ -1116,17 +1116,17 @@
 
 <span class="kw">impl</span> <span class="ident">CharEscape</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from_escape_table</span>(<span class="ident">escape</span>: <span class="ident">u8</span>, <span class="ident">byte</span>: <span class="ident">u8</span>) <span class="op">-&gt;</span> <span class="ident">CharEscape</span> {
+    <span class="kw">fn</span> <span class="ident">from_escape_table</span>(<span class="ident">escape</span>: <span class="ident">u8</span>, <span class="ident">byte</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">CharEscape</span> {
         <span class="kw">match</span> <span class="ident">escape</span> {
-            <span class="self">self</span>::<span class="ident">AA</span> <span class="op">=&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">Alert</span>,
-            <span class="self">self</span>::<span class="ident">BB</span> <span class="op">=&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">Backspace</span>,
-            <span class="self">self</span>::<span class="ident">TT</span> <span class="op">=&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">Tab</span>,
-            <span class="self">self</span>::<span class="ident">NN</span> <span class="op">=&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">LineFeed</span>,
-            <span class="self">self</span>::<span class="ident">RR</span> <span class="op">=&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">CarriageReturn</span>,
-            <span class="self">self</span>::<span class="ident">QU</span> <span class="op">=&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">Quote</span>,
-            <span class="self">self</span>::<span class="ident">BS</span> <span class="op">=&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">ReverseSolidus</span>,
-            <span class="self">self</span>::<span class="ident">UU</span> <span class="op">=&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">AsciiControl</span>(<span class="ident">byte</span>),
-            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+            <span class="self">self</span>::<span class="ident">AA</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">Alert</span>,
+            <span class="self">self</span>::<span class="ident">BB</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">Backspace</span>,
+            <span class="self">self</span>::<span class="ident">TT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">Tab</span>,
+            <span class="self">self</span>::<span class="ident">NN</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">LineFeed</span>,
+            <span class="self">self</span>::<span class="ident">RR</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">CarriageReturn</span>,
+            <span class="self">self</span>::<span class="ident">QU</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">Quote</span>,
+            <span class="self">self</span>::<span class="ident">BS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">ReverseSolidus</span>,
+            <span class="self">self</span>::<span class="ident">UU</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">CharEscape</span>::<span class="ident">AsciiControl</span>(<span class="ident">byte</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
         }
     }
 }
@@ -1149,7 +1149,7 @@
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Formatter</span> {
     <span class="doccomment">/// Writes a representation of the special nil value to the specified writer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_nil</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_nil</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1158,7 +1158,7 @@
 
     <span class="doccomment">/// Writes a representation of the special nil value to the specified writer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_null</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_null</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1170,7 +1170,7 @@
     <span class="doccomment">/// The implementation provided by the trait will use the Scheme notation</span>
     <span class="doccomment">/// (`#t` and `#f`).</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_bool</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">value</span>: <span class="ident">bool</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_bool</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">value</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1179,7 +1179,7 @@
 
     <span class="doccomment">/// Writes an integer value like `-123` to the specified writer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_number</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Number</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_number</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Number</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1190,16 +1190,16 @@
             <span class="kw">type</span> <span class="ident">Value</span> <span class="op">=</span> ();
             <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">io</span>::<span class="ident">Error</span>;
 
-            <span class="kw">fn</span> <span class="ident">error</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="ident">Error</span> {
+            <span class="kw">fn</span> <span class="ident">error</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="ident">Error</span> {
                 <span class="ident">io</span>::<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">io</span>::<span class="ident">ErrorKind</span>::<span class="ident">Other</span>, <span class="ident">msg</span>.<span class="ident">into</span>())
             }
-            <span class="kw">fn</span> <span class="ident">visit_u64</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u64</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">fn</span> <span class="ident">visit_u64</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
                 <span class="ident">itoa</span>::<span class="ident">write</span>(<span class="self">self</span>.<span class="ident">writer</span>, <span class="ident">n</span>).<span class="ident">map</span>(<span class="ident">drop</span>)
             }
-            <span class="kw">fn</span> <span class="ident">visit_i64</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i64</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">fn</span> <span class="ident">visit_i64</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">i64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
                 <span class="ident">itoa</span>::<span class="ident">write</span>(<span class="self">self</span>.<span class="ident">writer</span>, <span class="ident">n</span>).<span class="ident">map</span>(<span class="ident">drop</span>)
             }
-            <span class="kw">fn</span> <span class="ident">visit_f64</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">f64</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+            <span class="kw">fn</span> <span class="ident">visit_f64</span>(<span class="self">self</span>, <span class="ident">n</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">ryu</span>::<span class="ident">Buffer</span>::<span class="ident">new</span>();
                 <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">format</span>(<span class="ident">n</span>);
                 <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="ident">s</span>.<span class="ident">as_bytes</span>())
@@ -1212,7 +1212,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// The implementation provided by the trait will use Scheme notation</span>
     <span class="doccomment">/// (`#\C`).</span>
-    <span class="kw">fn</span> <span class="ident">write_char</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">c</span>: <span class="ident">char</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_char</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">c</span>: <span class="ident">char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1222,7 +1222,7 @@
     <span class="doccomment">/// Called before each series of `write_string_fragment` and</span>
     <span class="doccomment">/// `write_char_escape`.  Writes a `&quot;` to the specified writer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">begin_string</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">begin_string</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1232,7 +1232,7 @@
     <span class="doccomment">/// Called after each series of `write_string_fragment` and</span>
     <span class="doccomment">/// `write_char_escape`.  Writes a `&quot;` to the specified writer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">end_string</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">end_string</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1242,7 +1242,7 @@
     <span class="doccomment">/// Writes a string fragment that doesn&#39;t need any escaping to the specified</span>
     <span class="doccomment">/// writer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_string_fragment</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">fragment</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_string_fragment</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">fragment</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1255,7 +1255,7 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>,
         <span class="ident">char_escape</span>: <span class="ident">CharEscape</span>,
-    ) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1264,7 +1264,7 @@
 
     <span class="doccomment">/// Writes a symbol to the specified writer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_symbol</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_symbol</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1274,7 +1274,7 @@
 
     <span class="doccomment">/// Writes a keyword to the specified writer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_keyword</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_keyword</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1284,7 +1284,7 @@
 
     <span class="doccomment">/// Writes a byte vector to the specified writer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_bytes</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_bytes</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1296,7 +1296,7 @@
     <span class="doccomment">/// Called before any list elements.  Writes a `(` to the specified</span>
     <span class="doccomment">/// writer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">begin_list</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">begin_list</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1306,7 +1306,7 @@
     <span class="doccomment">/// Called after all list elements have been written.  Writes a `)` to the</span>
     <span class="doccomment">/// specified writer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">end_list</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">end_list</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1316,7 +1316,7 @@
     <span class="doccomment">/// Called before starting to write a list or vector element. Writes a space</span>
     <span class="doccomment">/// to the specified writer, if needed.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">begin_seq_element</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">first</span>: <span class="ident">bool</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">begin_seq_element</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">first</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1329,7 +1329,7 @@
 
     <span class="doccomment">/// Called after every list or vector element.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">end_seq_element</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">end_seq_element</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1339,20 +1339,20 @@
     <span class="doccomment">/// Called before any vector elements.  Will write `#(` for generic vectors,</span>
     <span class="doccomment">/// or `#u8(` for byte vectors, to the specified writer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">begin_vector</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">kind</span>: <span class="ident">VectorType</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">begin_vector</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">kind</span>: <span class="ident">VectorType</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
         <span class="kw">match</span> <span class="ident">kind</span> {
-            <span class="ident">VectorType</span>::<span class="ident">Generic</span> <span class="op">=&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;#(&quot;</span>),
-            <span class="ident">VectorType</span>::<span class="ident">Byte</span> <span class="op">=&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;#u8(&quot;</span>),
+            <span class="ident">VectorType</span>::<span class="ident">Generic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;#(&quot;</span>),
+            <span class="ident">VectorType</span>::<span class="ident">Byte</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;#u8(&quot;</span>),
         }
     }
 
     <span class="doccomment">/// Called after all vector elements have been written.  Writes a `)` to the</span>
     <span class="doccomment">/// specified writer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">end_vector</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">end_vector</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1363,7 +1363,7 @@
     <span class="doccomment">/// generally, the `cdr` field of a cons cell.  Writes a `.` to</span>
     <span class="doccomment">/// the specified writer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_dot</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_dot</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
@@ -1385,82 +1385,82 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Formatter</span> <span class="kw">for</span> <span class="ident">CustomizedFormatter</span> {
-    <span class="kw">fn</span> <span class="ident">write_nil</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_nil</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">nil_syntax</span> {
-            <span class="ident">NilSyntax</span>::<span class="ident">EmptyList</span> <span class="op">=&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;()&quot;</span>),
-            <span class="ident">NilSyntax</span>::<span class="ident">Symbol</span> <span class="op">=&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;nil&quot;</span>),
-            <span class="ident">NilSyntax</span>::<span class="ident">Token</span> <span class="op">=&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;#nil&quot;</span>),
-            <span class="ident">NilSyntax</span>::<span class="ident">False</span> <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">write_bool</span>(<span class="ident">writer</span>, <span class="bool-val">false</span>),
+            <span class="ident">NilSyntax</span>::<span class="ident">EmptyList</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;()&quot;</span>),
+            <span class="ident">NilSyntax</span>::<span class="ident">Symbol</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;nil&quot;</span>),
+            <span class="ident">NilSyntax</span>::<span class="ident">Token</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;#nil&quot;</span>),
+            <span class="ident">NilSyntax</span>::<span class="ident">False</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">write_bool</span>(<span class="ident">writer</span>, <span class="bool-val">false</span>),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">write_bool</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">value</span>: <span class="ident">bool</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_bool</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">value</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">bool_syntax</span> {
-            <span class="ident">BoolSyntax</span>::<span class="ident">Symbol</span> <span class="op">=&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="kw">if</span> <span class="ident">value</span> { <span class="string">b&quot;t&quot;</span> } <span class="kw">else</span> { <span class="string">b&quot;nil&quot;</span> }),
-            <span class="ident">BoolSyntax</span>::<span class="ident">Token</span> <span class="op">=&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="kw">if</span> <span class="ident">value</span> { <span class="string">b&quot;#t&quot;</span> } <span class="kw">else</span> { <span class="string">b&quot;#f&quot;</span> }),
+            <span class="ident">BoolSyntax</span>::<span class="ident">Symbol</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="kw">if</span> <span class="ident">value</span> { <span class="string">b&quot;t&quot;</span> } <span class="kw">else</span> { <span class="string">b&quot;nil&quot;</span> }),
+            <span class="ident">BoolSyntax</span>::<span class="ident">Token</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="kw">if</span> <span class="ident">value</span> { <span class="string">b&quot;#t&quot;</span> } <span class="kw">else</span> { <span class="string">b&quot;#f&quot;</span> }),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">write_keyword</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_keyword</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">keyword_syntax</span> {
-            <span class="ident">KeywordSyntax</span>::<span class="ident">ColonPostfix</span> <span class="op">=&gt;</span> {
+            <span class="ident">KeywordSyntax</span>::<span class="ident">ColonPostfix</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="ident">name</span>.<span class="ident">as_bytes</span>())<span class="question-mark">?</span>;
                 <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;:&quot;</span>)
             }
-            <span class="ident">KeywordSyntax</span>::<span class="ident">ColonPrefix</span> <span class="op">=&gt;</span> {
+            <span class="ident">KeywordSyntax</span>::<span class="ident">ColonPrefix</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;:&quot;</span>)<span class="question-mark">?</span>;
                 <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="ident">name</span>.<span class="ident">as_bytes</span>())
             }
-            <span class="ident">KeywordSyntax</span>::<span class="ident">Octothorpe</span> <span class="op">=&gt;</span> {
+            <span class="ident">KeywordSyntax</span>::<span class="ident">Octothorpe</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;#:&quot;</span>)<span class="question-mark">?</span>;
                 <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="ident">name</span>.<span class="ident">as_bytes</span>())
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">begin_vector</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">kind</span>: <span class="ident">VectorType</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">begin_vector</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">kind</span>: <span class="ident">VectorType</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">vector_syntax</span> {
-            <span class="ident">VectorSyntax</span>::<span class="ident">Brackets</span> <span class="op">=&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;[&quot;</span>),
-            <span class="ident">VectorSyntax</span>::<span class="ident">Octothorpe</span> <span class="op">=&gt;</span> <span class="kw">match</span> <span class="ident">kind</span> {
-                <span class="ident">VectorType</span>::<span class="ident">Generic</span> <span class="op">=&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;#(&quot;</span>),
-                <span class="ident">VectorType</span>::<span class="ident">Byte</span> <span class="op">=&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">bytes_syntax</span> {
-                    <span class="ident">BytesSyntax</span>::<span class="ident">R6RS</span> <span class="op">=&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;#vu8(&quot;</span>),
-                    <span class="ident">BytesSyntax</span>::<span class="ident">R7RS</span> <span class="op">=&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;#u8(&quot;</span>),
-                    <span class="kw">_</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;invalid combination of VectorSyntax and BytesSyntax&quot;</span>),
+            <span class="ident">VectorSyntax</span>::<span class="ident">Brackets</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;[&quot;</span>),
+            <span class="ident">VectorSyntax</span>::<span class="ident">Octothorpe</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">kind</span> {
+                <span class="ident">VectorType</span>::<span class="ident">Generic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;#(&quot;</span>),
+                <span class="ident">VectorType</span>::<span class="ident">Byte</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">bytes_syntax</span> {
+                    <span class="ident">BytesSyntax</span>::<span class="ident">R6RS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;#vu8(&quot;</span>),
+                    <span class="ident">BytesSyntax</span>::<span class="ident">R7RS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;#u8(&quot;</span>),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;invalid combination of VectorSyntax and BytesSyntax&quot;</span>),
                 },
             },
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">end_vector</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">end_vector</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">vector_syntax</span> {
-            <span class="ident">VectorSyntax</span>::<span class="ident">Brackets</span> <span class="op">=&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;]&quot;</span>),
-            <span class="ident">VectorSyntax</span>::<span class="ident">Octothorpe</span> <span class="op">=&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;)&quot;</span>),
+            <span class="ident">VectorSyntax</span>::<span class="ident">Brackets</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;]&quot;</span>),
+            <span class="ident">VectorSyntax</span>::<span class="ident">Octothorpe</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;)&quot;</span>),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">write_char</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">c</span>: <span class="ident">char</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_char</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">c</span>: <span class="ident">char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">char_syntax</span> {
-            <span class="ident">CharSyntax</span>::<span class="ident">R6RS</span> <span class="op">=&gt;</span> <span class="ident">write_scheme_char</span>(<span class="ident">writer</span>, <span class="ident">c</span>),
-            <span class="ident">CharSyntax</span>::<span class="ident">Elisp</span> <span class="op">=&gt;</span> <span class="ident">write_elisp_char</span>(<span class="ident">writer</span>, <span class="ident">c</span>),
+            <span class="ident">CharSyntax</span>::<span class="ident">R6RS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">write_scheme_char</span>(<span class="ident">writer</span>, <span class="ident">c</span>),
+            <span class="ident">CharSyntax</span>::<span class="ident">Elisp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">write_elisp_char</span>(<span class="ident">writer</span>, <span class="ident">c</span>),
         }
     }
 
@@ -1470,38 +1470,38 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>,
         <span class="ident">char_escape</span>: <span class="ident">CharEscape</span>,
-    ) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">string_syntax</span> {
-            <span class="ident">StringSyntax</span>::<span class="ident">R6RS</span> <span class="op">=&gt;</span> <span class="ident">write_r6rs_char_escape</span>(<span class="ident">writer</span>, <span class="ident">char_escape</span>),
-            <span class="ident">StringSyntax</span>::<span class="ident">Elisp</span> <span class="op">=&gt;</span> <span class="ident">write_elisp_char_escape</span>(<span class="ident">writer</span>, <span class="ident">char_escape</span>),
+            <span class="ident">StringSyntax</span>::<span class="ident">R6RS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">write_r6rs_char_escape</span>(<span class="ident">writer</span>, <span class="ident">char_escape</span>),
+            <span class="ident">StringSyntax</span>::<span class="ident">Elisp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">write_elisp_char_escape</span>(<span class="ident">writer</span>, <span class="ident">char_escape</span>),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">write_bytes</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_bytes</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">bytes_syntax</span> {
-            <span class="ident">BytesSyntax</span>::<span class="ident">R6RS</span> <span class="op">|</span> <span class="ident">BytesSyntax</span>::<span class="ident">R7RS</span> <span class="op">=&gt;</span> {
+            <span class="ident">BytesSyntax</span>::<span class="ident">R6RS</span> <span class="op">|</span> <span class="ident">BytesSyntax</span>::<span class="ident">R7RS</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">write_scheme_vector</span>(<span class="self">self</span>, <span class="ident">writer</span>, <span class="ident">VectorType</span>::<span class="ident">Byte</span>, <span class="ident">bytes</span>, <span class="op">|</span><span class="ident">writer</span>, <span class="kw-2">&amp;</span><span class="ident">octet</span><span class="op">|</span> {
                     <span class="ident">itoa</span>::<span class="ident">write</span>(<span class="ident">writer</span>, <span class="ident">octet</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ())
                 })
             }
-            <span class="ident">BytesSyntax</span>::<span class="ident">Elisp</span> <span class="op">=&gt;</span> {
+            <span class="ident">BytesSyntax</span>::<span class="ident">Elisp</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">static</span> <span class="ident">OCTAL_CHARS</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="string">b&quot;012345678&quot;</span>;
                 <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;\&quot;&quot;</span>)<span class="question-mark">?</span>;
                 <span class="kw">for</span> <span class="ident">octet</span> <span class="kw">in</span> <span class="ident">bytes</span> {
                     <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;\\&quot;</span>)<span class="question-mark">?</span>;
                     <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">triplet</span> <span class="kw">in</span> <span class="kw-2">&amp;</span>[
-                        (<span class="ident">octet</span> <span class="op">&gt;&gt;</span> <span class="number">6</span>) <span class="op">&amp;</span> <span class="number">0b111u8</span>,
-                        (<span class="ident">octet</span> <span class="op">&gt;&gt;</span> <span class="number">3</span>) <span class="op">&amp;</span> <span class="number">0b111u8</span>,
+                        (<span class="ident">octet</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">6</span>) <span class="op">&amp;</span> <span class="number">0b111u8</span>,
+                        (<span class="ident">octet</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">3</span>) <span class="op">&amp;</span> <span class="number">0b111u8</span>,
                         <span class="ident">octet</span> <span class="op">&amp;</span> <span class="number">0b111u8</span>,
                     ] {
                         <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">triplet</span> <span class="kw">as</span> <span class="ident">usize</span>;
-                        <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="kw-2">&amp;</span><span class="ident">OCTAL_CHARS</span>[<span class="ident">index</span>..=<span class="ident">index</span>])<span class="question-mark">?</span>;
+                        <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="kw-2">&amp;</span><span class="ident">OCTAL_CHARS</span>[<span class="ident">index</span>..<span class="op">=</span><span class="ident">index</span>])<span class="question-mark">?</span>;
                     }
                 }
                 <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="string">b&quot;\&quot;&quot;</span>)
@@ -1522,7 +1522,7 @@
     <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
 {
     <span class="doccomment">/// Construct an S-expression printer tuned given the specified options.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_options</span>(<span class="ident">writer</span>: <span class="ident">W</span>, <span class="ident">options</span>: <span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_options</span>(<span class="ident">writer</span>: <span class="ident">W</span>, <span class="ident">options</span>: <span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Printer</span> {
             <span class="ident">writer</span>,
             <span class="ident">formatter</span>: <span class="ident">CustomizedFormatter</span> { <span class="ident">options</span> },
@@ -1538,38 +1538,38 @@
     <span class="doccomment">/// Creates a new S-expression printer whose output will be</span>
     <span class="doccomment">/// written to the writer specified.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_formatter</span>(<span class="ident">writer</span>: <span class="ident">W</span>, <span class="ident">formatter</span>: <span class="ident">F</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_formatter</span>(<span class="ident">writer</span>: <span class="ident">W</span>, <span class="ident">formatter</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Printer</span> { <span class="ident">writer</span>, <span class="ident">formatter</span> }
     }
 
     <span class="doccomment">/// Unwrap the `Writer` from the `Printer`.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_inner</span>(<span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">W</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_inner</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">W</span> {
         <span class="self">self</span>.<span class="ident">writer</span>
     }
 
     <span class="doccomment">/// Output the representation of the specified value to the underlying</span>
     <span class="doccomment">/// writer.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">print</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">print</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="ident">value</span> {
-            <span class="ident">Value</span>::<span class="ident">Nil</span> <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_nil</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>),
-            <span class="ident">Value</span>::<span class="ident">Null</span> <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_null</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>),
-            <span class="ident">Value</span>::<span class="ident">Bool</span>(<span class="ident">b</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_bool</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="kw-2">*</span><span class="ident">b</span>),
-            <span class="ident">Value</span>::<span class="ident">Number</span>(<span class="ident">n</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_number</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="kw-2">&amp;</span><span class="ident">n</span>),
-            <span class="ident">Value</span>::<span class="ident">Char</span>(<span class="ident">c</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_char</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="kw-2">*</span><span class="ident">c</span>),
-            <span class="ident">Value</span>::<span class="ident">Symbol</span>(<span class="ident">name</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_symbol</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="kw-2">&amp;</span><span class="ident">name</span>),
-            <span class="ident">Value</span>::<span class="ident">Keyword</span>(<span class="ident">name</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_keyword</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="kw-2">&amp;</span><span class="ident">name</span>),
-            <span class="ident">Value</span>::<span class="ident">String</span>(<span class="ident">s</span>) <span class="op">=&gt;</span> <span class="ident">format_escaped_str</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">formatter</span>, <span class="kw-2">&amp;</span><span class="ident">s</span>),
-            <span class="ident">Value</span>::<span class="ident">Bytes</span>(<span class="ident">bytes</span>) <span class="op">=&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_bytes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="ident">bytes</span>),
-            <span class="ident">Value</span>::<span class="ident">Cons</span>(<span class="ident">elements</span>) <span class="op">=&gt;</span> {
+            <span class="ident">Value</span>::<span class="ident">Nil</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_nil</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>),
+            <span class="ident">Value</span>::<span class="ident">Null</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_null</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>),
+            <span class="ident">Value</span>::<span class="ident">Bool</span>(<span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_bool</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="kw-2">*</span><span class="ident">b</span>),
+            <span class="ident">Value</span>::<span class="ident">Number</span>(<span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_number</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="kw-2">&amp;</span><span class="ident">n</span>),
+            <span class="ident">Value</span>::<span class="ident">Char</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_char</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="kw-2">*</span><span class="ident">c</span>),
+            <span class="ident">Value</span>::<span class="ident">Symbol</span>(<span class="ident">name</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_symbol</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="kw-2">&amp;</span><span class="ident">name</span>),
+            <span class="ident">Value</span>::<span class="ident">Keyword</span>(<span class="ident">name</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_keyword</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="kw-2">&amp;</span><span class="ident">name</span>),
+            <span class="ident">Value</span>::<span class="ident">String</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">format_escaped_str</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">formatter</span>, <span class="kw-2">&amp;</span><span class="ident">s</span>),
+            <span class="ident">Value</span>::<span class="ident">Bytes</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_bytes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="ident">bytes</span>),
+            <span class="ident">Value</span>::<span class="ident">Cons</span>(<span class="ident">elements</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">begin_list</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>)<span class="question-mark">?</span>;
                 <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">pair</span>) <span class="kw">in</span> <span class="ident">elements</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                    <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">begin_seq_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="ident">i</span> <span class="op">==</span> <span class="number">0</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">begin_seq_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>)<span class="question-mark">?</span>;
                     <span class="self">self</span>.<span class="ident">print</span>(<span class="ident">pair</span>.<span class="ident">car</span>())<span class="question-mark">?</span>;
                     <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">end_seq_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>)<span class="question-mark">?</span>;
                     <span class="kw">match</span> <span class="ident">pair</span>.<span class="ident">cdr</span>() {
-                        <span class="ident">Value</span>::<span class="ident">Null</span> <span class="op">|</span> <span class="ident">Value</span>::<span class="ident">Cons</span>(<span class="kw">_</span>) <span class="op">=&gt;</span> {}
-                        <span class="kw">_</span> <span class="op">=&gt;</span> {
+                        <span class="ident">Value</span>::<span class="ident">Null</span> <span class="op">|</span> <span class="ident">Value</span>::<span class="ident">Cons</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {}
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">begin_seq_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
                             <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">write_dot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>)<span class="question-mark">?</span>;
                             <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">end_seq_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>)<span class="question-mark">?</span>;
@@ -1581,7 +1581,7 @@
                 }
                 <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">end_list</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>)
             }
-            <span class="ident">Value</span>::<span class="ident">Vector</span>(<span class="ident">elements</span>) <span class="op">=&gt;</span> {
+            <span class="ident">Value</span>::<span class="ident">Vector</span>(<span class="ident">elements</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">write_vector</span>(<span class="ident">VectorType</span>::<span class="ident">Generic</span>, <span class="ident">elements</span>.<span class="ident">iter</span>(), <span class="op">|</span><span class="ident">printer</span>, <span class="ident">element</span><span class="op">|</span> {
                     <span class="ident">printer</span>.<span class="ident">print</span>(<span class="ident">element</span>)
                 })
@@ -1589,14 +1589,14 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">write_vector</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">O</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">kind</span>: <span class="ident">VectorType</span>, <span class="ident">elements</span>: <span class="ident">I</span>, <span class="kw-2">mut</span> <span class="ident">output</span>: <span class="ident">O</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">write_vector</span><span class="op">&lt;</span><span class="ident">I</span>, <span class="ident">O</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">kind</span>: <span class="ident">VectorType</span>, <span class="ident">elements</span>: <span class="ident">I</span>, <span class="kw-2">mut</span> <span class="ident">output</span>: <span class="ident">O</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">I</span>: <span class="ident">IntoIterator</span>,
-        <span class="ident">O</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>, <span class="ident">I</span>::<span class="ident">Item</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
+        <span class="ident">O</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>, <span class="ident">I</span>::<span class="ident">Item</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
     {
         <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">begin_vector</span>(<span class="ident">kind</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>)<span class="question-mark">?</span>;
         <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">element</span>) <span class="kw">in</span> <span class="ident">elements</span>.<span class="ident">into_iter</span>().<span class="ident">enumerate</span>() {
-            <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">begin_seq_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="ident">i</span> <span class="op">==</span> <span class="number">0</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">begin_seq_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>, <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>)<span class="question-mark">?</span>;
             <span class="ident">output</span>(<span class="self">self</span>, <span class="ident">element</span>)<span class="question-mark">?</span>;
             <span class="self">self</span>.<span class="ident">formatter</span>.<span class="ident">end_seq_element</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>)<span class="question-mark">?</span>;
         }
@@ -1610,16 +1610,16 @@
     <span class="ident">kind</span>: <span class="ident">VectorType</span>,
     <span class="ident">elements</span>: <span class="ident">I</span>,
     <span class="kw-2">mut</span> <span class="ident">output</span>: <span class="ident">O</span>,
-) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">Formatter</span>,
     <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     <span class="ident">I</span>: <span class="ident">IntoIterator</span>,
-    <span class="ident">O</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">I</span>::<span class="ident">Item</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
+    <span class="ident">O</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">I</span>::<span class="ident">Item</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
 {
     <span class="ident">fmt</span>.<span class="ident">begin_vector</span>(<span class="ident">kind</span>, <span class="ident">writer</span>)<span class="question-mark">?</span>;
     <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">element</span>) <span class="kw">in</span> <span class="ident">elements</span>.<span class="ident">into_iter</span>().<span class="ident">enumerate</span>() {
-        <span class="ident">fmt</span>.<span class="ident">begin_seq_element</span>(<span class="ident">writer</span>, <span class="ident">i</span> <span class="op">==</span> <span class="number">0</span>)<span class="question-mark">?</span>;
+        <span class="ident">fmt</span>.<span class="ident">begin_seq_element</span>(<span class="ident">writer</span>, <span class="ident">i</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>)<span class="question-mark">?</span>;
         <span class="ident">output</span>(<span class="ident">writer</span>, <span class="ident">element</span>)<span class="question-mark">?</span>;
         <span class="ident">fmt</span>.<span class="ident">end_seq_element</span>(<span class="ident">writer</span>)<span class="question-mark">?</span>;
     }
@@ -1632,7 +1632,7 @@
 {
     <span class="doccomment">/// Creates a new S-expression printer.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">writer</span>: <span class="ident">W</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">writer</span>: <span class="ident">W</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Printer</span>::<span class="ident">with_formatter</span>(<span class="ident">writer</span>, <span class="ident">DefaultFormatter</span>)
     }
 }
@@ -1642,12 +1642,12 @@
     <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
 {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">buf</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">buf</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">write</span>(<span class="ident">buf</span>)
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">flush</span>()
     }
 }
@@ -1656,7 +1656,7 @@
     <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>,
     <span class="ident">formatter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">F</span>,
     <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     <span class="ident">F</span>: <span class="ident">Formatter</span>,
@@ -1671,7 +1671,7 @@
     <span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>,
     <span class="ident">formatter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">F</span>,
     <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
     <span class="ident">F</span>: <span class="ident">Formatter</span>,
@@ -1682,7 +1682,7 @@
 
     <span class="kw">for</span> (<span class="ident">i</span>, <span class="kw-2">&amp;</span><span class="ident">byte</span>) <span class="kw">in</span> <span class="ident">bytes</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
         <span class="kw">let</span> <span class="ident">escape</span> <span class="op">=</span> <span class="ident">ESCAPE</span>[<span class="ident">byte</span> <span class="kw">as</span> <span class="ident">usize</span>];
-        <span class="kw">if</span> <span class="ident">escape</span> <span class="op">==</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">escape</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
             <span class="kw">continue</span>;
         }
 
@@ -1696,33 +1696,33 @@
         <span class="ident">start</span> <span class="op">=</span> <span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">start</span> <span class="op">!=</span> <span class="ident">bytes</span>.<span class="ident">len</span>() {
+    <span class="kw">if</span> <span class="ident">start</span> <span class="op">!</span><span class="op">=</span> <span class="ident">bytes</span>.<span class="ident">len</span>() {
         <span class="ident">formatter</span>.<span class="ident">write_string_fragment</span>(<span class="ident">writer</span>, <span class="kw-2">&amp;</span><span class="ident">value</span>[<span class="ident">start</span>..])<span class="question-mark">?</span>;
     }
 
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">fn</span> <span class="ident">write_r6rs_char_escape</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">char_escape</span>: <span class="ident">CharEscape</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">fn</span> <span class="ident">write_r6rs_char_escape</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">char_escape</span>: <span class="ident">CharEscape</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
 {
     <span class="kw">use</span> <span class="self">self</span>::<span class="ident">CharEscape</span>::<span class="kw-2">*</span>;
 
     <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">char_escape</span> {
-        <span class="ident">Quote</span> <span class="op">=&gt;</span> <span class="string">b&quot;\\\&quot;&quot;</span>,
-        <span class="ident">ReverseSolidus</span> <span class="op">=&gt;</span> <span class="string">b&quot;\\\\&quot;</span>,
-        <span class="ident">Alert</span> <span class="op">=&gt;</span> <span class="string">b&quot;\\a&quot;</span>,
-        <span class="ident">Backspace</span> <span class="op">=&gt;</span> <span class="string">b&quot;\\b&quot;</span>,
-        <span class="ident">LineFeed</span> <span class="op">=&gt;</span> <span class="string">b&quot;\\n&quot;</span>,
-        <span class="ident">CarriageReturn</span> <span class="op">=&gt;</span> <span class="string">b&quot;\\r&quot;</span>,
-        <span class="ident">Tab</span> <span class="op">=&gt;</span> <span class="string">b&quot;\\t&quot;</span>,
-        <span class="ident">AsciiControl</span>(<span class="ident">byte</span>) <span class="op">=&gt;</span> {
+        <span class="ident">Quote</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">b&quot;\\\&quot;&quot;</span>,
+        <span class="ident">ReverseSolidus</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">b&quot;\\\\&quot;</span>,
+        <span class="ident">Alert</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">b&quot;\\a&quot;</span>,
+        <span class="ident">Backspace</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">b&quot;\\b&quot;</span>,
+        <span class="ident">LineFeed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">b&quot;\\n&quot;</span>,
+        <span class="ident">CarriageReturn</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">b&quot;\\r&quot;</span>,
+        <span class="ident">Tab</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">b&quot;\\t&quot;</span>,
+        <span class="ident">AsciiControl</span>(<span class="ident">byte</span>) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">static</span> <span class="ident">HEX_DIGITS</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="string">b&quot;0123456789ABCDEF&quot;</span>;
             <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[
                 <span class="string">b&#39;\\&#39;</span>,
                 <span class="string">b&#39;x&#39;</span>,
-                <span class="ident">HEX_DIGITS</span>[(<span class="ident">byte</span> <span class="op">&gt;&gt;</span> <span class="number">4</span>) <span class="kw">as</span> <span class="ident">usize</span>],
+                <span class="ident">HEX_DIGITS</span>[(<span class="ident">byte</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">4</span>) <span class="kw">as</span> <span class="ident">usize</span>],
                 <span class="ident">HEX_DIGITS</span>[(<span class="ident">byte</span> <span class="op">&amp;</span> <span class="number">0xF</span>) <span class="kw">as</span> <span class="ident">usize</span>],
                 <span class="string">b&#39;;&#39;</span>,
             ];
@@ -1733,21 +1733,21 @@
     <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="ident">s</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">write_elisp_char_escape</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">char_escape</span>: <span class="ident">CharEscape</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">fn</span> <span class="ident">write_elisp_char_escape</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">char_escape</span>: <span class="ident">CharEscape</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
 {
     <span class="kw">use</span> <span class="self">self</span>::<span class="ident">CharEscape</span>::<span class="kw-2">*</span>;
 
     <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">char_escape</span> {
-        <span class="ident">Quote</span> <span class="op">=&gt;</span> <span class="string">b&quot;\\\&quot;&quot;</span>,
-        <span class="ident">ReverseSolidus</span> <span class="op">=&gt;</span> <span class="string">b&quot;\\\\&quot;</span>,
-        <span class="ident">Alert</span> <span class="op">=&gt;</span> <span class="string">b&quot;\\a&quot;</span>,
-        <span class="ident">Backspace</span> <span class="op">=&gt;</span> <span class="string">b&quot;\\b&quot;</span>,
-        <span class="ident">LineFeed</span> <span class="op">=&gt;</span> <span class="string">b&quot;\\n&quot;</span>,
-        <span class="ident">CarriageReturn</span> <span class="op">=&gt;</span> <span class="string">b&quot;\\r&quot;</span>,
-        <span class="ident">Tab</span> <span class="op">=&gt;</span> <span class="string">b&quot;\\t&quot;</span>,
-        <span class="ident">AsciiControl</span>(<span class="ident">byte</span>) <span class="op">=&gt;</span> {
+        <span class="ident">Quote</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">b&quot;\\\&quot;&quot;</span>,
+        <span class="ident">ReverseSolidus</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">b&quot;\\\\&quot;</span>,
+        <span class="ident">Alert</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">b&quot;\\a&quot;</span>,
+        <span class="ident">Backspace</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">b&quot;\\b&quot;</span>,
+        <span class="ident">LineFeed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">b&quot;\\n&quot;</span>,
+        <span class="ident">CarriageReturn</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">b&quot;\\r&quot;</span>,
+        <span class="ident">Tab</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">b&quot;\\t&quot;</span>,
+        <span class="ident">AsciiControl</span>(<span class="ident">byte</span>) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="comment">// Note we use the `\uNNNN` syntax here, as a hexadecimal or octal</span>
             <span class="comment">// escape might turn the string into a unibyte string.</span>
             <span class="kw">static</span> <span class="ident">HEX_DIGITS</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="string">b&quot;0123456789ABCDEF&quot;</span>;
@@ -1756,7 +1756,7 @@
                 <span class="string">b&#39;u&#39;</span>,
                 <span class="string">b&#39;0&#39;</span>,
                 <span class="string">b&#39;0&#39;</span>,
-                <span class="ident">HEX_DIGITS</span>[(<span class="ident">byte</span> <span class="op">&gt;&gt;</span> <span class="number">4</span>) <span class="kw">as</span> <span class="ident">usize</span>],
+                <span class="ident">HEX_DIGITS</span>[(<span class="ident">byte</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">4</span>) <span class="kw">as</span> <span class="ident">usize</span>],
                 <span class="ident">HEX_DIGITS</span>[(<span class="ident">byte</span> <span class="op">&amp;</span> <span class="number">0xF</span>) <span class="kw">as</span> <span class="ident">usize</span>],
             ];
             <span class="kw">return</span> <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="ident">bytes</span>);
@@ -1766,12 +1766,12 @@
     <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="ident">s</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">write_scheme_char</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">c</span>: <span class="ident">char</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">fn</span> <span class="ident">write_scheme_char</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">c</span>: <span class="ident">char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
 {
     <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">u32</span>::<span class="ident">from</span>(<span class="ident">c</span>);
-    <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;=</span> <span class="number">32</span> <span class="op">&amp;&amp;</span> <span class="ident">n</span> <span class="op">&lt;</span> <span class="number">127</span> {
+    <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">32</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">n</span> <span class="op">&lt;</span> <span class="number">127</span> {
         <span class="comment">// ASCII, excluding non-printable characters</span>
         <span class="kw">let</span> <span class="ident">buf</span> <span class="op">=</span> [<span class="string">b&#39;#&#39;</span>, <span class="string">b&#39;\\&#39;</span>, <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u8</span>];
         <span class="ident">writer</span>.<span class="ident">write_all</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>)
@@ -1782,12 +1782,12 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">write_elisp_char</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">c</span>: <span class="ident">char</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+<span class="kw">fn</span> <span class="ident">write_elisp_char</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">writer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">W</span>, <span class="ident">c</span>: <span class="ident">char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span>,
 {
     <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">u32</span>::<span class="ident">from</span>(<span class="ident">c</span>);
-    <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;=</span> <span class="number">32</span> <span class="op">&amp;&amp;</span> <span class="ident">n</span> <span class="op">&lt;</span> <span class="number">127</span> {
+    <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">32</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">n</span> <span class="op">&lt;</span> <span class="number">127</span> {
         <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">n</span> <span class="kw">as</span> <span class="ident">u8</span>;
         <span class="comment">// ASCII, excluding non-printable characters</span>
         <span class="kw">if</span> <span class="ident">ELISP_ESCAPE_CHARS</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">c</span>) {
@@ -1839,7 +1839,7 @@
 <span class="doccomment">/// Serialize the given value value as S-expression text into the IO stream,</span>
 <span class="doccomment">/// using the default printer options.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_writer</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span><span class="op">&gt;</span>(<span class="ident">writer</span>: <span class="ident">W</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_writer</span><span class="op">&lt;</span><span class="ident">W</span>: <span class="ident">io</span>::<span class="ident">Write</span><span class="op">&gt;</span>(<span class="ident">writer</span>: <span class="ident">W</span>, <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">printer</span> <span class="op">=</span> <span class="ident">Printer</span>::<span class="ident">new</span>(<span class="ident">writer</span>);
     <span class="ident">printer</span>.<span class="ident">print</span>(<span class="ident">value</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
@@ -1851,7 +1851,7 @@
     <span class="ident">writer</span>: <span class="ident">W</span>,
     <span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Value</span>,
     <span class="ident">options</span>: <span class="ident">Options</span>,
-) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">printer</span> <span class="op">=</span> <span class="ident">Printer</span>::<span class="ident">with_options</span>(<span class="ident">writer</span>, <span class="ident">options</span>);
     <span class="ident">printer</span>.<span class="ident">print</span>(<span class="ident">value</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(())
@@ -1860,7 +1860,7 @@
 <span class="doccomment">/// Serialize the given value as byte vector containing S-expression text, using</span>
 <span class="doccomment">/// the default printer options.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_vec</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_vec</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">writer</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="number">128</span>);
     <span class="ident">to_writer</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">writer</span>, <span class="ident">value</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="ident">writer</span>)
@@ -1868,7 +1868,7 @@
 
 <span class="doccomment">/// Serialize the given value as byte vector containing S-expression text.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_vec_custom</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Value</span>, <span class="ident">options</span>: <span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_vec_custom</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Value</span>, <span class="ident">options</span>: <span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">writer</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="number">128</span>);
     <span class="ident">to_writer_custom</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">writer</span>, <span class="ident">value</span>, <span class="ident">options</span>)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="ident">writer</span>)
@@ -1877,7 +1877,7 @@
 <span class="doccomment">/// Serialize the given value an S-expression string,</span>
 <span class="doccomment">/// using the default printer options.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_string</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Value</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_string</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Value</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">to_vec</span>(<span class="ident">value</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="kw">unsafe</span> {
         <span class="comment">// We do not emit invalid UTF-8.</span>
@@ -1888,7 +1888,7 @@
 
 <span class="doccomment">/// Serialize the given value an S-expression string.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_string_custom</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Value</span>, <span class="ident">options</span>: <span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_string_custom</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">Value</span>, <span class="ident">options</span>: <span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">to_vec_custom</span>(<span class="ident">value</span>, <span class="ident">options</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="kw">unsafe</span> {
         <span class="comment">// We do not emit invalid UTF-8.</span>

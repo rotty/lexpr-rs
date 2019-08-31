@@ -122,7 +122,7 @@
 <span class="doccomment">/// let v: Vec&lt;u32&gt; = from_str(&quot;(1 2 3)&quot;).unwrap();</span>
 <span class="doccomment">/// assert_eq!(v, vec![1, 2, 3]);</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_str</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_str</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">DeserializeOwned</span>,
 {
@@ -137,7 +137,7 @@
 <span class="doccomment">/// let v: Vec&lt;u32&gt; = from_str_custom(&quot;[1 2 3]&quot;, parse::Options::elisp()).unwrap();</span>
 <span class="doccomment">/// assert_eq!(v, vec![1, 2, 3]);</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_str_custom</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">options</span>: <span class="ident">parse</span>::<span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_str_custom</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">options</span>: <span class="ident">parse</span>::<span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">DeserializeOwned</span>,
 {
@@ -153,7 +153,7 @@
 <span class="doccomment">/// let v: Vec&lt;u32&gt; = from_slice(b&quot;(1 2 3)&quot;).unwrap();</span>
 <span class="doccomment">/// assert_eq!(v, vec![1, 2, 3]);</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_slice</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_slice</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">DeserializeOwned</span>,
 {
@@ -169,7 +169,7 @@
 <span class="doccomment">/// let v: Vec&lt;u32&gt; = from_slice_custom(b&quot;[1 2 3]&quot;, parse::Options::elisp()).unwrap();</span>
 <span class="doccomment">/// assert_eq!(v, vec![1, 2, 3]);</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_slice_custom</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">options</span>: <span class="ident">parse</span>::<span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_slice_custom</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">options</span>: <span class="ident">parse</span>::<span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">DeserializeOwned</span>,
 {
@@ -186,7 +186,7 @@
 <span class="doccomment">/// let v: Vec&lt;u32&gt; = from_reader(cursor).unwrap();</span>
 <span class="doccomment">/// assert_eq!(v, vec![1, 2, 3]);</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_reader</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">rdr</span>: <span class="kw">impl</span> <span class="ident">io</span>::<span class="ident">Read</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_reader</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">rdr</span>: <span class="kw">impl</span> <span class="ident">io</span>::<span class="ident">Read</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">DeserializeOwned</span>,
 {
@@ -203,7 +203,7 @@
 <span class="doccomment">/// let v: Vec&lt;u32&gt; = from_reader_custom(cursor, parse::Options::elisp()).unwrap();</span>
 <span class="doccomment">/// assert_eq!(v, vec![1, 2, 3]);</span>
 <span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_reader_custom</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">rdr</span>: <span class="kw">impl</span> <span class="ident">io</span>::<span class="ident">Read</span>, <span class="ident">options</span>: <span class="ident">parse</span>::<span class="ident">Options</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_reader_custom</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">rdr</span>: <span class="kw">impl</span> <span class="ident">io</span>::<span class="ident">Read</span>, <span class="ident">options</span>: <span class="ident">parse</span>::<span class="ident">Options</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">DeserializeOwned</span>,
 {
