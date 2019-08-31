@@ -22,10 +22,10 @@ proc-macro-hack = "0.5.4"
 lexpr-macros = { version = "0.2.0", path = "../lexpr-macros" }
 
 [dev-dependencies]
-criterion = "0.2"
-quickcheck = "0.8.2"
+criterion = "0.3.0"
+quickcheck = "0.9.0"
 quickcheck_macros = "0.8.0"
-rand = "0.6.5"
+rand = "0.7.0"
 
 [[bench]]
 name = "bench"
