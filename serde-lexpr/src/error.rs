@@ -124,7 +124,7 @@ impl error::Error for Error {
 }
 
 impl Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &*self.0 {
             ErrorImpl::Message(msg, _) => Display::fmt(msg, f),
             ErrorImpl::Io(e) => Display::fmt(e, f),
@@ -134,7 +134,7 @@ impl Display for Error {
 }
 
 impl Debug for Error {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &*self.0 {
             ErrorImpl::Message(msg, loc) => formatter
                 .debug_tuple("Message")
@@ -152,7 +152,7 @@ impl de::Error for Error {
         Error(Box::new(ErrorImpl::Message(msg.to_string(), None)))
     }
 
-    fn invalid_type(unexp: de::Unexpected, exp: &dyn de::Expected) -> Self {
+    fn invalid_type(unexp: de::Unexpected<'_>, exp: &dyn de::Expected) -> Self {
         if let de::Unexpected::Unit = unexp {
             Error::custom(format_args!("invalid type: null, expected {}", exp))
         } else {

@@ -1,4 +1,5 @@
 #![deny(missing_docs)]
+#![warn(rust_2018_idioms)]
 
 //! This crate provides [Serde]-based serialization and deserialization from
 //! statically-typed Rust data structures to S-expressions, both using the

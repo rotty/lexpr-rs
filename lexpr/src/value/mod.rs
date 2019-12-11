@@ -977,7 +977,7 @@ impl Value {
     }
 }
 
-struct WriterFormatter<'a, 'b: 'a> {
+struct WriterFormatter<'a, 'b> {
     inner: &'a mut fmt::Formatter<'b>,
 }
 
@@ -1013,7 +1013,7 @@ impl fmt::Display for Value {
     /// assert_eq!(compact,
     ///     r#"((city "London") (street "10 Downing Street"))"#);
     /// ```
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut wr = WriterFormatter { inner: f };
         crate::print::to_writer(&mut wr, self).map_err(|_| fmt::Error)
     }

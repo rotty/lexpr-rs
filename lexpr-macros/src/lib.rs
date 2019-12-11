@@ -1,6 +1,7 @@
 //! Internal crate implementing macros exposed by the `lexpr` crate.
 
 #![recursion_limit = "128"]
+#![warn(rust_2018_idioms)]
 
 extern crate proc_macro;
 

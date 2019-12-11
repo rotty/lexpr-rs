@@ -245,7 +245,7 @@ pub(crate) enum ErrorCode {
 }
 
 impl Display for ErrorCode {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             ErrorCode::Io(ref err) => Display::fmt(err, f),
             ErrorCode::EofWhileParsingList => f.write_str("EOF while parsing a list"),
@@ -282,13 +282,13 @@ impl error::Error for Error {
 }
 
 impl Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         Display::fmt(&*self.err, f)
     }
 }
 
 impl Display for ErrorImpl {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(loc) = self.location {
             write!(
                 f,
@@ -304,7 +304,7 @@ impl Display for ErrorImpl {
 // Remove two layers of verbosity from the debug representation. Humans often
 // end up seeing this representation because it is what unwrap() shows.
 impl Debug for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(loc) = self.err.location {
             write!(
                 f,
