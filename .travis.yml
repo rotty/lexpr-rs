@@ -35,14 +35,22 @@ jobs:
       script:
         - cargo clippy --all-features --all-targets -- -D warnings
     - stage: coverage
+      rust: stable
       sudo: required
       dist: xenial
-      cache: false
-      services:
-        - docker
+      addons:
+        apt:
+          packages:
+            - libssl-dev
+      before_cache: |
+        if !command -v cargo-tarpaulin > /dev/null 2>&1; then
+          cargo install cargo-tarpaulin -f
+        fi
       script:
-        - docker run --security-opt seccomp=unconfined -v "$PWD:/volume" xd009642/tarpaulin:develop-nightly sh -c "cargo tarpaulin --all --out Xml  --run-types Tests Doctests"
-        - bash <(curl -s https://codecov.io/bash)
+        - cargo tarpaulin --version || true
+      after_success: |
+        cargo tarpaulin --all --out Xml  --run-types Tests Doctests
+        bash <(curl -s https://codecov.io/bash)
     - stage: publish
       env:  GHP_UPLOAD_VERSION=0.3.2
       rust: nightly
