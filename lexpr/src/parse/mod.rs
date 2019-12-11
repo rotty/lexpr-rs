@@ -1057,13 +1057,13 @@ impl<'de, R: Read<'de>> Iterator for Parser<R> {
 /// as a [`File`], you will want to apply your own buffering, e.g. using
 /// [`std::io::BufReader`].
 ///
-/// ```
+/// ```no_run
 /// use std::error::Error;
 /// use std::fs::File;
 /// use std::io::BufReader;
 /// use std::path::Path;
 ///
-/// fn read_value_from_file<P: AsRef<Path>>(path: P) -> Result<lexpr::Value, Box<Error>> {
+/// fn read_value_from_file<P: AsRef<Path>>(path: P) -> Result<lexpr::Value, Box<dyn Error>> {
 ///     // Open the file in read-only mode with buffer.
 ///     let file = File::open(path)?;
 ///     let reader = BufReader::new(file);
@@ -1075,12 +1075,8 @@ impl<'de, R: Read<'de>> Iterator for Parser<R> {
 ///     Ok(value)
 /// }
 ///
-/// fn main() {
-/// # }
-/// # fn fake_main() {
-///     let value = read_value_from_file("test.el").unwrap();
-///     println!("{:?}", value);
-/// }
+/// let value = read_value_from_file("test.el").unwrap();
+/// println!("{:?}", value);
 /// ```
 ///
 /// [`File`]: https://doc.rust-lang.org/std/fs/struct.File.html
