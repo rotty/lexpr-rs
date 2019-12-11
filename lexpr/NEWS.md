@@ -1,3 +1,15 @@
+# 0.2.4
+
+This is dependency-update release:
+
+- The procedural `sexp` macro is now implemented on top of
+  `proc-macro2` 1.0 and `quote` 1.0.
+- `lexpr` now uses newer versions of `criterion`, `quickcheck` and
+  `rand` in its `dev-dependencies`.
+
+In addition, some minor code cleanups have been done, including slight
+simplification of some doctest examples.
+
 # 0.2.3
 
 New features:
