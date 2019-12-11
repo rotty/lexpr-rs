@@ -8,19 +8,17 @@
 //! ```
 //! use lexpr::sexp;
 //!
-//! fn main() {
-//!     // The type of `john` is `lexpr::Value`
-//!     let john = sexp!((
-//!         (name . "John Doe")
-//!         (age . 43)
-//!         (phones "+44 1234567" "+44 2345678")
-//!     ));
+//! // The type of `john` is `lexpr::Value`
+//! let john = sexp!((
+//!     (name . "John Doe")
+//!     (age . 43)
+//!     (phones "+44 1234567" "+44 2345678")
+//! ));
 //!
-//!     println!("first phone number: {}", john["phones"][0]);
+//! println!("first phone number: {}", john["phones"][0]);
 //!
-//!     // Convert to a string of S-expression data and print it out
-//!     println!("{}", john.to_string());
-//! }
+//! // Convert to a string of S-expression data and print it out
+//! println!("{}", john.to_string());
 //! ```
 //!
 //! The `Value::to_string()` function converts a `lexpr::Value` into a
@@ -63,28 +61,23 @@
 //! ```
 //! use lexpr::{sexp, parse::Error, Value};
 //!
-//! fn example() -> Result<(), Error> {
-//!     // Some S-expression input data as a &str. Maybe this comes from the user.
-//!     let data = r#"(
-//!             (name . "John Doe")
-//!             (age . 43)
-//!             (phones . (
-//!                 "+44 1234567"
-//!                 "+44 2345678"
-//!             ))
-//!         )"#;
+//! # fn main() -> Result<(), Error> {
+//! // Some S-expression input data as a &str. Maybe this comes from the user.
+//! let data = r#"(
+//!         (name . "John Doe")
+//!         (age . 43)
+//!         (phones . (
+//!             "+44 1234567"
+//!             "+44 2345678"
+//!         ))
+//!     )"#;
 //!
-//!     // Parse the string of data into lexpr::Value.
-//!     let v: Value = lexpr::from_str(data)?;
+//! // Parse the string of data into lexpr::Value.
+//! let v: Value = lexpr::from_str(data)?;
 //!
-//!     // Access parts of the data by indexing with square brackets.
-//!     println!("Please call {} at the number {}", v["name"], v["phones"][0]);
-//!
-//!     Ok(())
-//! }
-//! #
-//! # fn main() {
-//! #     example().unwrap();
+//! // Access parts of the data by indexing with square brackets.
+//! println!("Please call {} at the number {}", v["name"], v["phones"][0]);
+//! # Ok(())
 //! # }
 //! ```
 //!

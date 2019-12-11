@@ -66,24 +66,20 @@
 //! ```
 //!  use lexpr::{Value, parse::Error};
 //!
-//!  fn example() -> Result<(), Error> {
-//!      // Some s-expressions a &str.
-//!      let data = r#"((name . "John Doe")
-//!                     (age . 43)
-//!                     (phones "+44 1234567" "+44 2345678"))"#;
+//! # fn main() -> Result<(), Error> {
+//! // Some s-expressions a &str.
+//! let data = r#"((name . "John Doe")
+//!                (age . 43)
+//!                (phones "+44 1234567" "+44 2345678"))"#;
 //!
-//!      // Parse the string of data into lexpr::Value.
-//!      let v = lexpr::from_str(data)?;
+//! // Parse the string of data into lexpr::Value.
+//! let v = lexpr::from_str(data)?;
 //!
-//!      // Access parts of the data by indexing with square brackets.
-//!      println!("Please call {} at the number {}", v["name"], v["phones"][1]);
+//! // Access parts of the data by indexing with square brackets.
+//! println!("Please call {} at the number {}", v["name"], v["phones"][1]);
 //!
-//!      Ok(())
-//!  }
-//!  #
-//!  # fn main() {
-//!  #     example().unwrap();
-//!  # }
+//! Ok(())
+//! # }
 //! ```
 //!
 //! # What are S-expressions?
