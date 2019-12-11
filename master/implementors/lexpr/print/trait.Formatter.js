@@ -6,5 +6,4 @@ implementors["lexpr"] = [];
             } else {
                 window.pending_implementors = implementors;
             }
-        
-})()
+        })()

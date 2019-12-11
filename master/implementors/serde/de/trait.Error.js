@@ -7,5 +7,4 @@ implementors["serde_lexpr"] = [{text:"impl <a class=\"trait\" href=\"serde/de/tr
             } else {
                 window.pending_implementors = implementors;
             }
-        
-})()
+        })()

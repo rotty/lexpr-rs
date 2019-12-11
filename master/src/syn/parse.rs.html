@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/travis/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.5/src/parse.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>parse.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../syn/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/travis/.cargo/registry/src/github.com-1ecc6299db9ec823/syn-1.0.11/src/parse.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>parse.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css"><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../syn/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1191,6 +1191,34 @@
 <span id="1191">1191</span>
 <span id="1192">1192</span>
 <span id="1193">1193</span>
+<span id="1194">1194</span>
+<span id="1195">1195</span>
+<span id="1196">1196</span>
+<span id="1197">1197</span>
+<span id="1198">1198</span>
+<span id="1199">1199</span>
+<span id="1200">1200</span>
+<span id="1201">1201</span>
+<span id="1202">1202</span>
+<span id="1203">1203</span>
+<span id="1204">1204</span>
+<span id="1205">1205</span>
+<span id="1206">1206</span>
+<span id="1207">1207</span>
+<span id="1208">1208</span>
+<span id="1209">1209</span>
+<span id="1210">1210</span>
+<span id="1211">1211</span>
+<span id="1212">1212</span>
+<span id="1213">1213</span>
+<span id="1214">1214</span>
+<span id="1215">1215</span>
+<span id="1216">1216</span>
+<span id="1217">1217</span>
+<span id="1218">1218</span>
+<span id="1219">1219</span>
+<span id="1220">1220</span>
+<span id="1221">1221</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Parsing interface for parsing a token stream into a syntax tree node.</span>
 <span class="doccomment">//!</span>
@@ -1303,9 +1331,7 @@
 <span class="doccomment">//! #     Ok(())</span>
 <span class="doccomment">//! # }</span>
 <span class="doccomment">//! #</span>
-<span class="doccomment">//! # fn main() {</span>
-<span class="doccomment">//! #     run_parser().unwrap();</span>
-<span class="doccomment">//! # }</span>
+<span class="doccomment">//! # run_parser().unwrap();</span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! The [`parse_quote!`] macro also uses this approach.</span>
@@ -1457,13 +1483,16 @@
     <span class="comment">// the cell.</span>
     <span class="ident">cell</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">marker</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">unexpected</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Span</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">unexpected</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">Unexpected</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">ParseBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">is_empty</span>() <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="self">self</span>.<span class="ident">unexpected</span>.<span class="ident">get</span>().<span class="ident">is_none</span>() {
-            <span class="self">self</span>.<span class="ident">unexpected</span>.<span class="ident">set</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">cursor</span>().<span class="ident">span</span>()));
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">is_empty</span>() {
+            <span class="kw">let</span> (<span class="ident">inner</span>, <span class="ident">old_span</span>) <span class="op">=</span> <span class="ident">inner_unexpected</span>(<span class="self">self</span>);
+            <span class="kw">if</span> <span class="ident">old_span</span>.<span class="ident">is_none</span>() {
+                <span class="ident">inner</span>.<span class="ident">set</span>(<span class="ident">Unexpected</span>::<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">cursor</span>().<span class="ident">span</span>()));
+            }
         }
     }
 }
@@ -1518,13 +1547,11 @@
 <span class="doccomment">/// #     input.parse()</span>
 <span class="doccomment">/// # }</span>
 <span class="doccomment">/// #</span>
-<span class="doccomment">/// # fn main() {</span>
-<span class="doccomment">/// #     use syn::parse::Parser;</span>
-<span class="doccomment">/// #     let remainder = remainder_after_skipping_past_next_at</span>
-<span class="doccomment">/// #         .parse_str(&quot;a @ b c&quot;)</span>
-<span class="doccomment">/// #         .unwrap();</span>
-<span class="doccomment">/// #     assert_eq!(remainder.to_string(), &quot;b c&quot;);</span>
-<span class="doccomment">/// # }</span>
+<span class="doccomment">/// # use syn::parse::Parser;</span>
+<span class="doccomment">/// # let remainder = remainder_after_skipping_past_next_at</span>
+<span class="doccomment">/// #     .parse_str(&quot;a @ b c&quot;)</span>
+<span class="doccomment">/// #     .unwrap();</span>
+<span class="doccomment">/// # assert_eq!(remainder.to_string(), &quot;b c&quot;);</span>
 <span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StepCursor</span><span class="op">&lt;</span><span class="lifetime">&#39;c</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -1586,19 +1613,52 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new_parse_buffer</span>(
     <span class="ident">scope</span>: <span class="ident">Span</span>,
     <span class="ident">cursor</span>: <span class="ident">Cursor</span>,
-    <span class="ident">unexpected</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Span</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">unexpected</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">Unexpected</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ParseBuffer</span> {
     <span class="ident">ParseBuffer</span> {
         <span class="ident">scope</span>,
         <span class="comment">// See comment on `cell` in the struct definition.</span>
         <span class="ident">cell</span>: <span class="ident">Cell</span>::<span class="ident">new</span>(<span class="kw">unsafe</span> { <span class="ident">mem</span>::<span class="ident">transmute</span>::<span class="op">&lt;</span><span class="ident">Cursor</span>, <span class="ident">Cursor</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">cursor</span>) }),
         <span class="ident">marker</span>: <span class="ident">PhantomData</span>,
-        <span class="ident">unexpected</span>,
+        <span class="ident">unexpected</span>: <span class="ident">Cell</span>::<span class="ident">new</span>(<span class="prelude-val">Some</span>(<span class="ident">unexpected</span>)),
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">get_unexpected</span>(<span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident">ParseBuffer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Span</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="ident">buffer</span>.<span class="ident">unexpected</span>.<span class="ident">clone</span>()
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum</span> <span class="ident">Unexpected</span> {
+    <span class="prelude-val">None</span>,
+    <span class="prelude-val">Some</span>(<span class="ident">Span</span>),
+    <span class="ident">Chain</span>(<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">Unexpected</span><span class="op">&gt;</span><span class="op">&gt;</span>),
+}
+
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Unexpected</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">Unexpected</span>::<span class="prelude-val">None</span>
+    }
+}
+
+<span class="comment">// We call this on Cell&lt;Unexpected&gt; and Cell&lt;Option&lt;T&gt;&gt; where temporarily</span>
+<span class="comment">// swapping in a None is cheap.</span>
+<span class="kw">fn</span> <span class="ident">cell_clone</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Default</span> <span class="op">+</span> <span class="ident">Clone</span><span class="op">&gt;</span>(<span class="ident">cell</span>: <span class="kw-2">&amp;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span> {
+    <span class="kw">let</span> <span class="ident">prev</span> <span class="op">=</span> <span class="ident">cell</span>.<span class="ident">take</span>();
+    <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">prev</span>.<span class="ident">clone</span>();
+    <span class="ident">cell</span>.<span class="ident">set</span>(<span class="ident">prev</span>);
+    <span class="ident">ret</span>
+}
+
+<span class="kw">fn</span> <span class="ident">inner_unexpected</span>(<span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident">ParseBuffer</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">Unexpected</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Span</span><span class="op">&gt;</span>) {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">unexpected</span> <span class="op">=</span> <span class="ident">get_unexpected</span>(<span class="ident">buffer</span>);
+    <span class="kw">loop</span> {
+        <span class="kw">match</span> <span class="ident">cell_clone</span>(<span class="kw-2">&amp;</span><span class="ident">unexpected</span>) {
+            <span class="ident">Unexpected</span>::<span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> (<span class="ident">unexpected</span>, <span class="prelude-val">None</span>),
+            <span class="ident">Unexpected</span>::<span class="prelude-val">Some</span>(<span class="ident">span</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> (<span class="ident">unexpected</span>, <span class="prelude-val">Some</span>(<span class="ident">span</span>)),
+            <span class="ident">Unexpected</span>::<span class="ident">Chain</span>(<span class="ident">next</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unexpected</span> <span class="op">=</span> <span class="ident">next</span>,
+        }
+    }
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">get_unexpected</span>(<span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident">ParseBuffer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">Unexpected</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="ident">cell_clone</span>(<span class="kw-2">&amp;</span><span class="ident">buffer</span>.<span class="ident">unexpected</span>).<span class="ident">unwrap</span>()
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">ParseBuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -1809,12 +1869,10 @@
     <span class="doccomment">///     }</span>
     <span class="doccomment">/// }</span>
     <span class="doccomment">/// #</span>
-    <span class="doccomment">/// # fn main() {</span>
-    <span class="doccomment">/// #     let input = quote! {</span>
-    <span class="doccomment">/// #         struct S(A, B);</span>
-    <span class="doccomment">/// #     };</span>
-    <span class="doccomment">/// #     syn::parse2::&lt;TupleStruct&gt;(input).unwrap();</span>
-    <span class="doccomment">/// # }</span>
+    <span class="doccomment">/// # let input = quote! {</span>
+    <span class="doccomment">/// #     struct S(A, B);</span>
+    <span class="doccomment">/// # };</span>
+    <span class="doccomment">/// # syn::parse2::&lt;TupleStruct&gt;(input).unwrap();</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_terminated</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">P</span>: <span class="ident">Parse</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -2041,8 +2099,8 @@
             <span class="ident">cell</span>: <span class="self">self</span>.<span class="ident">cell</span>.<span class="ident">clone</span>(),
             <span class="ident">marker</span>: <span class="ident">PhantomData</span>,
             <span class="comment">// Not the parent&#39;s unexpected. Nothing cares whether the clone</span>
-            <span class="comment">// parses all the way.</span>
-            <span class="ident">unexpected</span>: <span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">Cell</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>)),
+            <span class="comment">// parses all the way unless we `advance_to`.</span>
+            <span class="ident">unexpected</span>: <span class="ident">Cell</span>::<span class="ident">new</span>(<span class="prelude-val">Some</span>(<span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">Cell</span>::<span class="ident">new</span>(<span class="ident">Unexpected</span>::<span class="prelude-val">None</span>)))),
         }
     }
 
@@ -2117,13 +2175,11 @@
     <span class="doccomment">/// #     input.parse()</span>
     <span class="doccomment">/// # }</span>
     <span class="doccomment">/// #</span>
-    <span class="doccomment">/// # fn main() {</span>
-    <span class="doccomment">/// #     use syn::parse::Parser;</span>
-    <span class="doccomment">/// #     let remainder = remainder_after_skipping_past_next_at</span>
-    <span class="doccomment">/// #         .parse_str(&quot;a @ b c&quot;)</span>
-    <span class="doccomment">/// #         .unwrap();</span>
-    <span class="doccomment">/// #     assert_eq!(remainder.to_string(), &quot;b c&quot;);</span>
-    <span class="doccomment">/// # }</span>
+    <span class="doccomment">/// # use syn::parse::Parser;</span>
+    <span class="doccomment">/// # let remainder = remainder_after_skipping_past_next_at</span>
+    <span class="doccomment">/// #     .parse_str(&quot;a @ b c&quot;)</span>
+    <span class="doccomment">/// #     .unwrap();</span>
+    <span class="doccomment">/// # assert_eq!(remainder.to_string(), &quot;b c&quot;);</span>
     <span class="doccomment">/// ```</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">step</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">function</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
     <span class="kw">where</span>
@@ -2165,7 +2221,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">check_unexpected</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">unexpected</span>.<span class="ident">get</span>() {
+        <span class="kw">match</span> <span class="ident">inner_unexpected</span>(<span class="self">self</span>).<span class="number">1</span> {
             <span class="prelude-val">Some</span>(<span class="ident">span</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">span</span>, <span class="string">&quot;unexpected token&quot;</span>)),
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
         }
@@ -2297,7 +2353,7 @@
 <span class="kw">fn</span> <span class="ident">tokens_to_parse_buffer</span>(<span class="ident">tokens</span>: <span class="kw-2">&amp;</span><span class="ident">TokenBuffer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ParseBuffer</span> {
     <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">Span</span>::<span class="ident">call_site</span>();
     <span class="kw">let</span> <span class="ident">cursor</span> <span class="op">=</span> <span class="ident">tokens</span>.<span class="ident">begin</span>();
-    <span class="kw">let</span> <span class="ident">unexpected</span> <span class="op">=</span> <span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">Cell</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>));
+    <span class="kw">let</span> <span class="ident">unexpected</span> <span class="op">=</span> <span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">Cell</span>::<span class="ident">new</span>(<span class="ident">Unexpected</span>::<span class="prelude-val">None</span>));
     <span class="ident">new_parse_buffer</span>(<span class="ident">scope</span>, <span class="ident">cursor</span>, <span class="ident">unexpected</span>)
 }
 
@@ -2323,7 +2379,7 @@
     <span class="kw">fn</span> <span class="ident">__parse_scoped</span>(<span class="self">self</span>, <span class="ident">scope</span>: <span class="ident">Span</span>, <span class="ident">tokens</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Output</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">TokenBuffer</span>::<span class="ident">new2</span>(<span class="ident">tokens</span>);
         <span class="kw">let</span> <span class="ident">cursor</span> <span class="op">=</span> <span class="ident">buf</span>.<span class="ident">begin</span>();
-        <span class="kw">let</span> <span class="ident">unexpected</span> <span class="op">=</span> <span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">Cell</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>));
+        <span class="kw">let</span> <span class="ident">unexpected</span> <span class="op">=</span> <span class="ident">Rc</span>::<span class="ident">new</span>(<span class="ident">Cell</span>::<span class="ident">new</span>(<span class="ident">Unexpected</span>::<span class="prelude-val">None</span>));
         <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">new_parse_buffer</span>(<span class="ident">scope</span>, <span class="ident">cursor</span>, <span class="ident">unexpected</span>);
         <span class="kw">let</span> <span class="ident">node</span> <span class="op">=</span> <span class="self">self</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>)<span class="question-mark">?</span>;
         <span class="ident">state</span>.<span class="ident">check_unexpected</span>()<span class="question-mark">?</span>;
@@ -2386,4 +2442,4 @@
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g., <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g., <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g., <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../../";window.currentCrate = "syn";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../";window.currentCrate = "syn";</script><script src="../../aliases.js"></script><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>

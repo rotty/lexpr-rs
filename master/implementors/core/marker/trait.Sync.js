@@ -12,5 +12,4 @@ implementors["syn"] = [{text:"impl !<a class=\"trait\" href=\"https://doc.rust-l
             } else {
                 window.pending_implementors = implementors;
             }
-        
-})()
+        })()

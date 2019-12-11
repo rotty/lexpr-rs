@@ -6,5 +6,4 @@ implementors["serde_lexpr"] = [];
             } else {
                 window.pending_implementors = implementors;
             }
-        
-})()
+        })()

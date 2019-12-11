@@ -6,5 +6,4 @@ implementors["lexpr"] = [{text:"impl&lt;W, F&gt; <a class=\"trait\" href=\"https
             } else {
                 window.pending_implementors = implementors;
             }
-        
-})()
+        })()
