@@ -285,7 +285,7 @@ impl From<f64> for Number {
 }
 
 impl Display for Number {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.n {
             N::PosInt(i) => Display::fmt(&i, formatter),
             N::NegInt(i) => Display::fmt(&i, formatter),
@@ -295,7 +295,7 @@ impl Display for Number {
 }
 
 impl Debug for Number {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         Debug::fmt(&self.n, formatter)
     }
 }

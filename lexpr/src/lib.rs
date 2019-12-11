@@ -1,4 +1,5 @@
 #![deny(missing_docs)]
+#![warn(rust_2018_idioms)]
 
 //! This crate provides facilities for parsing, printing and
 //! manipulating S-expression data. S-expressions are the format used

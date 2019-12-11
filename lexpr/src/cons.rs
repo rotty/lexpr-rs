@@ -29,7 +29,7 @@ pub struct Cons {
 }
 
 impl fmt::Debug for Cons {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(fmt, "({:?} . {:?})", self.car(), self.cdr())
     }
 }
@@ -111,7 +111,7 @@ impl Cons {
     ///    println!("list element: {}", cell.car());
     /// }
     /// ```
-    pub fn iter(&self) -> Iter {
+    pub fn iter(&self) -> Iter<'_> {
         Iter { cursor: Some(self) }
     }
 
