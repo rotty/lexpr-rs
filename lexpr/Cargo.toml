@@ -1,7 +1,7 @@
 [package]
 name = "lexpr"
 description = "A representation for Lisp data"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["Andreas Rottmann <mail@r0tty.org>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rotty/lexpr-rs"
