@@ -4,6 +4,10 @@ New features:
 
 - The iterators for cons cell chains now have a `peek` method.
 
+Besides some CI churn, the `quickcheck_macros` dev-dependency has been
+updated, which eliminates old versions of `syn` and `quote` from the
+development build requirements.
+
 # 0.2.4
 
 This is dependency-update release:
