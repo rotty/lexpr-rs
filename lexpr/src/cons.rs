@@ -218,6 +218,13 @@ pub struct Iter<'a> {
     cursor: Option<&'a Cons>,
 }
 
+impl<'a> Iter<'a> {
+    /// Returns the current cons cell, without advancing the iterator.
+    pub fn peek(&self) -> Option<&Cons> {
+        self.cursor
+    }
+}
+
 impl<'a> Iterator for Iter<'a> {
     type Item = &'a Cons;
 
@@ -242,6 +249,19 @@ impl<'a> Iterator for Iter<'a> {
 /// [`Cons::into_iter`]: struct.Cons.html#method.into_iter
 pub struct IntoIter {
     cursor: Option<Cons>,
+}
+
+impl IntoIter {
+    /// Returns the current cons cell, without advancing the iterator.
+    pub fn peek(&self) -> Option<&Cons> {
+        self.cursor.as_ref()
+    }
+
+    /// Returns a mutable reference to the current cons cell, without advancing
+    /// the iterator.
+    pub fn peek_mut(&mut self) -> Option<&mut Cons> {
+        self.cursor.as_mut()
+    }
 }
 
 impl Iterator for IntoIter {
