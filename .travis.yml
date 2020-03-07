@@ -1,7 +1,6 @@
 language: rust
 cache: cargo
 rust:
-  - 1.32.0 # uniform paths
   - stable
   - beta
   - nightly
@@ -21,6 +20,11 @@ jobs:
       script: cargo check --all-targets
       rust: stable
     # We lint using rustfmt and clippy on beta, to future-proof
+    - stage: test
+      name: "MSRV (1.32.0) compile check"
+      rust: 1.32.0 # uniform paths
+      script:
+        - cd msrv-test && cargo build
     - stage: lint
       name: "Rust: beta, rustfmt"
       rust: beta
