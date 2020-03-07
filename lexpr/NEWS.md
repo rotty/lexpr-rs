@@ -1,3 +1,9 @@
+# 0.2.5 (unreleased)
+
+New features:
+
+- The iterators for cons cell chains now have a `peek` method.
+
 # 0.2.4
 
 This is dependency-update release:
