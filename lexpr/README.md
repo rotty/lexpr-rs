@@ -48,6 +48,12 @@ To get a better idea of the direction `lexpr` is headed, you may want
 to take at the [TODO](./TODO.md) or the ["why"](./docs/why.md)
 document.
 
+## Rust version requirements
+
+`lexpr` is CI-tested on current stable, beta and nightly channels of
+Rust. Additionally, it is made sure that the code still compiles on
+Rust 1.32.0. However, no tests are run for that build.
+
 ## Supported Lisp dialects
 
 Currently, `lexpr` focuses on Scheme, mostly based on R6RS and R7RS
