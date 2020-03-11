@@ -301,8 +301,11 @@ impl<'a> Parser<read::StrRead<'a>> {
 }
 
 macro_rules! overflow {
-    ($a:ident * 10 + $b:ident, $c:expr) => {
-        $a >= $c / 10 && ($a > $c / 10 || $b > $c % 10)
+    ($a:ident * $radix:literal + $b:ident, $c:expr) => {
+        $a >= $c / $radix && ($a > $c / $radix || $b > $c % $radix)
+    };
+    ($a:ident * $radix:ident + $b:ident, $c:expr) => {
+        $a >= $c / $radix && ($a > $c / $radix || $b > $c % $radix)
     };
 }
 
@@ -447,6 +450,10 @@ impl<'de, R: Read<'de>> Parser<R> {
                         self.expect_ident(b"8")?;
                         Ok(Value::Bytes(self.parse_byte_list()?.into_boxed_slice()))
                     }
+                    Some(b'b') => Ok(Value::from(self.parse_radix_literal(2)?)),
+                    Some(b'o') => Ok(Value::from(self.parse_radix_literal(8)?)),
+                    Some(b'd') => Ok(Value::from(self.parse_radix_literal(10)?)),
+                    Some(b'x') => Ok(Value::from(self.parse_radix_literal(16)?)),
                     Some(b'\\') => Ok(Value::Char(self.read.parse_r6rs_char(&mut self.scratch)?)),
                     Some(_) => Err(self.peek_error(ErrorCode::ExpectedSomeIdent)),
                     None => Err(self.peek_error(ErrorCode::EofWhileParsingValue)),
@@ -458,7 +465,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                 if next == 0 || is_delimiter(next) || is_sign_subsequent(next) {
                     Ok(Value::symbol(self.parse_symbol_suffix("-")?))
                 } else {
-                    Ok(Value::from(self.parse_integer(false)?))
+                    Ok(Value::from(self.parse_num_literal(10, false)?))
                 }
             }
             b'+' => {
@@ -467,10 +474,10 @@ impl<'de, R: Read<'de>> Parser<R> {
                 if next == 0 || is_delimiter(next) || is_sign_subsequent(next) {
                     Ok(Value::symbol(self.parse_symbol_suffix("+")?))
                 } else {
-                    Ok(Value::from(self.parse_integer(true)?))
+                    Ok(Value::from(self.parse_num_literal(10, true)?))
                 }
             }
-            b'0'..=b'9' => Ok(Value::from(self.parse_integer(true)?)),
+            b'0'..=b'9' => Ok(Value::from(self.parse_num_literal(10, true)?)),
             b'"' => {
                 self.eat_char();
                 self.scratch.clear();
@@ -629,7 +636,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                     }
                     _ => {
                         let n = self
-                            .parse_integer(true)?
+                            .parse_number()?
                             .as_u64()
                             .ok_or_else(|| self.peek_error(ErrorCode::ExpectedOctet))?;
                         if n > 255 {
@@ -719,76 +726,129 @@ impl<'de, R: Read<'de>> Parser<R> {
         }
     }
 
-    fn parse_integer(&mut self, pos: bool) -> Result<Number> {
-        match self.next_char_or_null()? {
-            b'0' => {
-                // There can be only one leading '0'.
-                match self.peek_or_null()? {
-                    b'0'..=b'9' => Err(self.peek_error(ErrorCode::InvalidNumber)),
-                    _ => self.parse_number(pos, 0),
+    // Parses a full numeric literal, including a potential radix prefix
+    fn parse_number(&mut self) -> Result<Number> {
+        match self.peek_or_null()? {
+            b'#' => {
+                self.eat_char();
+                match self.next_char_or_null()? {
+                    b'b' => self.parse_radix_literal(2),
+                    b'o' => self.parse_radix_literal(8),
+                    b'd' => self.parse_radix_literal(10),
+                    b'x' => self.parse_radix_literal(16),
+                    _ => Err(self.peek_error(ErrorCode::InvalidNumber)),
                 }
             }
-            c @ b'1'..=b'9' => {
-                let mut res = u64::from(c - b'0');
-
-                loop {
-                    match self.peek_or_null()? {
-                        c @ b'0'..=b'9' => {
-                            self.eat_char();
-                            let digit = u64::from(c - b'0');
-
-                            // We need to be careful with overflow. If we can, try to keep the
-                            // number as a `u64` until we grow too large. At that point, switch to
-                            // parsing the value as a `f64`.
-                            if overflow!(res * 10 + digit, u64::MAX) {
-                                return Ok(Number::from(self.parse_long_integer(
-                                    pos, res, 1, // res * 10^1
-                                )?));
-                            }
-
-                            res = res * 10 + digit;
-                        }
-                        _ => {
-                            return self.parse_number(pos, res);
-                        }
-                    }
-                }
-            }
-            _ => Err(self.error(ErrorCode::InvalidNumber)),
+            _ => self.parse_radix_literal(10),
         }
     }
 
+    // Parses a numeric literal, including a potential sign, with the given radix
+    fn parse_radix_literal(&mut self, radix: u8) -> Result<Number> {
+        match self.peek_or_null()? {
+            b'-' => {
+                self.eat_char();
+                self.parse_num_literal(radix, false)
+            }
+            b'+' => {
+                self.eat_char();
+                self.parse_num_literal(radix, true)
+            }
+            _ => self.parse_num_literal(radix, true),
+        }
+    }
+
+    // Parses a numeric literal without a leading sign, with the given radix.
+    fn parse_num_literal(&mut self, radix: u8, pos: bool) -> Result<Number> {
+        let r = u64::from(radix);
+        // There needs to be a leading digit (R7RS 7.1)
+        let first_digit = match self.next_char_or_null()? {
+            c @ b'0'..=b'9' => c - b'0',
+            c @ b'a'..=b'f' => 10 + (c - b'a'),
+            c @ b'A'..=b'F' => 10 + (c - b'A'),
+            _ => return Err(self.peek_error(ErrorCode::InvalidNumber)),
+        };
+        if first_digit >= radix {
+            return Err(self.peek_error(ErrorCode::InvalidNumber));
+        }
+        let mut res = u64::from(first_digit);
+        loop {
+            let digit = match self.peek_or_null()? {
+                c @ b'0'..=b'9' => c - b'0',
+                c @ b'a'..=b'f' => 10 + (c - b'a'),
+                c @ b'A'..=b'F' => 10 + (c - b'A'),
+                _ => return self.parse_num_tail(radix, pos, res),
+            };
+            if digit >= radix {
+                return Err(self.peek_error(ErrorCode::InvalidNumber));
+            }
+            self.eat_char();
+            let digit = u64::from(digit);
+            // We need to be careful with overflow. If we can, try to keep the
+            // number as a `u64` until we grow too large. At that point, switch to
+            // parsing the value as a `f64`.
+            if overflow!(res * r + digit, u64::MAX) {
+                return Ok(Number::from(self.parse_long_integer(
+                    radix, pos, res, 1, // res * 10^1
+                )?));
+            }
+            res = res * r + digit;
+        }
+    }
+
+    // Parse an over-long integer as a f64.
     fn parse_long_integer(
         &mut self,
+        radix: u8,
         pos: bool,
         significand: u64,
         mut exponent: i32,
     ) -> Result<f64> {
         loop {
-            match self.peek_or_null()? {
-                b'0'..=b'9' => {
-                    self.eat_char();
-                    // This could overflow... if your integer is gigabytes long.
-                    // Ignore that possibility.
-                    exponent += 1;
-                }
+            let digit = match self.peek_or_null()? {
+                c @ b'0'..=b'9' => c - b'0',
+                c @ b'a'..=b'f' if radix >= 10 => 10 + (c - b'a'),
+                c @ b'A'..=b'F' if radix >= 10 => 10 + (c - b'A'),
                 b'.' => {
+                    if radix != 10 {
+                        return Err(self.peek_error(ErrorCode::InvalidNumber));
+                    }
                     return self.parse_decimal(pos, significand, exponent);
                 }
                 b'e' | b'E' => {
+                    if radix != 10 {
+                        return Err(self.peek_error(ErrorCode::InvalidNumber));
+                    }
                     return self.parse_exponent(pos, significand, exponent);
                 }
                 _ => {
                     return self.f64_from_parts(pos, significand, exponent);
                 }
+            };
+            if digit >= radix {
+                return Err(self.peek_error(ErrorCode::InvalidNumber));
             }
+            self.eat_char();
+            // This could overflow... if your integer is gigabytes long.
+            // Ignore that possibility.
+            exponent += 1;
         }
     }
 
-    fn parse_number(&mut self, pos: bool, significand: u64) -> Result<Number> {
+    fn parse_num_tail(&mut self, radix: u8, pos: bool, significand: u64) -> Result<Number> {
         Ok(match self.peek_or_null()? {
-            b'.' => Number::from(self.parse_decimal(pos, significand, 0)?),
-            b'e' | b'E' => Number::from(self.parse_exponent(pos, significand, 0)?),
+            b'.' => {
+                if radix != 10 {
+                    return Err(self.peek_error(ErrorCode::InvalidNumber));
+                }
+                Number::from(self.parse_decimal(pos, significand, 0)?)
+            }
+            b'e' | b'E' => {
+                if radix != 10 {
+                    return Err(self.peek_error(ErrorCode::InvalidNumber));
+                }
+                Number::from(self.parse_exponent(pos, significand, 0)?)
+            }
             _ => {
                 if pos {
                     Number::from(significand)

@@ -3,10 +3,15 @@
 New features:
 
 - The iterators for cons cell chains now have a `peek` method.
+- Number literals with R7RS radix prefixes are now understood. This
+  allows for parsing of binary, octal, hexidecimal, and
+  explicitly-decimal literals, e.g., `#b10101110`. `#o0777`,
+  `#xDEADBEEF` and `#d42`. A sign is allowed to follow the radix
+  prefix, as per R7RS formal syntax.
 
 Besides some CI churn, the `quickcheck_macros` dev-dependency has been
 updated, which eliminates old versions of `syn` and `quote` from the
-development build requirements.
+transitive development build dependencies.
 
 # 0.2.4
 
