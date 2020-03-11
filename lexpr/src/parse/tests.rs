@@ -53,12 +53,36 @@ fn test_atom_failures() {
 }
 
 #[test]
-fn test_numbers() {
+fn test_decimal_numbers() {
     assert_eq!(from_str("42").unwrap(), Value::from(42));
     assert_eq!(from_str("-23").unwrap(), Value::from(-23));
     assert_eq!(from_str("+23").unwrap(), Value::from(23));
     assert_eq!(from_str("0.5e10").unwrap(), Value::from(0.5e10));
     assert_eq!(from_str("-0.5e10").unwrap(), Value::from(-0.5e10));
+}
+
+#[test]
+fn test_hex_numbers() {
+    assert_eq!(from_str("#x42").unwrap(), Value::from(0x42));
+    assert_eq!(
+        from_str("#xDEADBEEF").unwrap(),
+        Value::from(0xDEAD_BEEF_u32)
+    );
+    assert_eq!(from_str("#x-23").unwrap(), Value::from(-0x23));
+    assert_eq!(from_str("#x+23").unwrap(), Value::from(0x23));
+}
+
+#[test]
+fn test_bin_numbers() {
+    assert_eq!(from_str("#b1010").unwrap(), Value::from(10));
+    assert_eq!(from_str("#b-100").unwrap(), Value::from(-4));
+    assert_eq!(from_str("#b-111").unwrap(), Value::from(-7));
+}
+
+#[test]
+fn test_oct_numbers() {
+    assert_eq!(from_str("#o0777").unwrap(), Value::from(0o777));
+    assert_eq!(from_str("#o1764").unwrap(), Value::from(0o1764));
 }
 
 #[test]
