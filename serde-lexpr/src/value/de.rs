@@ -47,9 +47,12 @@ macro_rules! deserialize_prim_number {
         where
             V: de::Visitor<'de>,
         {
-            self.input.as_number().ok_or_else(|| invalid_value(self.input, "a number")).and_then(|n| visit_number(n, visitor))
+            self.input
+                .as_number()
+                .ok_or_else(|| invalid_value(self.input, "a number"))
+                .and_then(|n| visit_number(n, visitor))
         }
-    }
+    };
 }
 
 impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
