@@ -580,6 +580,37 @@ impl<'de, R: Read<'de>> Parser<R> {
                 self.eat_char();
                 Ok(Value::Char(self.read.parse_elisp_char(&mut self.scratch)?))
             }
+            b'\'' => {
+                self.eat_char();
+                // TODO: more specific error
+                let datum = self
+                    .parse()?
+                    .ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingList))?;
+                Ok(Value::list(vec![Value::symbol("quote"), datum]))
+            }
+            b'`' => {
+                self.eat_char();
+                // TODO: more specific error
+                let datum = self
+                    .parse()?
+                    .ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingList))?;
+                Ok(Value::list(vec![Value::symbol("quasiquote"), datum]))
+            }
+            b',' => {
+                self.eat_char();
+                let name = match self.peek_or_null()? {
+                    b'@' => {
+                        self.eat_char();
+                        "unquote-splicing"
+                    }
+                    _ => "unquote",
+                };
+                // TODO: more specific error
+                let datum = self
+                    .parse()?
+                    .ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingList))?;
+                Ok(Value::list(vec![Value::symbol(name), datum]))
+            }
             _ => {
                 if SYMBOL_EXTENDED.contains(&peek) {
                     Ok(Value::symbol(self.parse_symbol()?))
