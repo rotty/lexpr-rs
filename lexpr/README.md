@@ -57,23 +57,18 @@ Rust 1.32.0. However, no tests are run for that build.
 ## Supported Lisp dialects
 
 Currently, `lexpr` focuses on Scheme, mostly based on R6RS and R7RS
-syntax, with some extensions, and Emacs Lisp. The following features,
-common across dialects, are not yet implemented:
+syntax, with some extensions, and Emacs Lisp.
 
-- Syntactic shorthands for `quote`, `quasiquote`, `unquote` and
-  `unquote-splicing`. Again, these are not usually important when
-  using S-expressions as a data exchange format.
-- Support for number syntax is currently quite limited. Integers and
-  floating point values written in decimal notation should work
-  though.
-
-Further dialect-specific omissions, both ones that are planned to be
-fixed in the future, and deliberate ones, are listed below. If you are
-missing a feature that is not yet listed here, please [file an
-issue]!.
+Dialect-specific omissions, both ones that are planned to be fixed in
+the future, and deliberate ones, are listed below. If you are missing
+a feature that is not yet listed here, please [file an issue]!.
 
 ### Scheme
 
+- Support for number syntax is currently quite limited, compared to
+  Scheme's numeric tower. Integers (including hexadecimal, octal and
+  binary notation) as well as floating point values should work
+  though.
 - For strings, continuation line syntax (using a trailing slash) is
   not yet implemented.
 - Block comments.
@@ -82,9 +77,11 @@ issue]!.
 
 ### Emacs Lisp
 
-The main area where `lexpr` only supports a subset of Emacs Lisp are
-strings and characters. You can have a look at [the gory
-details](./docs/elisp-strings.md).
+- A main area where `lexpr` only supports a subset of Emacs Lisp are
+  strings and characters. You can have a look at [the gory
+  details](./docs/elisp-strings.md).
+- Integer literals with an arbitrary base (radix), are not yet
+  supported.
 
 ## Licensing
 
