@@ -463,3 +463,53 @@ fn test_parser_iterator() {
         vec![1.into(), Value::list(vec![2i32, 3]), 4.into()],
     );
 }
+
+#[test]
+fn test_quote_shorthand() {
+    assert_eq!(
+        from_str("'1").unwrap(),
+        Value::list(vec![Value::symbol("quote"), Value::from(1)])
+    );
+    assert_eq!(
+        from_str("'(1 2 3)").unwrap(),
+        Value::list(vec![Value::symbol("quote"), Value::list(vec![1, 2, 3])])
+    );
+}
+
+#[test]
+fn test_quasiquote_shorthand() {
+    assert_eq!(
+        from_str("`1").unwrap(),
+        Value::list(vec![Value::symbol("quasiquote"), Value::from(1)])
+    );
+    assert_eq!(
+        from_str("`(1 2 3)").unwrap(),
+        Value::list(vec![
+            Value::symbol("quasiquote"),
+            Value::list(vec![1, 2, 3])
+        ])
+    );
+}
+
+#[test]
+fn test_unquote_shorthand() {
+    assert_eq!(
+        from_str(",1").unwrap(),
+        Value::list(vec![Value::symbol("unquote"), Value::from(1)])
+    );
+    assert_eq!(
+        from_str(",(1 2 3)").unwrap(),
+        Value::list(vec![Value::symbol("unquote"), Value::list(vec![1, 2, 3])])
+    );
+}
+
+#[test]
+fn test_unquote_splicing_shorthand() {
+    assert_eq!(
+        from_str(",@(1 2 3)").unwrap(),
+        Value::list(vec![
+            Value::symbol("unquote-splicing"),
+            Value::list(vec![1, 2, 3])
+        ])
+    );
+}
