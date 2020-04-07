@@ -218,6 +218,23 @@ impl Default for Options {
     }
 }
 
+#[derive(Debug, Clone)]
+enum Token {
+    Null,
+    Nil,
+    Bool(bool),
+    Char(char),
+    Number(Number),
+    Symbol(Box<str>),
+    Keyword(Box<str>),
+    String(Box<str>),
+    Bytes(Box<[u8]>),
+    ListOpen(u8),
+    Quotation(&'static str),
+    VecOpen(u8),
+    ByteVecOpen(u8),
+}
+
 impl<'de, R> Parser<R>
 where
     R: read::Read<'de>,
@@ -394,6 +411,149 @@ impl<'de, R: Read<'de>> Parser<R> {
             .and_then(|o| o.ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingValue)))
     }
 
+    fn parse_token(&mut self, peek: u8) -> Result<Token> {
+        let token = match peek {
+            b'#' => {
+                self.eat_char();
+                match self.next_char()? {
+                    Some(b't') => Token::Bool(true),
+                    Some(b'f') => Token::Bool(false),
+                    Some(b'n') => {
+                        self.expect_ident(b"il")?;
+                        Token::Nil
+                    }
+                    Some(b'(') => Token::VecOpen(b')'),
+                    Some(b':') if self.options.keyword_syntax(KeywordSyntax::Octothorpe) => {
+                        Token::Keyword(self.parse_symbol()?.into())
+                    }
+                    Some(b'v') => {
+                        self.expect_ident(b"u8")?;
+                        Token::ByteVecOpen(b')')
+                    }
+                    Some(b'u') => {
+                        self.expect_ident(b"8")?;
+                        Token::ByteVecOpen(b')')
+                    }
+                    Some(b'b') => Token::Number(self.parse_radix_literal(2)?),
+                    Some(b'o') => Token::Number(self.parse_radix_literal(8)?),
+                    Some(b'd') => Token::Number(self.parse_radix_literal(10)?),
+                    Some(b'x') => Token::Number(self.parse_radix_literal(16)?),
+                    Some(b'\\') => Token::Char(self.read.parse_r6rs_char(&mut self.scratch)?),
+                    Some(_) => return Err(self.peek_error(ErrorCode::ExpectedSomeIdent)),
+                    None => return Err(self.peek_error(ErrorCode::EofWhileParsingValue)),
+                }
+            }
+            b'-' => {
+                self.eat_char();
+                let next = self.peek_or_null()?;
+                if next == 0 || is_delimiter(next) || is_sign_subsequent(next) {
+                    Token::Symbol(self.parse_symbol_suffix("-")?.into())
+                } else {
+                    Token::Number(self.parse_num_literal(10, false)?)
+                }
+            }
+            b'+' => {
+                self.eat_char();
+                let next = self.peek_or_null()?;
+                if next == 0 || is_delimiter(next) || is_sign_subsequent(next) {
+                    Token::Symbol(self.parse_symbol_suffix("+")?.into())
+                } else {
+                    Token::Number(self.parse_num_literal(10, true)?)
+                }
+            }
+            b'0'..=b'9' => Token::Number(self.parse_num_literal(10, true)?),
+            b'"' => {
+                self.eat_char();
+                self.scratch.clear();
+                match self.options.string_syntax {
+                    StringSyntax::R6RS => match self.read.parse_r6rs_str(&mut self.scratch)? {
+                        Reference::Borrowed(s) => Token::String(s.into()),
+                        Reference::Copied(s) => Token::String(s.into()),
+                    },
+                    StringSyntax::Elisp => match self.read.parse_elisp_str(&mut self.scratch)? {
+                        ElispStr::Multibyte(mb) => match mb {
+                            Reference::Borrowed(s) => Token::String(s.into()),
+                            Reference::Copied(s) => Token::String(s.into()),
+                        },
+                        ElispStr::Unibyte(ub) => match ub {
+                            Reference::Borrowed(b) => Token::Bytes(b.into()),
+                            Reference::Copied(b) => Token::Bytes(b.into()),
+                        },
+                    },
+                }
+            }
+            b'(' => {
+                self.eat_char();
+                Token::ListOpen(b')')
+            }
+            b'[' => {
+                self.eat_char();
+                match self.options.brackets {
+                    Brackets::Vector => Token::VecOpen(b']'),
+                    Brackets::List => Token::ListOpen(b']'),
+                }
+            }
+            b':' => {
+                if self.options.keyword_syntax(KeywordSyntax::ColonPrefix) {
+                    self.eat_char();
+                    Token::Keyword(self.parse_symbol()?.into())
+                } else {
+                    Token::Symbol(self.parse_symbol()?.into())
+                }
+            }
+            b'a'..=b'z' | b'A'..=b'Z' => {
+                let mut name = self.parse_symbol()?;
+                if self.options.keyword_syntax(KeywordSyntax::ColonPostfix) && name.ends_with(':') {
+                    name.pop();
+                    Token::Keyword(name.into())
+                } else if self.options.nil_symbol() != NilSymbol::Default && name == "nil" {
+                    match self.options.nil_symbol() {
+                        NilSymbol::EmptyList => Token::Null,
+                        NilSymbol::Special => Token::Nil,
+                        NilSymbol::Default => unreachable!(),
+                    }
+                } else if self.options.t_symbol() != TSymbol::Default && name == "t" {
+                    match self.options.t_symbol() {
+                        TSymbol::True => Token::Bool(true),
+                        TSymbol::Default => unreachable!(),
+                    }
+                } else {
+                    Token::Symbol(name.into())
+                }
+            }
+            b'?' if self.options.char_syntax == CharSyntax::Elisp => {
+                self.eat_char();
+                Token::Char(self.read.parse_elisp_char(&mut self.scratch)?)
+            }
+            b'\'' => {
+                self.eat_char();
+                Token::Quotation("quote")
+            }
+            b'`' => {
+                self.eat_char();
+                Token::Quotation("quasiquote")
+            }
+            b',' => {
+                self.eat_char();
+                match self.peek_or_null()? {
+                    b'@' => {
+                        self.eat_char();
+                        Token::Quotation("unquote-splicing")
+                    }
+                    _ => Token::Quotation("unquote"),
+                }
+            }
+            _ => {
+                if SYMBOL_EXTENDED.contains(&peek) {
+                    Token::Symbol(self.parse_symbol()?.into())
+                } else {
+                    return Err(self.peek_error(ErrorCode::ExpectedSomeValue));
+                }
+            }
+        };
+        Ok(token)
+    }
+
     /// Parse a single S-expression from the input source.
     ///
     /// If the end of input is ecountered, this will return
@@ -413,213 +573,58 @@ impl<'de, R: Read<'de>> Parser<R> {
             Some(b) => b,
             None => return Ok(None),
         };
-
-        let value = match peek {
-            b'#' => {
-                self.eat_char();
-                match self.next_char()? {
-                    Some(b't') => Ok(Value::from(true)),
-                    Some(b'f') => Ok(Value::from(false)),
-                    Some(b'n') => {
-                        self.expect_ident(b"il")?;
-                        Ok(Value::Nil)
-                    }
-                    Some(b'(') => {
-                        self.remaining_depth -= 1;
-                        if self.remaining_depth == 0 {
-                            return Err(self.peek_error(ErrorCode::RecursionLimitExceeded));
-                        }
-
-                        let ret = self.parse_vector_elements(b')');
-
-                        self.remaining_depth += 1;
-
-                        match (ret, self.end_seq()) {
-                            (Ok(elements), Ok(())) => Ok(Value::Vector(elements.into())),
-                            (Err(err), _) | (_, Err(err)) => Err(err),
-                        }
-                    }
-                    Some(b':') if self.options.keyword_syntax(KeywordSyntax::Octothorpe) => {
-                        Ok(Value::keyword(self.parse_symbol()?))
-                    }
-                    Some(b'v') => {
-                        self.expect_ident(b"u8")?;
-                        Ok(Value::Bytes(self.parse_byte_list()?.into_boxed_slice()))
-                    }
-                    Some(b'u') => {
-                        self.expect_ident(b"8")?;
-                        Ok(Value::Bytes(self.parse_byte_list()?.into_boxed_slice()))
-                    }
-                    Some(b'b') => Ok(Value::from(self.parse_radix_literal(2)?)),
-                    Some(b'o') => Ok(Value::from(self.parse_radix_literal(8)?)),
-                    Some(b'd') => Ok(Value::from(self.parse_radix_literal(10)?)),
-                    Some(b'x') => Ok(Value::from(self.parse_radix_literal(16)?)),
-                    Some(b'\\') => Ok(Value::Char(self.read.parse_r6rs_char(&mut self.scratch)?)),
-                    Some(_) => Err(self.peek_error(ErrorCode::ExpectedSomeIdent)),
-                    None => Err(self.peek_error(ErrorCode::EofWhileParsingValue)),
-                }
+        let value = match self.parse_token(peek)? {
+            Token::Nil => Value::Nil,
+            Token::Null => Value::Null,
+            Token::Char(c) => Value::Char(c),
+            Token::Bool(b) => Value::Bool(b),
+            Token::Number(n) => Value::Number(n),
+            Token::Symbol(s) => Value::Symbol(s),
+            Token::Keyword(name) => Value::Keyword(name),
+            Token::String(s) => Value::String(s),
+            Token::Bytes(b) => Value::Bytes(b),
+            Token::ByteVecOpen(close) => {
+                Value::Bytes(self.parse_byte_list(close)?.into_boxed_slice())
             }
-            b'-' => {
-                self.eat_char();
-                let next = self.peek_or_null()?;
-                if next == 0 || is_delimiter(next) || is_sign_subsequent(next) {
-                    Ok(Value::symbol(self.parse_symbol_suffix("-")?))
-                } else {
-                    Ok(Value::from(self.parse_num_literal(10, false)?))
-                }
-            }
-            b'+' => {
-                self.eat_char();
-                let next = self.peek_or_null()?;
-                if next == 0 || is_delimiter(next) || is_sign_subsequent(next) {
-                    Ok(Value::symbol(self.parse_symbol_suffix("+")?))
-                } else {
-                    Ok(Value::from(self.parse_num_literal(10, true)?))
-                }
-            }
-            b'0'..=b'9' => Ok(Value::from(self.parse_num_literal(10, true)?)),
-            b'"' => {
-                self.eat_char();
-                self.scratch.clear();
-                match self.options.string_syntax {
-                    StringSyntax::R6RS => match self.read.parse_r6rs_str(&mut self.scratch)? {
-                        Reference::Borrowed(s) => Ok(Value::from(s)),
-                        Reference::Copied(s) => Ok(Value::from(s)),
-                    },
-                    StringSyntax::Elisp => match self.read.parse_elisp_str(&mut self.scratch)? {
-                        ElispStr::Multibyte(mb) => match mb {
-                            Reference::Borrowed(s) => Ok(Value::from(s)),
-                            Reference::Copied(s) => Ok(Value::from(s)),
-                        },
-                        ElispStr::Unibyte(ub) => match ub {
-                            Reference::Borrowed(b) => Ok(Value::from(b)),
-                            Reference::Copied(b) => Ok(Value::from(b)),
-                        },
-                    },
-                }
-            }
-            b'(' => {
+            Token::VecOpen(close) => {
                 self.remaining_depth -= 1;
                 if self.remaining_depth == 0 {
                     return Err(self.peek_error(ErrorCode::RecursionLimitExceeded));
                 }
 
-                self.eat_char();
-                let ret = self.parse_list_elements(b')');
+                let ret = self.parse_vector_elements(close);
 
                 self.remaining_depth += 1;
 
-                match (ret, self.end_seq()) {
-                    (Ok(ret), Ok(())) => Ok(ret),
-                    (Err(err), _) | (_, Err(err)) => Err(err),
+                match (ret, self.end_seq(close)) {
+                    (Ok(elements), Ok(())) => Value::Vector(elements.into()),
+                    (Err(err), _) | (_, Err(err)) => return Err(err),
                 }
             }
-            b'[' => match self.options.brackets {
-                Brackets::Vector => {
-                    self.remaining_depth -= 1;
-                    if self.remaining_depth == 0 {
-                        return Err(self.peek_error(ErrorCode::RecursionLimitExceeded));
-                    }
-
-                    self.eat_char();
-                    let ret = self.parse_vector_elements(b']');
-
-                    self.remaining_depth += 1;
-
-                    match (ret, self.end_seq()) {
-                        (Ok(elements), Ok(())) => Ok(Value::Vector(elements.into())),
-                        (Err(err), _) | (_, Err(err)) => Err(err),
-                    }
+            Token::ListOpen(close) => {
+                self.remaining_depth -= 1;
+                if self.remaining_depth == 0 {
+                    return Err(self.peek_error(ErrorCode::RecursionLimitExceeded));
                 }
-                Brackets::List => {
-                    self.remaining_depth -= 1;
-                    if self.remaining_depth == 0 {
-                        return Err(self.peek_error(ErrorCode::RecursionLimitExceeded));
-                    }
 
-                    self.eat_char();
-                    let ret = self.parse_list_elements(b']');
+                let ret = self.parse_list_elements(close);
 
-                    self.remaining_depth += 1;
+                self.remaining_depth += 1;
 
-                    match (ret, self.end_seq()) {
-                        (Ok(ret), Ok(())) => Ok(ret),
-                        (Err(err), _) | (_, Err(err)) => Err(err),
-                    }
-                }
-            },
-            b':' => {
-                if self.options.keyword_syntax(KeywordSyntax::ColonPrefix) {
-                    self.eat_char();
-                    Ok(Value::keyword(self.parse_symbol()?))
-                } else {
-                    Ok(Value::symbol(self.parse_symbol()?))
+                match (ret, self.end_seq(close)) {
+                    (Ok(elements), Ok(())) => elements,
+                    (Err(err), _) | (_, Err(err)) => return Err(err),
                 }
             }
-            b'a'..=b'z' | b'A'..=b'Z' => {
-                let mut name = self.parse_symbol()?;
-                if self.options.keyword_syntax(KeywordSyntax::ColonPostfix) && name.ends_with(':') {
-                    name.pop();
-                    Ok(Value::keyword(name))
-                } else if self.options.nil_symbol() != NilSymbol::Default && name == "nil" {
-                    match self.options.nil_symbol() {
-                        NilSymbol::EmptyList => Ok(Value::Null),
-                        NilSymbol::Special => Ok(Value::Nil),
-                        NilSymbol::Default => unreachable!(),
-                    }
-                } else if self.options.t_symbol() != TSymbol::Default && name == "t" {
-                    match self.options.t_symbol() {
-                        TSymbol::True => Ok(Value::from(true)),
-                        TSymbol::Default => unreachable!(),
-                    }
-                } else {
-                    Ok(Value::symbol(name))
-                }
-            }
-            b'?' if self.options.char_syntax == CharSyntax::Elisp => {
-                self.eat_char();
-                Ok(Value::Char(self.read.parse_elisp_char(&mut self.scratch)?))
-            }
-            b'\'' => {
-                self.eat_char();
+            Token::Quotation(name) => {
                 // TODO: more specific error
                 let datum = self
                     .parse()?
                     .ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingList))?;
-                Ok(Value::list(vec![Value::symbol("quote"), datum]))
-            }
-            b'`' => {
-                self.eat_char();
-                // TODO: more specific error
-                let datum = self
-                    .parse()?
-                    .ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingList))?;
-                Ok(Value::list(vec![Value::symbol("quasiquote"), datum]))
-            }
-            b',' => {
-                self.eat_char();
-                let name = match self.peek_or_null()? {
-                    b'@' => {
-                        self.eat_char();
-                        "unquote-splicing"
-                    }
-                    _ => "unquote",
-                };
-                // TODO: more specific error
-                let datum = self
-                    .parse()?
-                    .ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingList))?;
-                Ok(Value::list(vec![Value::symbol(name), datum]))
-            }
-            _ => {
-                if SYMBOL_EXTENDED.contains(&peek) {
-                    Ok(Value::symbol(self.parse_symbol()?))
-                } else {
-                    Err(self.peek_error(ErrorCode::ExpectedSomeValue))
-                }
+                Value::list(vec![Value::symbol(name), datum])
             }
         };
-        value.map(Some)
+        Ok(Some(value))
     }
 
     fn parse_symbol(&mut self) -> Result<String> {
@@ -649,7 +654,7 @@ impl<'de, R: Read<'de>> Parser<R> {
         Ok(())
     }
 
-    fn parse_byte_list(&mut self) -> Result<Vec<u8>> {
+    fn parse_byte_list(&mut self, close: u8) -> Result<Vec<u8>> {
         match self.parse_whitespace() {
             Err(e) => return Err(e),
             Ok(Some(b'(')) => self.eat_char(),
@@ -660,12 +665,11 @@ impl<'de, R: Read<'de>> Parser<R> {
         loop {
             match self.parse_whitespace() {
                 Err(e) => return Err(e),
-                Ok(Some(c)) => match c {
-                    b')' => {
+                Ok(Some(c)) => {
+                    if c == close {
                         self.eat_char();
                         break;
-                    }
-                    _ => {
+                    } else {
                         let n = self
                             .parse_number()?
                             .as_u64()
@@ -675,7 +679,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                         }
                         bytes.push(n as u8);
                     }
-                },
+                }
                 Ok(None) => return Err(self.peek_error(ErrorCode::EofWhileParsingList)),
             }
         }
@@ -1053,13 +1057,14 @@ impl<'de, R: Read<'de>> Parser<R> {
         Ok(if pos { f } else { -f })
     }
 
-    fn end_seq(&mut self) -> Result<()> {
+    fn end_seq(&mut self, close: u8) -> Result<()> {
         match self.parse_whitespace()? {
-            Some(b')') | Some(b']') => {
+            Some(b) if b == close => {
                 self.eat_char();
                 Ok(())
             }
             Some(_) => Err(self.peek_error(ErrorCode::TrailingCharacters)),
+            // TODO: path is taken for vectors as well
             None => Err(self.peek_error(ErrorCode::EofWhileParsingList)),
         }
     }
