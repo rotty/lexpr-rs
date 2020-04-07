@@ -1262,6 +1262,11 @@
 <span id="1262">1262</span>
 <span id="1263">1263</span>
 <span id="1264">1264</span>
+<span id="1265">1265</span>
+<span id="1266">1266</span>
+<span id="1267">1267</span>
+<span id="1268">1268</span>
+<span id="1269">1269</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! S-expression parser and options.</span>
 <span class="doccomment">//!</span>
@@ -1483,6 +1488,23 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">enum</span> <span class="ident">Token</span> {
+    <span class="ident">Null</span>,
+    <span class="ident">Nil</span>,
+    <span class="ident">Bool</span>(<span class="ident">bool</span>),
+    <span class="ident">Char</span>(<span class="ident">char</span>),
+    <span class="ident">Number</span>(<span class="ident">Number</span>),
+    <span class="ident">Symbol</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>),
+    <span class="ident">Keyword</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>),
+    <span class="ident">String</span>(<span class="ident">Box</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>),
+    <span class="ident">Bytes</span>(<span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>),
+    <span class="ident">ListOpen</span>(<span class="ident">u8</span>),
+    <span class="ident">Quotation</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>),
+    <span class="ident">VecOpen</span>(<span class="ident">u8</span>),
+    <span class="ident">ByteVecOpen</span>(<span class="ident">u8</span>),
+}
+
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="ident">R</span><span class="op">&gt;</span> <span class="ident">Parser</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">R</span>: <span class="ident">read</span>::<span class="ident">Read</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
@@ -1659,6 +1681,149 @@
             .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="ident">o</span>.<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">EofWhileParsingValue</span>)))
     }
 
+    <span class="kw">fn</span> <span class="ident">parse_token</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">peek</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Token</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">peek</span> {
+            <span class="string">b&#39;#&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">eat_char</span>();
+                <span class="kw">match</span> <span class="self">self</span>.<span class="ident">next_char</span>()<span class="question-mark">?</span> {
+                    <span class="prelude-val">Some</span>(<span class="string">b&#39;t&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">Bool</span>(<span class="bool-val">true</span>),
+                    <span class="prelude-val">Some</span>(<span class="string">b&#39;f&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">Bool</span>(<span class="bool-val">false</span>),
+                    <span class="prelude-val">Some</span>(<span class="string">b&#39;n&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="self">self</span>.<span class="ident">expect_ident</span>(<span class="string">b&quot;il&quot;</span>)<span class="question-mark">?</span>;
+                        <span class="ident">Token</span>::<span class="ident">Nil</span>
+                    }
+                    <span class="prelude-val">Some</span>(<span class="string">b&#39;(&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">VecOpen</span>(<span class="string">b&#39;)&#39;</span>),
+                    <span class="prelude-val">Some</span>(<span class="string">b&#39;:&#39;</span>) <span class="kw">if</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">keyword_syntax</span>(<span class="ident">KeywordSyntax</span>::<span class="ident">Octothorpe</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">Token</span>::<span class="ident">Keyword</span>(<span class="self">self</span>.<span class="ident">parse_symbol</span>()<span class="question-mark">?</span>.<span class="ident">into</span>())
+                    }
+                    <span class="prelude-val">Some</span>(<span class="string">b&#39;v&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="self">self</span>.<span class="ident">expect_ident</span>(<span class="string">b&quot;u8&quot;</span>)<span class="question-mark">?</span>;
+                        <span class="ident">Token</span>::<span class="ident">ByteVecOpen</span>(<span class="string">b&#39;)&#39;</span>)
+                    }
+                    <span class="prelude-val">Some</span>(<span class="string">b&#39;u&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="self">self</span>.<span class="ident">expect_ident</span>(<span class="string">b&quot;8&quot;</span>)<span class="question-mark">?</span>;
+                        <span class="ident">Token</span>::<span class="ident">ByteVecOpen</span>(<span class="string">b&#39;)&#39;</span>)
+                    }
+                    <span class="prelude-val">Some</span>(<span class="string">b&#39;b&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">Number</span>(<span class="self">self</span>.<span class="ident">parse_radix_literal</span>(<span class="number">2</span>)<span class="question-mark">?</span>),
+                    <span class="prelude-val">Some</span>(<span class="string">b&#39;o&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">Number</span>(<span class="self">self</span>.<span class="ident">parse_radix_literal</span>(<span class="number">8</span>)<span class="question-mark">?</span>),
+                    <span class="prelude-val">Some</span>(<span class="string">b&#39;d&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">Number</span>(<span class="self">self</span>.<span class="ident">parse_radix_literal</span>(<span class="number">10</span>)<span class="question-mark">?</span>),
+                    <span class="prelude-val">Some</span>(<span class="string">b&#39;x&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">Number</span>(<span class="self">self</span>.<span class="ident">parse_radix_literal</span>(<span class="number">16</span>)<span class="question-mark">?</span>),
+                    <span class="prelude-val">Some</span>(<span class="string">b&#39;\\&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">Char</span>(<span class="self">self</span>.<span class="ident">read</span>.<span class="ident">parse_r6rs_char</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">scratch</span>)<span class="question-mark">?</span>),
+                    <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedSomeIdent</span>)),
+                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">EofWhileParsingValue</span>)),
+                }
+            }
+            <span class="string">b&#39;-&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">eat_char</span>();
+                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">peek_or_null</span>()<span class="question-mark">?</span>;
+                <span class="kw">if</span> <span class="ident">next</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">is_delimiter</span>(<span class="ident">next</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">is_sign_subsequent</span>(<span class="ident">next</span>) {
+                    <span class="ident">Token</span>::<span class="ident">Symbol</span>(<span class="self">self</span>.<span class="ident">parse_symbol_suffix</span>(<span class="string">&quot;-&quot;</span>)<span class="question-mark">?</span>.<span class="ident">into</span>())
+                } <span class="kw">else</span> {
+                    <span class="ident">Token</span>::<span class="ident">Number</span>(<span class="self">self</span>.<span class="ident">parse_num_literal</span>(<span class="number">10</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>)
+                }
+            }
+            <span class="string">b&#39;+&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">eat_char</span>();
+                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">peek_or_null</span>()<span class="question-mark">?</span>;
+                <span class="kw">if</span> <span class="ident">next</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">is_delimiter</span>(<span class="ident">next</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">is_sign_subsequent</span>(<span class="ident">next</span>) {
+                    <span class="ident">Token</span>::<span class="ident">Symbol</span>(<span class="self">self</span>.<span class="ident">parse_symbol_suffix</span>(<span class="string">&quot;+&quot;</span>)<span class="question-mark">?</span>.<span class="ident">into</span>())
+                } <span class="kw">else</span> {
+                    <span class="ident">Token</span>::<span class="ident">Number</span>(<span class="self">self</span>.<span class="ident">parse_num_literal</span>(<span class="number">10</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>)
+                }
+            }
+            <span class="string">b&#39;0&#39;</span>..<span class="op">=</span><span class="string">b&#39;9&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">Number</span>(<span class="self">self</span>.<span class="ident">parse_num_literal</span>(<span class="number">10</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>),
+            <span class="string">b&#39;&quot;&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">eat_char</span>();
+                <span class="self">self</span>.<span class="ident">scratch</span>.<span class="ident">clear</span>();
+                <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">string_syntax</span> {
+                    <span class="ident">StringSyntax</span>::<span class="ident">R6RS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">read</span>.<span class="ident">parse_r6rs_str</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">scratch</span>)<span class="question-mark">?</span> {
+                        <span class="ident">Reference</span>::<span class="ident">Borrowed</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">String</span>(<span class="ident">s</span>.<span class="ident">into</span>()),
+                        <span class="ident">Reference</span>::<span class="ident">Copied</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">String</span>(<span class="ident">s</span>.<span class="ident">into</span>()),
+                    },
+                    <span class="ident">StringSyntax</span>::<span class="ident">Elisp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">read</span>.<span class="ident">parse_elisp_str</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">scratch</span>)<span class="question-mark">?</span> {
+                        <span class="ident">ElispStr</span>::<span class="ident">Multibyte</span>(<span class="ident">mb</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">mb</span> {
+                            <span class="ident">Reference</span>::<span class="ident">Borrowed</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">String</span>(<span class="ident">s</span>.<span class="ident">into</span>()),
+                            <span class="ident">Reference</span>::<span class="ident">Copied</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">String</span>(<span class="ident">s</span>.<span class="ident">into</span>()),
+                        },
+                        <span class="ident">ElispStr</span>::<span class="ident">Unibyte</span>(<span class="ident">ub</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">ub</span> {
+                            <span class="ident">Reference</span>::<span class="ident">Borrowed</span>(<span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">Bytes</span>(<span class="ident">b</span>.<span class="ident">into</span>()),
+                            <span class="ident">Reference</span>::<span class="ident">Copied</span>(<span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">Bytes</span>(<span class="ident">b</span>.<span class="ident">into</span>()),
+                        },
+                    },
+                }
+            }
+            <span class="string">b&#39;(&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">eat_char</span>();
+                <span class="ident">Token</span>::<span class="ident">ListOpen</span>(<span class="string">b&#39;)&#39;</span>)
+            }
+            <span class="string">b&#39;[&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">eat_char</span>();
+                <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">brackets</span> {
+                    <span class="ident">Brackets</span>::<span class="ident">Vector</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">VecOpen</span>(<span class="string">b&#39;]&#39;</span>),
+                    <span class="ident">Brackets</span>::<span class="ident">List</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">ListOpen</span>(<span class="string">b&#39;]&#39;</span>),
+                }
+            }
+            <span class="string">b&#39;:&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">keyword_syntax</span>(<span class="ident">KeywordSyntax</span>::<span class="ident">ColonPrefix</span>) {
+                    <span class="self">self</span>.<span class="ident">eat_char</span>();
+                    <span class="ident">Token</span>::<span class="ident">Keyword</span>(<span class="self">self</span>.<span class="ident">parse_symbol</span>()<span class="question-mark">?</span>.<span class="ident">into</span>())
+                } <span class="kw">else</span> {
+                    <span class="ident">Token</span>::<span class="ident">Symbol</span>(<span class="self">self</span>.<span class="ident">parse_symbol</span>()<span class="question-mark">?</span>.<span class="ident">into</span>())
+                }
+            }
+            <span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;z&#39;</span> <span class="op">|</span> <span class="string">b&#39;A&#39;</span>..<span class="op">=</span><span class="string">b&#39;Z&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">parse_symbol</span>()<span class="question-mark">?</span>;
+                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">keyword_syntax</span>(<span class="ident">KeywordSyntax</span>::<span class="ident">ColonPostfix</span>) <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">name</span>.<span class="ident">ends_with</span>(<span class="string">&#39;:&#39;</span>) {
+                    <span class="ident">name</span>.<span class="ident">pop</span>();
+                    <span class="ident">Token</span>::<span class="ident">Keyword</span>(<span class="ident">name</span>.<span class="ident">into</span>())
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">nil_symbol</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">NilSymbol</span>::<span class="ident">Default</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">name</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;nil&quot;</span> {
+                    <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">nil_symbol</span>() {
+                        <span class="ident">NilSymbol</span>::<span class="ident">EmptyList</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">Null</span>,
+                        <span class="ident">NilSymbol</span>::<span class="ident">Special</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">Nil</span>,
+                        <span class="ident">NilSymbol</span>::<span class="ident">Default</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                    }
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">t_symbol</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">TSymbol</span>::<span class="ident">Default</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">name</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;t&quot;</span> {
+                    <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">t_symbol</span>() {
+                        <span class="ident">TSymbol</span>::<span class="ident">True</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">Bool</span>(<span class="bool-val">true</span>),
+                        <span class="ident">TSymbol</span>::<span class="ident">Default</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                    }
+                } <span class="kw">else</span> {
+                    <span class="ident">Token</span>::<span class="ident">Symbol</span>(<span class="ident">name</span>.<span class="ident">into</span>())
+                }
+            }
+            <span class="string">b&#39;?&#39;</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">char_syntax</span> <span class="op">=</span><span class="op">=</span> <span class="ident">CharSyntax</span>::<span class="ident">Elisp</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">eat_char</span>();
+                <span class="ident">Token</span>::<span class="ident">Char</span>(<span class="self">self</span>.<span class="ident">read</span>.<span class="ident">parse_elisp_char</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">scratch</span>)<span class="question-mark">?</span>)
+            }
+            <span class="string">b&#39;\&#39;&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">eat_char</span>();
+                <span class="ident">Token</span>::<span class="ident">Quotation</span>(<span class="string">&quot;quote&quot;</span>)
+            }
+            <span class="string">b&#39;`&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">eat_char</span>();
+                <span class="ident">Token</span>::<span class="ident">Quotation</span>(<span class="string">&quot;quasiquote&quot;</span>)
+            }
+            <span class="string">b&#39;,&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">eat_char</span>();
+                <span class="kw">match</span> <span class="self">self</span>.<span class="ident">peek_or_null</span>()<span class="question-mark">?</span> {
+                    <span class="string">b&#39;@&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="self">self</span>.<span class="ident">eat_char</span>();
+                        <span class="ident">Token</span>::<span class="ident">Quotation</span>(<span class="string">&quot;unquote-splicing&quot;</span>)
+                    }
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Token</span>::<span class="ident">Quotation</span>(<span class="string">&quot;unquote&quot;</span>),
+                }
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">SYMBOL_EXTENDED</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">peek</span>) {
+                    <span class="ident">Token</span>::<span class="ident">Symbol</span>(<span class="self">self</span>.<span class="ident">parse_symbol</span>()<span class="question-mark">?</span>.<span class="ident">into</span>())
+                } <span class="kw">else</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedSomeValue</span>));
+                }
+            }
+        };
+        <span class="prelude-val">Ok</span>(<span class="ident">token</span>)
+    }
+
     <span class="doccomment">/// Parse a single S-expression from the input source.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// If the end of input is ecountered, this will return</span>
@@ -1678,213 +1843,58 @@
             <span class="prelude-val">Some</span>(<span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">b</span>,
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
         };
-
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">peek</span> {
-            <span class="string">b&#39;#&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">eat_char</span>();
-                <span class="kw">match</span> <span class="self">self</span>.<span class="ident">next_char</span>()<span class="question-mark">?</span> {
-                    <span class="prelude-val">Some</span>(<span class="string">b&#39;t&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="bool-val">true</span>)),
-                    <span class="prelude-val">Some</span>(<span class="string">b&#39;f&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="bool-val">false</span>)),
-                    <span class="prelude-val">Some</span>(<span class="string">b&#39;n&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="self">self</span>.<span class="ident">expect_ident</span>(<span class="string">b&quot;il&quot;</span>)<span class="question-mark">?</span>;
-                        <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">Nil</span>)
-                    }
-                    <span class="prelude-val">Some</span>(<span class="string">b&#39;(&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
-                        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">RecursionLimitExceeded</span>));
-                        }
-
-                        <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">parse_vector_elements</span>(<span class="string">b&#39;)&#39;</span>);
-
-                        <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-
-                        <span class="kw">match</span> (<span class="ident">ret</span>, <span class="self">self</span>.<span class="ident">end_seq</span>()) {
-                            (<span class="prelude-val">Ok</span>(<span class="ident">elements</span>), <span class="prelude-val">Ok</span>(())) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">Vector</span>(<span class="ident">elements</span>.<span class="ident">into</span>())),
-                            (<span class="prelude-val">Err</span>(<span class="ident">err</span>), <span class="kw">_</span>) <span class="op">|</span> (<span class="kw">_</span>, <span class="prelude-val">Err</span>(<span class="ident">err</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>),
-                        }
-                    }
-                    <span class="prelude-val">Some</span>(<span class="string">b&#39;:&#39;</span>) <span class="kw">if</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">keyword_syntax</span>(<span class="ident">KeywordSyntax</span>::<span class="ident">Octothorpe</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">keyword</span>(<span class="self">self</span>.<span class="ident">parse_symbol</span>()<span class="question-mark">?</span>))
-                    }
-                    <span class="prelude-val">Some</span>(<span class="string">b&#39;v&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="self">self</span>.<span class="ident">expect_ident</span>(<span class="string">b&quot;u8&quot;</span>)<span class="question-mark">?</span>;
-                        <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">Bytes</span>(<span class="self">self</span>.<span class="ident">parse_byte_list</span>()<span class="question-mark">?</span>.<span class="ident">into_boxed_slice</span>()))
-                    }
-                    <span class="prelude-val">Some</span>(<span class="string">b&#39;u&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="self">self</span>.<span class="ident">expect_ident</span>(<span class="string">b&quot;8&quot;</span>)<span class="question-mark">?</span>;
-                        <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">Bytes</span>(<span class="self">self</span>.<span class="ident">parse_byte_list</span>()<span class="question-mark">?</span>.<span class="ident">into_boxed_slice</span>()))
-                    }
-                    <span class="prelude-val">Some</span>(<span class="string">b&#39;b&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">parse_radix_literal</span>(<span class="number">2</span>)<span class="question-mark">?</span>)),
-                    <span class="prelude-val">Some</span>(<span class="string">b&#39;o&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">parse_radix_literal</span>(<span class="number">8</span>)<span class="question-mark">?</span>)),
-                    <span class="prelude-val">Some</span>(<span class="string">b&#39;d&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">parse_radix_literal</span>(<span class="number">10</span>)<span class="question-mark">?</span>)),
-                    <span class="prelude-val">Some</span>(<span class="string">b&#39;x&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">parse_radix_literal</span>(<span class="number">16</span>)<span class="question-mark">?</span>)),
-                    <span class="prelude-val">Some</span>(<span class="string">b&#39;\\&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">Char</span>(<span class="self">self</span>.<span class="ident">read</span>.<span class="ident">parse_r6rs_char</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">scratch</span>)<span class="question-mark">?</span>)),
-                    <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedSomeIdent</span>)),
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">EofWhileParsingValue</span>)),
-                }
+        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">parse_token</span>(<span class="ident">peek</span>)<span class="question-mark">?</span> {
+            <span class="ident">Token</span>::<span class="ident">Nil</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Value</span>::<span class="ident">Nil</span>,
+            <span class="ident">Token</span>::<span class="ident">Null</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Value</span>::<span class="ident">Null</span>,
+            <span class="ident">Token</span>::<span class="ident">Char</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Value</span>::<span class="ident">Char</span>(<span class="ident">c</span>),
+            <span class="ident">Token</span>::<span class="ident">Bool</span>(<span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Value</span>::<span class="ident">Bool</span>(<span class="ident">b</span>),
+            <span class="ident">Token</span>::<span class="ident">Number</span>(<span class="ident">n</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Value</span>::<span class="ident">Number</span>(<span class="ident">n</span>),
+            <span class="ident">Token</span>::<span class="ident">Symbol</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Value</span>::<span class="ident">Symbol</span>(<span class="ident">s</span>),
+            <span class="ident">Token</span>::<span class="ident">Keyword</span>(<span class="ident">name</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Value</span>::<span class="ident">Keyword</span>(<span class="ident">name</span>),
+            <span class="ident">Token</span>::<span class="ident">String</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Value</span>::<span class="ident">String</span>(<span class="ident">s</span>),
+            <span class="ident">Token</span>::<span class="ident">Bytes</span>(<span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Value</span>::<span class="ident">Bytes</span>(<span class="ident">b</span>),
+            <span class="ident">Token</span>::<span class="ident">ByteVecOpen</span>(<span class="ident">close</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Value</span>::<span class="ident">Bytes</span>(<span class="self">self</span>.<span class="ident">parse_byte_list</span>(<span class="ident">close</span>)<span class="question-mark">?</span>.<span class="ident">into_boxed_slice</span>())
             }
-            <span class="string">b&#39;-&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">eat_char</span>();
-                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">peek_or_null</span>()<span class="question-mark">?</span>;
-                <span class="kw">if</span> <span class="ident">next</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">is_delimiter</span>(<span class="ident">next</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">is_sign_subsequent</span>(<span class="ident">next</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">symbol</span>(<span class="self">self</span>.<span class="ident">parse_symbol_suffix</span>(<span class="string">&quot;-&quot;</span>)<span class="question-mark">?</span>))
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">parse_num_literal</span>(<span class="number">10</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>))
-                }
-            }
-            <span class="string">b&#39;+&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">eat_char</span>();
-                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">peek_or_null</span>()<span class="question-mark">?</span>;
-                <span class="kw">if</span> <span class="ident">next</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">is_delimiter</span>(<span class="ident">next</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">is_sign_subsequent</span>(<span class="ident">next</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">symbol</span>(<span class="self">self</span>.<span class="ident">parse_symbol_suffix</span>(<span class="string">&quot;+&quot;</span>)<span class="question-mark">?</span>))
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">parse_num_literal</span>(<span class="number">10</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>))
-                }
-            }
-            <span class="string">b&#39;0&#39;</span>..<span class="op">=</span><span class="string">b&#39;9&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="self">self</span>.<span class="ident">parse_num_literal</span>(<span class="number">10</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>)),
-            <span class="string">b&#39;&quot;&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">eat_char</span>();
-                <span class="self">self</span>.<span class="ident">scratch</span>.<span class="ident">clear</span>();
-                <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">string_syntax</span> {
-                    <span class="ident">StringSyntax</span>::<span class="ident">R6RS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">read</span>.<span class="ident">parse_r6rs_str</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">scratch</span>)<span class="question-mark">?</span> {
-                        <span class="ident">Reference</span>::<span class="ident">Borrowed</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="ident">s</span>)),
-                        <span class="ident">Reference</span>::<span class="ident">Copied</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="ident">s</span>)),
-                    },
-                    <span class="ident">StringSyntax</span>::<span class="ident">Elisp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">read</span>.<span class="ident">parse_elisp_str</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">scratch</span>)<span class="question-mark">?</span> {
-                        <span class="ident">ElispStr</span>::<span class="ident">Multibyte</span>(<span class="ident">mb</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">mb</span> {
-                            <span class="ident">Reference</span>::<span class="ident">Borrowed</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="ident">s</span>)),
-                            <span class="ident">Reference</span>::<span class="ident">Copied</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="ident">s</span>)),
-                        },
-                        <span class="ident">ElispStr</span>::<span class="ident">Unibyte</span>(<span class="ident">ub</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">ub</span> {
-                            <span class="ident">Reference</span>::<span class="ident">Borrowed</span>(<span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="ident">b</span>)),
-                            <span class="ident">Reference</span>::<span class="ident">Copied</span>(<span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="ident">b</span>)),
-                        },
-                    },
-                }
-            }
-            <span class="string">b&#39;(&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Token</span>::<span class="ident">VecOpen</span>(<span class="ident">close</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">RecursionLimitExceeded</span>));
                 }
 
-                <span class="self">self</span>.<span class="ident">eat_char</span>();
-                <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">parse_list_elements</span>(<span class="string">b&#39;)&#39;</span>);
+                <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">parse_vector_elements</span>(<span class="ident">close</span>);
 
                 <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
 
-                <span class="kw">match</span> (<span class="ident">ret</span>, <span class="self">self</span>.<span class="ident">end_seq</span>()) {
-                    (<span class="prelude-val">Ok</span>(<span class="ident">ret</span>), <span class="prelude-val">Ok</span>(())) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ret</span>),
-                    (<span class="prelude-val">Err</span>(<span class="ident">err</span>), <span class="kw">_</span>) <span class="op">|</span> (<span class="kw">_</span>, <span class="prelude-val">Err</span>(<span class="ident">err</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>),
+                <span class="kw">match</span> (<span class="ident">ret</span>, <span class="self">self</span>.<span class="ident">end_seq</span>(<span class="ident">close</span>)) {
+                    (<span class="prelude-val">Ok</span>(<span class="ident">elements</span>), <span class="prelude-val">Ok</span>(())) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Value</span>::<span class="ident">Vector</span>(<span class="ident">elements</span>.<span class="ident">into</span>()),
+                    (<span class="prelude-val">Err</span>(<span class="ident">err</span>), <span class="kw">_</span>) <span class="op">|</span> (<span class="kw">_</span>, <span class="prelude-val">Err</span>(<span class="ident">err</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>),
                 }
             }
-            <span class="string">b&#39;[&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">brackets</span> {
-                <span class="ident">Brackets</span>::<span class="ident">Vector</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
-                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">RecursionLimitExceeded</span>));
-                    }
-
-                    <span class="self">self</span>.<span class="ident">eat_char</span>();
-                    <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">parse_vector_elements</span>(<span class="string">b&#39;]&#39;</span>);
-
-                    <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-
-                    <span class="kw">match</span> (<span class="ident">ret</span>, <span class="self">self</span>.<span class="ident">end_seq</span>()) {
-                        (<span class="prelude-val">Ok</span>(<span class="ident">elements</span>), <span class="prelude-val">Ok</span>(())) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">Vector</span>(<span class="ident">elements</span>.<span class="ident">into</span>())),
-                        (<span class="prelude-val">Err</span>(<span class="ident">err</span>), <span class="kw">_</span>) <span class="op">|</span> (<span class="kw">_</span>, <span class="prelude-val">Err</span>(<span class="ident">err</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>),
-                    }
+            <span class="ident">Token</span>::<span class="ident">ListOpen</span>(<span class="ident">close</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
+                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">RecursionLimitExceeded</span>));
                 }
-                <span class="ident">Brackets</span>::<span class="ident">List</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
-                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">RecursionLimitExceeded</span>));
-                    }
 
-                    <span class="self">self</span>.<span class="ident">eat_char</span>();
-                    <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">parse_list_elements</span>(<span class="string">b&#39;]&#39;</span>);
+                <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">parse_list_elements</span>(<span class="ident">close</span>);
 
-                    <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                <span class="self">self</span>.<span class="ident">remaining_depth</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
 
-                    <span class="kw">match</span> (<span class="ident">ret</span>, <span class="self">self</span>.<span class="ident">end_seq</span>()) {
-                        (<span class="prelude-val">Ok</span>(<span class="ident">ret</span>), <span class="prelude-val">Ok</span>(())) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ret</span>),
-                        (<span class="prelude-val">Err</span>(<span class="ident">err</span>), <span class="kw">_</span>) <span class="op">|</span> (<span class="kw">_</span>, <span class="prelude-val">Err</span>(<span class="ident">err</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>),
-                    }
-                }
-            },
-            <span class="string">b&#39;:&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">keyword_syntax</span>(<span class="ident">KeywordSyntax</span>::<span class="ident">ColonPrefix</span>) {
-                    <span class="self">self</span>.<span class="ident">eat_char</span>();
-                    <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">keyword</span>(<span class="self">self</span>.<span class="ident">parse_symbol</span>()<span class="question-mark">?</span>))
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">symbol</span>(<span class="self">self</span>.<span class="ident">parse_symbol</span>()<span class="question-mark">?</span>))
+                <span class="kw">match</span> (<span class="ident">ret</span>, <span class="self">self</span>.<span class="ident">end_seq</span>(<span class="ident">close</span>)) {
+                    (<span class="prelude-val">Ok</span>(<span class="ident">elements</span>), <span class="prelude-val">Ok</span>(())) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">elements</span>,
+                    (<span class="prelude-val">Err</span>(<span class="ident">err</span>), <span class="kw">_</span>) <span class="op">|</span> (<span class="kw">_</span>, <span class="prelude-val">Err</span>(<span class="ident">err</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>),
                 }
             }
-            <span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;z&#39;</span> <span class="op">|</span> <span class="string">b&#39;A&#39;</span>..<span class="op">=</span><span class="string">b&#39;Z&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">parse_symbol</span>()<span class="question-mark">?</span>;
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">keyword_syntax</span>(<span class="ident">KeywordSyntax</span>::<span class="ident">ColonPostfix</span>) <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">name</span>.<span class="ident">ends_with</span>(<span class="string">&#39;:&#39;</span>) {
-                    <span class="ident">name</span>.<span class="ident">pop</span>();
-                    <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">keyword</span>(<span class="ident">name</span>))
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">nil_symbol</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">NilSymbol</span>::<span class="ident">Default</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">name</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;nil&quot;</span> {
-                    <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">nil_symbol</span>() {
-                        <span class="ident">NilSymbol</span>::<span class="ident">EmptyList</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">Null</span>),
-                        <span class="ident">NilSymbol</span>::<span class="ident">Special</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">Nil</span>),
-                        <span class="ident">NilSymbol</span>::<span class="ident">Default</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
-                    }
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">t_symbol</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">TSymbol</span>::<span class="ident">Default</span> <span class="kw-2">&amp;</span><span class="op">&amp;</span> <span class="ident">name</span> <span class="op">=</span><span class="op">=</span> <span class="string">&quot;t&quot;</span> {
-                    <span class="kw">match</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">t_symbol</span>() {
-                        <span class="ident">TSymbol</span>::<span class="ident">True</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">from</span>(<span class="bool-val">true</span>)),
-                        <span class="ident">TSymbol</span>::<span class="ident">Default</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
-                    }
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">symbol</span>(<span class="ident">name</span>))
-                }
-            }
-            <span class="string">b&#39;?&#39;</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">char_syntax</span> <span class="op">=</span><span class="op">=</span> <span class="ident">CharSyntax</span>::<span class="ident">Elisp</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">eat_char</span>();
-                <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">Char</span>(<span class="self">self</span>.<span class="ident">read</span>.<span class="ident">parse_elisp_char</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">scratch</span>)<span class="question-mark">?</span>))
-            }
-            <span class="string">b&#39;\&#39;&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">eat_char</span>();
+            <span class="ident">Token</span>::<span class="ident">Quotation</span>(<span class="ident">name</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// TODO: more specific error</span>
                 <span class="kw">let</span> <span class="ident">datum</span> <span class="op">=</span> <span class="self">self</span>
                     .<span class="ident">parse</span>()<span class="question-mark">?</span>
                     .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">EofWhileParsingList</span>))<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">list</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">Value</span>::<span class="ident">symbol</span>(<span class="string">&quot;quote&quot;</span>), <span class="ident">datum</span>]))
-            }
-            <span class="string">b&#39;`&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">eat_char</span>();
-                <span class="comment">// TODO: more specific error</span>
-                <span class="kw">let</span> <span class="ident">datum</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">parse</span>()<span class="question-mark">?</span>
-                    .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">EofWhileParsingList</span>))<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">list</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">Value</span>::<span class="ident">symbol</span>(<span class="string">&quot;quasiquote&quot;</span>), <span class="ident">datum</span>]))
-            }
-            <span class="string">b&#39;,&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">eat_char</span>();
-                <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">peek_or_null</span>()<span class="question-mark">?</span> {
-                    <span class="string">b&#39;@&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="self">self</span>.<span class="ident">eat_char</span>();
-                        <span class="string">&quot;unquote-splicing&quot;</span>
-                    }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;unquote&quot;</span>,
-                };
-                <span class="comment">// TODO: more specific error</span>
-                <span class="kw">let</span> <span class="ident">datum</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">parse</span>()<span class="question-mark">?</span>
-                    .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">EofWhileParsingList</span>))<span class="question-mark">?</span>;
-                <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">list</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">Value</span>::<span class="ident">symbol</span>(<span class="ident">name</span>), <span class="ident">datum</span>]))
-            }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">SYMBOL_EXTENDED</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">peek</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">Value</span>::<span class="ident">symbol</span>(<span class="self">self</span>.<span class="ident">parse_symbol</span>()<span class="question-mark">?</span>))
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">Err</span>(<span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedSomeValue</span>))
-                }
+                <span class="ident">Value</span>::<span class="ident">list</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="ident">Value</span>::<span class="ident">symbol</span>(<span class="ident">name</span>), <span class="ident">datum</span>])
             }
         };
-        <span class="ident">value</span>.<span class="ident">map</span>(<span class="prelude-val">Some</span>)
+        <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">value</span>))
     }
 
     <span class="kw">fn</span> <span class="ident">parse_symbol</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
@@ -1914,7 +1924,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">parse_byte_list</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">parse_byte_list</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">close</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">parse_whitespace</span>() {
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="string">b&#39;(&#39;</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">eat_char</span>(),
@@ -1925,12 +1935,11 @@
         <span class="kw">loop</span> {
             <span class="kw">match</span> <span class="self">self</span>.<span class="ident">parse_whitespace</span>() {
                 <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
-                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">c</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">c</span> {
-                    <span class="string">b&#39;)&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">c</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">if</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="ident">close</span> {
                         <span class="self">self</span>.<span class="ident">eat_char</span>();
                         <span class="kw">break</span>;
-                    }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    } <span class="kw">else</span> {
                         <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="self">self</span>
                             .<span class="ident">parse_number</span>()<span class="question-mark">?</span>
                             .<span class="ident">as_u64</span>()
@@ -1940,7 +1949,7 @@
                         }
                         <span class="ident">bytes</span>.<span class="ident">push</span>(<span class="ident">n</span> <span class="kw">as</span> <span class="ident">u8</span>);
                     }
-                },
+                }
                 <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">EofWhileParsingList</span>)),
             }
         }
@@ -2318,13 +2327,14 @@
         <span class="prelude-val">Ok</span>(<span class="kw">if</span> <span class="ident">pos</span> { <span class="ident">f</span> } <span class="kw">else</span> { <span class="op">-</span><span class="ident">f</span> })
     }
 
-    <span class="kw">fn</span> <span class="ident">end_seq</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">end_seq</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">close</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">parse_whitespace</span>()<span class="question-mark">?</span> {
-            <span class="prelude-val">Some</span>(<span class="string">b&#39;)&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">b&#39;]&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">b</span>) <span class="kw">if</span> <span class="ident">b</span> <span class="op">=</span><span class="op">=</span> <span class="ident">close</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">eat_char</span>();
                 <span class="prelude-val">Ok</span>(())
             }
             <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">TrailingCharacters</span>)),
+            <span class="comment">// TODO: path is taken for vectors as well</span>
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">EofWhileParsingList</span>)),
         }
     }
