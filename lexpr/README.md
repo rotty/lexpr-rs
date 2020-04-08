@@ -44,6 +44,13 @@ family of languages. `lexpr` aims to provide the tools to:
 - Parse and serialize S-expression data from and to its textual
   representation.
 
+- Use S-expressions as surface syntax for a configuration file format
+  or other domain-specific language (DSL). `lexpr` allows obtaining
+  source location information for the parsed data, so you can give
+  error messages that point to the exact place a problem was detected,
+  in case the source was parsed successfully as S-expression data, but
+  the parsed data does not meet the requirements of your DSL.
+
 To get a better idea of the direction `lexpr` is headed, you may want
 to take at the [TODO](./TODO.md) or the ["why"](./docs/why.md)
 document.

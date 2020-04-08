@@ -343,6 +343,7 @@ pub use lexpr_macros::sexp;
 mod syntax;
 
 pub mod cons;
+pub mod datum;
 pub mod number;
 pub mod parse;
 pub mod print;
@@ -361,6 +362,9 @@ pub use self::print::{
 
 #[doc(inline)]
 pub use value::Value;
+
+#[doc(inline)]
+pub use datum::Datum;
 
 #[doc(inline)]
 pub use cons::Cons;

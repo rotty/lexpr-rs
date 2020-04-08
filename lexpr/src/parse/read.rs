@@ -85,9 +85,29 @@ pub trait Read<'de>: private::Sealed {
     }
 }
 
+/// A location in the parsed text.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Ord)]
 pub struct Position {
-    pub line: usize,
-    pub column: usize,
+    line: usize,
+    column: usize,
+}
+
+impl Position {
+    pub(crate) fn new(line: usize, column: usize) -> Self {
+        Position { line, column }
+    }
+
+    /// Returns the 1-based line number.
+    pub fn line(&self) -> usize {
+        self.line
+    }
+    /// Returns the column.
+    ///
+    /// Column numbers are 0-based byte offsets from the last line terminator
+    /// (`\n`).
+    pub fn column(&self) -> usize {
+        self.column
+    }
 }
 
 pub enum Reference<'b, 'c, T: ?Sized + 'static> {

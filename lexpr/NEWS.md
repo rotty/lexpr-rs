@@ -2,6 +2,10 @@
 
 New features:
 
+- An additional API that allows obtaining source location information
+  is now available, thanks to the request of @emoon, who opened the
+  very first issue on lexpr. The central point of the new API is the
+  new `Datum` type, which combines a `Value` with location information.
 - The iterators for cons cell chains now have a `peek` method.
 - Number literals with R7RS radix prefixes are now understood. This
   allows for parsing of binary, octal, hexidecimal, and
