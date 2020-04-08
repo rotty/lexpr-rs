@@ -14,11 +14,14 @@ use std::u64;
 use error::ErrorCode;
 use read::{ElispStr, Reference};
 
-use crate::{Cons, Number, Value};
+use crate::{datum::SpanInfo, Cons, Number, Value};
 
-pub use crate::syntax::{CharSyntax, KeywordSyntax, StringSyntax};
+pub use crate::{
+    datum::{Datum, Span},
+    syntax::{CharSyntax, KeywordSyntax, StringSyntax},
+};
 
-pub use read::{IoRead, Read, SliceRead, StrRead};
+pub use read::{IoRead, Position, Read, SliceRead, StrRead};
 
 #[doc(inline)]
 pub use error::{Error, Result};
@@ -360,13 +363,13 @@ impl<'de, R: Read<'de>> Parser<R> {
     /// Error caused by a byte from next_char().
     fn error(&mut self, reason: ErrorCode) -> Error {
         let pos = self.read.position();
-        Error::syntax(reason, pos.line, pos.column)
+        Error::syntax(reason, pos.line(), pos.column())
     }
 
     /// Error caused by a byte from peek().
     fn peek_error(&mut self, reason: ErrorCode) -> Error {
         let pos = self.read.peek_position();
-        Error::syntax(reason, pos.line, pos.column)
+        Error::syntax(reason, pos.line(), pos.column())
     }
 
     /// Returns the first non-whitespace byte without consuming it, or `None` if
@@ -592,7 +595,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                     return Err(self.peek_error(ErrorCode::RecursionLimitExceeded));
                 }
 
-                let ret = self.parse_vector_elements(close);
+                let ret = self.parse_vector(close);
 
                 self.remaining_depth += 1;
 
@@ -607,12 +610,12 @@ impl<'de, R: Read<'de>> Parser<R> {
                     return Err(self.peek_error(ErrorCode::RecursionLimitExceeded));
                 }
 
-                let ret = self.parse_list_elements(close);
+                let ret = self.parse_list(close);
 
                 self.remaining_depth += 1;
 
                 match (ret, self.end_seq(close)) {
-                    (Ok(elements), Ok(())) => elements,
+                    (Ok(list), Ok(())) => list,
                     (Err(err), _) | (_, Err(err)) => return Err(err),
                 }
             }
@@ -625,6 +628,84 @@ impl<'de, R: Read<'de>> Parser<R> {
             }
         };
         Ok(Some(value))
+    }
+
+    /// Parse a datum, failing on EOF.
+    pub fn expect_datum(&mut self) -> Result<Datum> {
+        self.parse_datum()
+            .and_then(|o| o.ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingValue)))
+    }
+
+    /// Parse a syntax object.
+    pub fn parse_datum(&mut self) -> Result<Option<Datum>> {
+        let peek = match self.parse_whitespace()? {
+            Some(b) => b,
+            None => return Ok(None),
+        };
+        let start = self.read.position();
+        let primitive =
+            |value, parser: &Self| Datum::primitive(value, start, parser.read.position());
+        let syntax = match self.parse_token(peek)? {
+            Token::Nil => primitive(Value::Nil, self),
+            Token::Null => primitive(Value::Null, self),
+            Token::Char(c) => primitive(Value::Char(c), self),
+            Token::Bool(b) => primitive(Value::Bool(b), self),
+            Token::Number(n) => primitive(Value::Number(n), self),
+            Token::Symbol(s) => primitive(Value::Symbol(s), self),
+            Token::Keyword(name) => primitive(Value::Keyword(name), self),
+            Token::String(s) => primitive(Value::String(s), self),
+            Token::Bytes(b) => primitive(Value::Bytes(b), self),
+            Token::ByteVecOpen(close) => primitive(
+                Value::Bytes(self.parse_byte_list(close)?.into_boxed_slice()),
+                self,
+            ),
+            Token::VecOpen(close) => {
+                self.remaining_depth -= 1;
+                if self.remaining_depth == 0 {
+                    return Err(self.peek_error(ErrorCode::RecursionLimitExceeded));
+                }
+
+                let ret = self.parse_vector_meta(close);
+
+                self.remaining_depth += 1;
+
+                match (ret, self.end_seq(close)) {
+                    (Ok((elements, info)), Ok(())) => {
+                        Datum::vec(elements, info, start, self.read.position())
+                    }
+                    (Err(err), _) | (_, Err(err)) => return Err(err),
+                }
+            }
+            Token::ListOpen(close) => {
+                self.remaining_depth -= 1;
+                if self.remaining_depth == 0 {
+                    return Err(self.peek_error(ErrorCode::RecursionLimitExceeded));
+                }
+
+                let ret = self.parse_list_meta(close);
+
+                self.remaining_depth += 1;
+
+                match (ret, self.end_seq(close)) {
+                    (Ok(Some((head, meta))), Ok(())) => {
+                        Datum::cons(head, meta, start, self.read.position())
+                    }
+                    (Ok(None), Ok(())) => {
+                        Datum::primitive(Value::Null, start, self.read.position())
+                    }
+                    (Err(err), _) | (_, Err(err)) => return Err(err),
+                }
+            }
+            Token::Quotation(name) => {
+                // TODO: more specific error
+                let token_end = self.read.position();
+                let quoted = self
+                    .parse_datum()?
+                    .ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingList))?;
+                Datum::quotation(name, quoted, Span::new(start, token_end))
+            }
+        };
+        Ok(Some(syntax))
     }
 
     fn parse_symbol(&mut self) -> Result<String> {
@@ -686,7 +767,7 @@ impl<'de, R: Read<'de>> Parser<R> {
         Ok(bytes)
     }
 
-    fn parse_list_elements(&mut self, terminator: u8) -> Result<Value> {
+    fn parse_list(&mut self, terminator: u8) -> Result<Value> {
         let mut list = Cons::new(Value::Nil, Value::Null);
         let mut pair = &mut list;
         let mut have_value = false;
@@ -742,7 +823,77 @@ impl<'de, R: Read<'de>> Parser<R> {
         }
     }
 
-    fn parse_vector_elements(&mut self, terminator: u8) -> Result<Vec<Value>> {
+    fn parse_list_meta(&mut self, terminator: u8) -> Result<Option<(Cons, [SpanInfo; 2])>> {
+        let mut list = Cons::new(Value::Nil, Value::Null);
+        let null_meta = [SpanInfo::Prim(Span::empty()), SpanInfo::Prim(Span::empty())];
+        let mut list_meta = null_meta.clone();
+        let mut pair = &mut list;
+        let mut meta = &mut list_meta;
+        let mut have_value = false;
+        loop {
+            match self.parse_whitespace() {
+                Err(e) => return Err(e),
+                Ok(Some(c)) => match c {
+                    b')' | b']' => {
+                        if c != terminator {
+                            return Err(self.peek_error(ErrorCode::MismatchedParenthesis));
+                        }
+                        if have_value {
+                            return Ok(Some((list, list_meta)));
+                        } else {
+                            return Ok(None);
+                        }
+                    }
+                    b'.' => {
+                        let start = self.read.position();
+                        self.eat_char();
+                        let next = self.peek_or_null()?;
+                        if next == 0 || is_delimiter(next) {
+                            if !have_value {
+                                return Err(self.peek_error(ErrorCode::ExpectedSomeValue));
+                            }
+                            let (cdr, cdr_meta) = self.expect_datum()?.into_inner();
+                            pair.set_cdr(cdr);
+                            meta[1] = cdr_meta;
+                            match self.parse_whitespace()? {
+                                Some(b')') => return Ok(Some((list, list_meta))),
+                                Some(_) => {
+                                    return Err(self.peek_error(ErrorCode::TrailingCharacters))
+                                }
+                                None => return Err(self.peek_error(ErrorCode::EofWhileParsingList)),
+                            }
+                        } else {
+                            if have_value {
+                                pair.set_cdr(Value::from((Value::Nil, Value::Null)));
+                                meta[1] =
+                                    SpanInfo::Cons(Span::empty(), Box::new(null_meta.clone()));
+                                pair = pair.cdr_mut().as_cons_mut().unwrap();
+                                meta = meta[1].cons_mut().unwrap();
+                            }
+                            pair.set_car(Value::symbol(self.parse_symbol_suffix(".")?));
+                            meta[0] = SpanInfo::Prim(Span::new(start, self.read.position()));
+                            have_value = true;
+                        }
+                    }
+                    _ => {
+                        if have_value {
+                            pair.set_cdr(Value::from((Value::Nil, Value::Null)));
+                            meta[1] = SpanInfo::Cons(Span::empty(), Box::new(null_meta.clone()));
+                            pair = pair.cdr_mut().as_cons_mut().unwrap();
+                            meta = meta[1].cons_mut().unwrap();
+                        }
+                        let (car, car_meta) = self.expect_datum()?.into_inner();
+                        pair.set_car(car);
+                        meta[0] = car_meta;
+                        have_value = true;
+                    }
+                },
+                Ok(None) => return Err(self.peek_error(ErrorCode::EofWhileParsingList)),
+            }
+        }
+    }
+
+    fn parse_vector(&mut self, terminator: u8) -> Result<Vec<Value>> {
         let mut elements = Vec::new();
         loop {
             match self.parse_whitespace() {
@@ -755,6 +906,30 @@ impl<'de, R: Read<'de>> Parser<R> {
                         return Ok(elements);
                     }
                     _ => elements.push(self.parse_value()?),
+                },
+                Ok(None) => return Err(self.peek_error(ErrorCode::EofWhileParsingVector)),
+            }
+        }
+    }
+
+    fn parse_vector_meta(&mut self, terminator: u8) -> Result<(Vec<Value>, Vec<SpanInfo>)> {
+        let mut elements = Vec::new();
+        let mut element_meta = Vec::new();
+        loop {
+            match self.parse_whitespace() {
+                Err(e) => return Err(e),
+                Ok(Some(c)) => match c {
+                    b')' | b']' => {
+                        if c != terminator {
+                            return Err(self.peek_error(ErrorCode::MismatchedParenthesis));
+                        }
+                        return Ok((elements, element_meta));
+                    }
+                    _ => {
+                        let (value, meta) = self.expect_datum()?.into_inner();
+                        elements.push(value);
+                        element_meta.push(meta);
+                    }
                 },
                 Ok(None) => return Err(self.peek_error(ErrorCode::EofWhileParsingVector)),
             }
@@ -1263,7 +1438,7 @@ pub fn from_str_elisp(s: &str) -> Result<Value> {
 
 pub mod error;
 mod iter;
-mod read;
+pub(crate) mod read;
 
 #[cfg(test)]
 mod tests;

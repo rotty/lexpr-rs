@@ -513,3 +513,161 @@ fn test_unquote_splicing_shorthand() {
         ])
     );
 }
+
+#[test]
+fn test_atoms_location_info() {
+    let mut parser = Parser::from_str(
+        "foo-symbol :prefix-keyword postfix-keyword:\n\
+                          #t #f #nil\n\
+                          100 -42 4.5",
+    );
+    for (value, start, end) in vec![
+        (Value::symbol("foo-symbol"), (1, 0), (1, 10)),
+        (Value::symbol(":prefix-keyword"), (1, 11), (1, 26)),
+        (Value::symbol("postfix-keyword:"), (1, 27), (1, 43)),
+        (Value::from(true), (2, 0), (2, 2)),
+        (Value::from(false), (2, 3), (2, 5)),
+        (Value::Nil, (2, 6), (2, 10)),
+        (Value::from(100), (3, 0), (3, 3)),
+        (Value::from(-42), (3, 4), (3, 7)),
+        (Value::from(4.5), (3, 8), (3, 11)),
+    ] {
+        let datum = parser.expect_datum().expect("parse error");
+        assert_eq!(datum.value(), &value);
+        assert_eq!(datum.span(), make_span(start, end));
+    }
+    parser.end().unwrap();
+}
+
+#[test]
+fn test_vector_location_info() {
+    #[rustfmt::skip]
+    let mut parser = Parser::from_str(
+        "#(1 2 3) #(4 foo)\n\
+         #(a b) #()",
+    );
+
+    for (value, start, end, inner) in vec![
+        (
+            Value::vector(vec![1, 2, 3]),
+            (1, 0),
+            (1, 8),
+            vec![((1, 2), (1, 3)), ((1, 4), (1, 5)), ((1, 6), (1, 7))],
+        ),
+        (
+            Value::vector(vec![Value::from(4), Value::symbol("foo")]),
+            (1, 9),
+            (1, 17),
+            vec![((1, 11), (1, 12)), ((1, 13), (1, 16))],
+        ),
+        (
+            Value::vector(vec![Value::symbol("a"), Value::symbol("b")]),
+            (2, 0),
+            (2, 6),
+            vec![((2, 2), (2, 3)), ((2, 4), (2, 5))],
+        ),
+        (Value::Vector(vec![].into()), (2, 7), (2, 10), vec![]),
+    ] {
+        let datum = parser.expect_datum().expect("parse error");
+        assert_eq!(datum.value(), &value);
+        assert_eq!(datum.span(), make_span(start, end));
+        for ((start, end), element) in inner.into_iter().zip(datum.vector_iter().unwrap()) {
+            assert_eq!(make_span(start, end), element.span());
+        }
+    }
+    parser.end().unwrap();
+}
+
+#[test]
+fn test_list_location_info() {
+    #[rustfmt::skip]
+    let mut parser = Parser::from_str(
+        "(1 2 3) (4 .foo)\n\
+         (a b) ()",
+    );
+
+    for (value, start, end, inner) in vec![
+        (
+            Value::list(vec![1, 2, 3]),
+            (1, 0),
+            (1, 7),
+            vec![((1, 1), (1, 2)), ((1, 3), (1, 4)), ((1, 5), (1, 6))],
+        ),
+        (
+            Value::list(vec![Value::from(4), Value::symbol(".foo")]),
+            (1, 8),
+            (1, 16),
+            vec![((1, 9), (1, 10)), ((1, 11), (1, 15))],
+        ),
+        (
+            Value::list(vec![Value::symbol("a"), Value::symbol("b")]),
+            (2, 0),
+            (2, 5),
+            vec![((2, 1), (2, 2)), ((2, 3), (2, 4))],
+        ),
+        (Value::Null, (2, 6), (2, 8), vec![]),
+    ] {
+        let datum = parser.expect_datum().expect("parse error");
+        assert_eq!(datum.value(), &value);
+        assert_eq!(datum.span(), make_span(start, end));
+        let mut items = datum.list_iter().unwrap();
+        for ((start, end), element) in inner.into_iter().zip(items.by_ref()) {
+            assert_eq!(make_span(start, end), element.span());
+        }
+        assert!(items.is_empty());
+    }
+    parser.end().unwrap();
+}
+
+#[test]
+fn test_dotted_list_location_info() {
+    let mut parser = Parser::from_str("(1 2 . 3)");
+    let datum = parser.expect_datum().expect("parse error");
+    parser.end().unwrap();
+    assert_eq!(datum.value(), &Value::append(vec![1, 2], 3));
+    assert_eq!(datum.span(), make_span((1, 0), (1, 9)));
+    let mut items = datum.list_iter().unwrap();
+    for (&(start, end), element) in [(1, 2), (3, 4)].iter().zip(items.by_ref()) {
+        assert_eq!(make_span((1, start), (1, end)), element.span());
+    }
+    for (&(start, end), element) in [(7, 8)].iter().zip(items.by_ref()) {
+        assert_eq!(make_span((1, start), (1, end)), element.span());
+    }
+}
+
+#[test]
+fn test_quoted_location_info() {
+    let mut parser = Parser::from_str("`(foo ,@bar ,baz 5)");
+    let datum = parser.expect_datum().expect("parse error");
+    parser.end().unwrap();
+    assert_eq!(
+        datum.value(),
+        &Value::list(vec![
+            Value::symbol("quasiquote"),
+            Value::list(vec![
+                Value::symbol("foo"),
+                Value::list(vec![
+                    Value::symbol("unquote-splicing"),
+                    Value::symbol("bar")
+                ]),
+                Value::list(vec![Value::symbol("unquote"), Value::symbol("baz")]),
+                Value::from(5),
+            ])
+        ])
+    );
+    assert_eq!(datum.span(), make_span((1, 0), (1, 19)));
+    let mut items = datum.list_iter().unwrap();
+    for (&(start, end), element) in [(0, 1), (1, 19)].iter().zip(items.by_ref()) {
+        assert_eq!(make_span((1, start), (1, end)), element.span());
+    }
+}
+
+fn make_span(
+    (start_line, start_column): (usize, usize),
+    (end_line, end_column): (usize, usize),
+) -> Span {
+    Span::new(
+        Position::new(start_line, start_column),
+        Position::new(end_line, end_column),
+    )
+}

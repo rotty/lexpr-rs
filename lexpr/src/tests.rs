@@ -15,7 +15,7 @@ use std::str;
 
 use crate as lexpr;
 
-use lexpr::{parse, print, Number, Value};
+use lexpr::{datum, parse, print, Number, Value};
 
 enum ValueKind {
     Nil,
@@ -193,4 +193,65 @@ fn test_alist_index() {
     assert_eq!(alist["foo"], Value::from(42));
     assert_eq!(alist["bar"], Value::from(23));
     assert_eq!(alist["baz"], Value::from(127));
+}
+
+/// Checks that an arbitrary S-expression value can be parsed including span
+/// information, the span information can be obtained and passes basic sanity
+/// checking.
+#[test]
+fn parse_datum_span_sanity() {
+    fn prop(input: Value) -> bool {
+        let string = lexpr::to_string(&input).expect("conversion to string failed");
+        let output = lexpr::datum::from_str(&string).expect("parsing failed");
+        output.value() == &input && check_span_sanity(output.as_ref())
+    }
+    QuickCheck::new()
+        .tests(1000)
+        .max_tests(2000)
+        .gen(StdGen::new(::rand::thread_rng(), 4))
+        .quickcheck(prop as fn(Value) -> bool);
+}
+
+fn check_span_sanity(datum: datum::Ref<'_>) -> bool {
+    let span = datum.span();
+    // Each datum spans at least one byte
+    if span.start() >= span.end() {
+        return false;
+    }
+    if let Some(mut items) = datum.list_iter() {
+        let mut pos = span.start();
+        for datum in items.by_ref() {
+            // Strictly speaking there are cases where one datum can follow
+            // immediatly after another, but the writer should not generate such
+            // non-idiomatic output.
+            if datum.span().start() <= pos {
+                return false;
+            }
+            check_span_sanity(datum);
+            pos = datum.span().end();
+        }
+        for datum in items.by_ref() {
+            if datum.span().start() <= pos {
+                return false;
+            }
+            check_span_sanity(datum);
+            pos = datum.span().end();
+        }
+        if pos >= span.end() {
+            return false;
+        }
+    } else if let Some(mut items) = datum.vector_iter() {
+        let mut pos = span.start();
+        for datum in items.by_ref() {
+            if datum.span().start() <= pos {
+                return false;
+            }
+            check_span_sanity(datum);
+            pos = datum.span().end();
+        }
+        if pos >= span.end() {
+            return false;
+        }
+    }
+    true
 }
