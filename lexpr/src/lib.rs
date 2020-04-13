@@ -84,17 +84,23 @@
 //!
 //! # What are S-expressions?
 //!
-//! S-expressions, as mentioned above, is the notation used by various
-//! dialects of Lisp to represent data (and code). As a data format,
-//! it is roughly comparable to JSON (JavaScript Object Notation), but
-//! syntactically more lightweight and simpler. Note that different
-//! Lisp dialects have notational differences for some data types, and
-//! some may lack specific data types completely. This section tries
-//! to give an overview over the different types of values
-//! representable by the [`Value`] data type and how it relates to
-//! different Lisp dialects. All examples are given in the syntax used
-//! in [Guile](https://www.gnu.org/software/guile/) Scheme
-//! implementation.
+//! S-expressions, as mentioned above, are the notation used by various dialects
+//! of Lisp to represent data (and code). As a data format, it is roughly
+//! comparable to JSON (JavaScript Object Notation), but syntactically more
+//! lightweight. Also, JSON is designed for consumption and generation by
+//! machines, which is reflected by the fact that it does not specify a syntax
+//! for comments. S-expressions on the other hand, are intended to be written
+//! and read by humans as well as machines. In this respect, they are more like
+//! YAML, but have a simpler and less syntactically rigid structure. For
+//! example, indentation does not convey any information to the parser, but is
+//! used only to allow for easier digestion by humans.
+//!
+//! Different Lisp dialects have notational differences for some data types, and
+//! some may lack specific data types completely. This section tries to give an
+//! overview over the different types of values representable by the [`Value`]
+//! data type and how it relates to different Lisp dialects. All examples are
+//! given in the syntax used in [Guile](https://www.gnu.org/software/guile/)
+//! Scheme implementation.
 //!
 //! The parser and serializer implementation in `lexpr` can be
 //! tailored to parse and generate S-expression data in various
@@ -109,19 +115,19 @@
 //! ## Primitive types
 //!
 //! Primitive, or non-compound types are those that can not
-//! recursively contain arbitrary other values, such as numbers,
-//! strings and booleans.
+//! recursively contain arbitrary other values. Numbers,
+//! strings and booleans fall into this category.
 //!
 //! ### Symbols and keywords
 //!
 //! Lisp has a data type not commonly found in other languages, namely
-//! "symbols". A symbol is conceptually similar to identifiers in
-//! other languages, but allow for a much richer set of characters
-//! than allowed for identifiers in other languages. Also, identifiers
-//! in other languages can typically not be used in data; lisps expose
-//! them as a primitive data type, a result of the
-//! [homoiconicity](https://en.wikipedia.org/wiki/Homoiconicity) of
-//! the Lisp language family.
+//! "symbols". A symbol is conceptually similar to identifiers in other
+//! languages, but allow for a much richer set of characters than typically
+//! allowed for identifiers in other languages. Also, identifiers in other
+//! languages can usually not be used in data; Lisps expose them as a
+//! primitive data type, a result of the
+//! [homoiconicity](https://en.wikipedia.org/wiki/Homoiconicity) of the Lisp
+//! language family.
 //!
 //!
 //! ```scheme
@@ -143,6 +149,12 @@
 //!
 //! ### Booleans
 //!
+//! While Scheme has a primitive boolean data type, more traditional Lisps such
+//! as Emacs Lisp and Common Lisp do not; they instead use the symbols `t` and
+//! `nil` to represent boolean values. Using parser options, `lexpr` allows to
+//! parse these symbols as booleans, which may be desirable in some
+//! circumstances, as booleans are simpler to handle than symbols.
+//!
 //!  ```scheme
 //!  #t ; The literal representing true
 //!  #f ; The literal representing false
@@ -158,21 +170,26 @@
 //!
 //! ### Numbers
 //!
-//! Numbers are represented by the [`Number`] abstract data type. It
-//! can handle signed and unsigned integers, each up to 64 bit size,
-//! as well as floating point numbers.
-//!
-//! There is nothing surprising about the number syntax, extensions
-//! such as binary, octal and hexadecimal numbers are not yet
-//! implemented.
+//! Numbers are represented by the [`Number`] abstract data type. It can handle
+//! signed and unsigned integers, each up to 64 bit size, as well as floating
+//! point numbers. The Scheme syntax for hexadecimal, octal, and binary literals
+//! is supported.
 //!
 //! ```scheme
-//! 1 -4 3.14 ; A postive, negative, and a floating point number
+//! 1 -4 3.14  ; A postive, negative, and a floating point number
+//! #xDEADBEEF ; An integer written using decimal notation
+//! #o0677     ; Octal
+//! #b10110    ; Binary
 //! ```
+//!
+//! Scheme has an elaborate numerical type hierarchy (called "numeric tower"),
+//! which supports fractionals, numbers of arbitrary size, and complex
+//! numbers. These more advanced number types are not yet supported by `lexpr`.
+//!
 //!
 //! ### Characters
 //!
-//! Characters are unicode codepoints, represented by Rust's char data type
+//! Characters are unicode codepoints, represented by Rust's `char` data type
 //! embedded in the [`Value::Char`] variant.
 //!
 //! ### Strings
@@ -202,10 +219,10 @@
 //! ```
 //!
 //! Lists are not only used to represent sequences of values, but also
-//! associative arrays, also known as maps. A map is represented as a
-//! list containing sub-lists, where the first element of each
-//! sub-list is the key, and the remainder of the list is the
-//! associated value.
+//! associative arrays, also known as maps. A map is represented as a list
+//! containing cons cells, where the first field of each cons cell, called
+//! `car`, for obscure historical reasons, is the key, and the second field
+//! (`cdr`) of the cons cell is the associated value.
 //!
 //! ```scheme
 //! ;; An association list with the symbols `a` and `b` as keys
