@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `lexpr` crate."><meta name="keywords" content="rust, rustlang, rust-lang, lexpr"><title>lexpr - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../lexpr/index.html'><div class='logo-container'><img src='../rust-logo.png' alt='logo'></div></a><p class='location'>Crate lexpr</p><div class="sidebar-elems"><a id='all-types' href='all.html'><p>See all lexpr's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'lexpr', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/lexpr/lib.rs.html#1-358' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>lexpr</a></span></h1><div class='docblock'><p>This crate provides facilities for parsing, printing and
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `lexpr` crate."><meta name="keywords" content="rust, rustlang, rust-lang, lexpr"><title>lexpr - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script><noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="shortcut icon" href="../favicon.ico"><style type="text/css">#crate-search{background-image:url("../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../lexpr/index.html'><div class='logo-container'><img src='../rust-logo.png' alt='logo'></div></a><p class='location'>Crate lexpr</p><div class="sidebar-elems"><a id='all-types' href='all.html'><p>See all lexpr's items</p></a><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'lexpr', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/lexpr/lib.rs.html#1-375' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>lexpr</a></span></h1><div class='docblock'><p>This crate provides facilities for parsing, printing and
 manipulating S-expression data. S-expressions are the format used
 to represent code and data in the Lisp language family.</p>
 <pre><code class="language-scheme">((name . &quot;John Doe&quot;)
@@ -69,17 +69,22 @@ structure.</p>
 
 <span class="prelude-val">Ok</span>(())</pre></div>
 <h1 id="what-are-s-expressions" class="section-header"><a href="#what-are-s-expressions">What are S-expressions?</a></h1>
-<p>S-expressions, as mentioned above, is the notation used by various
-dialects of Lisp to represent data (and code). As a data format,
-it is roughly comparable to JSON (JavaScript Object Notation), but
-syntactically more lightweight and simpler. Note that different
-Lisp dialects have notational differences for some data types, and
-some may lack specific data types completely. This section tries
-to give an overview over the different types of values
-representable by the <a href="../lexpr/value/enum.Value.html" title="`Value`"><code>Value</code></a> data type and how it relates to
-different Lisp dialects. All examples are given in the syntax used
-in <a href="https://www.gnu.org/software/guile/">Guile</a> Scheme
-implementation.</p>
+<p>S-expressions, as mentioned above, are the notation used by various dialects
+of Lisp to represent data (and code). As a data format, it is roughly
+comparable to JSON (JavaScript Object Notation), but syntactically more
+lightweight. Also, JSON is designed for consumption and generation by
+machines, which is reflected by the fact that it does not specify a syntax
+for comments. S-expressions on the other hand, are intended to be written
+and read by humans as well as machines. In this respect, they are more like
+YAML, but have a simpler and less syntactically rigid structure. For
+example, indentation does not convey any information to the parser, but is
+used only to allow for easier digestion by humans.</p>
+<p>Different Lisp dialects have notational differences for some data types, and
+some may lack specific data types completely. This section tries to give an
+overview over the different types of values representable by the <a href="../lexpr/value/enum.Value.html" title="`Value`"><code>Value</code></a>
+data type and how it relates to different Lisp dialects. All examples are
+given in the syntax used in <a href="https://www.gnu.org/software/guile/">Guile</a>
+Scheme implementation.</p>
 <p>The parser and serializer implementation in <code>lexpr</code> can be
 tailored to parse and generate S-expression data in various
 &quot;dialects&quot; in use by different Lisp variants; the aim is to cover
@@ -90,17 +95,17 @@ extensions, as well as Emacs Lisp.</p>
 split into the two categories primitive types and compound types.</p>
 <h2 id="primitive-types" class="section-header"><a href="#primitive-types">Primitive types</a></h2>
 <p>Primitive, or non-compound types are those that can not
-recursively contain arbitrary other values, such as numbers,
-strings and booleans.</p>
+recursively contain arbitrary other values. Numbers,
+strings and booleans fall into this category.</p>
 <h3 id="symbols-and-keywords" class="section-header"><a href="#symbols-and-keywords">Symbols and keywords</a></h3>
 <p>Lisp has a data type not commonly found in other languages, namely
-&quot;symbols&quot;. A symbol is conceptually similar to identifiers in
-other languages, but allow for a much richer set of characters
-than allowed for identifiers in other languages. Also, identifiers
-in other languages can typically not be used in data; lisps expose
-them as a primitive data type, a result of the
-<a href="https://en.wikipedia.org/wiki/Homoiconicity">homoiconicity</a> of
-the Lisp language family.</p>
+&quot;symbols&quot;. A symbol is conceptually similar to identifiers in other
+languages, but allow for a much richer set of characters than typically
+allowed for identifiers in other languages. Also, identifiers in other
+languages can usually not be used in data; Lisps expose them as a
+primitive data type, a result of the
+<a href="https://en.wikipedia.org/wiki/Homoiconicity">homoiconicity</a> of the Lisp
+language family.</p>
 <pre><code class="language-scheme">this-is-a-symbol ; A single symbol, dashes are allowed
 another.symbol   ; Periods are allowed as well
 foo$bar!&lt;_&gt;?     ; As are quite a few other characters
@@ -114,6 +119,11 @@ are used for different purposes in the language.</p>
 :bar  ; A keyword named &quot;bar&quot;, written in Emacs Lisp or Common Lisp notation
 </code></pre>
 <h3 id="booleans" class="section-header"><a href="#booleans">Booleans</a></h3>
+<p>While Scheme has a primitive boolean data type, more traditional Lisps such
+as Emacs Lisp and Common Lisp do not; they instead use the symbols <code>t</code> and
+<code>nil</code> to represent boolean values. Using parser options, <code>lexpr</code> allows to
+parse these symbols as booleans, which may be desirable in some
+circumstances, as booleans are simpler to handle than symbols.</p>
 <pre><code class="language-scheme">#t ; The literal representing true
 #f ; The literal representing false
 </code></pre>
@@ -124,16 +134,20 @@ atom written as <code>()</code>, and there <code>nil</code> is just a regular
 symbol. Both <code>nil</code> and the empty list are present and
 distinguishable in <code>lexpr</code>.</p>
 <h3 id="numbers" class="section-header"><a href="#numbers">Numbers</a></h3>
-<p>Numbers are represented by the <a href="../lexpr/number/struct.Number.html" title="`Number`"><code>Number</code></a> abstract data type. It
-can handle signed and unsigned integers, each up to 64 bit size,
-as well as floating point numbers.</p>
-<p>There is nothing surprising about the number syntax, extensions
-such as binary, octal and hexadecimal numbers are not yet
-implemented.</p>
-<pre><code class="language-scheme">1 -4 3.14 ; A postive, negative, and a floating point number
+<p>Numbers are represented by the <a href="../lexpr/number/struct.Number.html" title="`Number`"><code>Number</code></a> abstract data type. It can handle
+signed and unsigned integers, each up to 64 bit size, as well as floating
+point numbers. The Scheme syntax for hexadecimal, octal, and binary literals
+is supported.</p>
+<pre><code class="language-scheme">1 -4 3.14  ; A postive, negative, and a floating point number
+#xDEADBEEF ; An integer written using decimal notation
+#o0677     ; Octal
+#b10110    ; Binary
 </code></pre>
+<p>Scheme has an elaborate numerical type hierarchy (called &quot;numeric tower&quot;),
+which supports fractionals, numbers of arbitrary size, and complex
+numbers. These more advanced number types are not yet supported by <code>lexpr</code>.</p>
 <h3 id="characters" class="section-header"><a href="#characters">Characters</a></h3>
-<p>Characters are unicode codepoints, represented by Rust's char data type
+<p>Characters are unicode codepoints, represented by Rust's <code>char</code> data type
 embedded in the <a href="../lexpr/value/enum.Value.html#Char.v" title="`Value::Char`"><code>Value::Char</code></a> variant.</p>
 <h3 id="strings" class="section-header"><a href="#strings">Strings</a></h3>
 <pre><code class="language-scheme">&quot;Hello World!&quot;
@@ -155,10 +169,10 @@ list. Here are some examples:</p>
 (1 2 . 3) ; A dotted (improper) list
 </code></pre>
 <p>Lists are not only used to represent sequences of values, but also
-associative arrays, also known as maps. A map is represented as a
-list containing sub-lists, where the first element of each
-sub-list is the key, and the remainder of the list is the
-associated value.</p>
+associative arrays, also known as maps. A map is represented as a list
+containing cons cells, where the first field of each cons cell, called
+<code>car</code>, for obscure historical reasons, is the key, and the second field
+(<code>cdr</code>) of the cons cell is the associated value.</p>
 <pre><code class="language-scheme">;; An association list with the symbols `a` and `b` as keys
 ((a . 42) (b . 43))
 </code></pre>
