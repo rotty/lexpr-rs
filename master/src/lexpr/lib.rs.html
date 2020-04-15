@@ -373,6 +373,10 @@
 <span id="373">373</span>
 <span id="374">374</span>
 <span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">deny</span>(<span class="ident">missing_docs</span>)]</span>
 <span class="attribute">#![<span class="ident">warn</span>(<span class="ident">rust_2018_idioms</span>)]</span>
@@ -719,6 +723,7 @@
 <span class="kw">mod</span> <span class="ident">syntax</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">cons</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">datum</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">number</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">parse</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">print</span>;
@@ -737,6 +742,9 @@
 
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">inline</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">value</span>::<span class="ident">Value</span>;
+
+<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">inline</span>)]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">datum</span>::<span class="ident">Datum</span>;
 
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">inline</span>)]</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">cons</span>::<span class="ident">Cons</span>;

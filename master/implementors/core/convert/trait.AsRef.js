@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["lexpr"] = [{"text":"impl&lt;'a&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/convert/trait.AsRef.html\" title=\"trait core::convert::AsRef\">AsRef</a>&lt;<a class=\"enum\" href=\"lexpr/value/enum.Value.html\" title=\"enum lexpr::value::Value\">Value</a>&gt; for <a class=\"struct\" href=\"lexpr/datum/struct.Ref.html\" title=\"struct lexpr::datum::Ref\">Ref</a>&lt;'a&gt;","synthetic":false,"types":["lexpr::datum::Ref"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

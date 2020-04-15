@@ -1,6 +1,6 @@
 var N = null;var sourcesIndex = {};
 sourcesIndex["itoa"] = {"name":"","files":["lib.rs"]};
-sourcesIndex["lexpr"] = {"name":"","dirs":[{"name":"parse","files":["error.rs","iter.rs","mod.rs","read.rs"]},{"name":"value","files":["from.rs","index.rs","mod.rs","partial_eq.rs"]}],"files":["cons.rs","lib.rs","number.rs","print.rs","syntax.rs"]};
+sourcesIndex["lexpr"] = {"name":"","dirs":[{"name":"parse","files":["error.rs","iter.rs","mod.rs","read.rs"]},{"name":"value","files":["from.rs","index.rs","mod.rs","partial_eq.rs"]}],"files":["cons.rs","datum.rs","lib.rs","number.rs","print.rs","syntax.rs"]};
 sourcesIndex["lexpr_macros"] = {"name":"","files":["generator.rs","lib.rs","parser.rs","value.rs"]};
 sourcesIndex["proc_macro2"] = {"name":"","files":["fallback.rs","lib.rs","strnom.rs","wrapper.rs"]};
 sourcesIndex["proc_macro_hack"] = {"name":"","files":["error.rs","lib.rs","parse.rs","quote.rs"]};
