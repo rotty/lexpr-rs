@@ -912,7 +912,7 @@
 {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">parser</span> <span class="op">=</span> <span class="ident">Parser</span>::<span class="ident">with_options</span>(<span class="ident">read</span>, <span class="ident">options</span>);
     <span class="kw">let</span> <span class="ident">datum</span> <span class="op">=</span> <span class="ident">parser</span>.<span class="ident">expect_datum</span>()<span class="question-mark">?</span>;
-    <span class="ident">parser</span>.<span class="ident">end</span>()<span class="question-mark">?</span>;
+    <span class="ident">parser</span>.<span class="ident">expect_end</span>()<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(<span class="ident">datum</span>)
 }
