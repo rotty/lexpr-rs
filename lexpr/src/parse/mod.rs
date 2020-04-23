@@ -330,14 +330,23 @@ macro_rules! overflow {
 }
 
 impl<'de, R: Read<'de>> Parser<R> {
-    /// The `Parser::end` method should be called after a value has been fully
-    /// parsed.  This allows the `Parser` to validate that the input stream is
-    /// at the end or that it only has trailing whitespace.
-    pub fn end(&mut self) -> Result<()> {
+    /// Expect the end of input.
+    ///
+    /// The `Parser::expect_end` method should be called after the last
+    /// S-expression has been consumed.  This allows the parser` to validate
+    /// that the input stream is at the end or that it only has trailing
+    /// whitespace.
+    pub fn expect_end(&mut self) -> Result<()> {
         match self.parse_whitespace()? {
             Some(_) => Err(self.peek_error(ErrorCode::TrailingCharacters)),
             None => Ok(()),
         }
+    }
+
+    /// Expect the end of input.
+    #[deprecated(since = "0.2.5", note = "Please use the `expect_end` method instead")]
+    pub fn end(&mut self) -> Result<()> {
+        self.expect_end()
     }
 
     fn peek(&mut self) -> Result<Option<u8>> {
@@ -394,23 +403,60 @@ impl<'de, R: Read<'de>> Parser<R> {
         }
     }
 
+    /// Obtain an iterator over the values produced by the parser.
+    ///
+    /// ```
+    /// # use lexpr::Parser;
+    /// let mut parser = Parser::from_str(r#"foo ("bar" . 3.14) #:baz (1 2 3)"#);
+    /// for value in parser.value_iter() {
+    ///     println!("parsed value: {}", value.expect("parse error"));
+    /// }
+    /// ```
+    pub fn value_iter(&mut self) -> ValueIter<'_, R> {
+        ValueIter(self)
+    }
+
+    /// Obtain an iterator over the values produced by the parser, including location information.
+    /// # use lexpr::Parser;
+    /// let mut parser = Parser::from_str(r#"foo ("bar" . 3.14) #:baz (1 2 3)"#);
+    /// for datum in parser.datum_iter() {
+    ///     let datum = datum.expect("parse error");
+    ///     let span = datum.span();
+    ///     let start = span.start();
+    ///     let end = span.end();
+    ///     println!("parsed datum at {}:{}--{}:{}: {}", start.line(), start.column(),
+    ///              end.start(), end.column(),
+    ///              datum.value());
+    /// }
+    /// ```
+    pub fn datum_iter(&mut self) -> DatumIter<'_, R> {
+        DatumIter(self)
+    }
+
+    /// Parse a single S-expression from the input source.
+    #[deprecated(since = "0.2.5", note = "Please use the `expect_value` method instead")]
+    pub fn parse_value(&mut self) -> Result<Value> {
+        self.next_value()
+            .and_then(|o| o.ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingValue)))
+    }
+
     /// Parse a single S-expression from the input source.
     ///
     /// This expects an S-expression value to be actually present, and
     /// returns an `Err` when called at the end of input. Use
-    /// `Parser::parse` if you need to handle end of input gracefully.
+    /// `Parser::value_iter()` if you need to handle end of input gracefully.
     ///
     /// ```
     /// # use lexpr::{sexp, parse, Parser};
     /// let mut parser = Parser::from_str(r#"foo ("bar" . 3.14) #:baz (1 2 3)"#);
-    /// assert_eq!(parser.parse_value().unwrap(), sexp!(foo));
-    /// assert_eq!(parser.parse_value().unwrap(), sexp!(("bar" . 3.14)));
-    /// assert_eq!(parser.parse_value().unwrap(), sexp!(#:baz));
-    /// assert_eq!(parser.parse_value().unwrap(), sexp!((1 2 3)));
-    /// assert!(parser.end().is_ok());
+    /// assert_eq!(parser.expect_value().unwrap(), sexp!(foo));
+    /// assert_eq!(parser.expect_value().unwrap(), sexp!(("bar" . 3.14)));
+    /// assert_eq!(parser.expect_value().unwrap(), sexp!(#:baz));
+    /// assert_eq!(parser.expect_value().unwrap(), sexp!((1 2 3)));
+    /// assert!(parser.expect_end().is_ok());
     /// ```
-    pub fn parse_value(&mut self) -> Result<Value> {
-        self.parse()
+    pub fn expect_value(&mut self) -> Result<Value> {
+        self.next_value()
             .and_then(|o| o.ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingValue)))
     }
 
@@ -557,21 +603,7 @@ impl<'de, R: Read<'de>> Parser<R> {
         Ok(token)
     }
 
-    /// Parse a single S-expression from the input source.
-    ///
-    /// If the end of input is ecountered, this will return
-    /// `Ok(None)`, otherwise, if parsing suceeded, `Ok(Some(Value))`.
-    ///
-    /// ```
-    /// # use lexpr::{sexp, parse, Parser};
-    /// let mut parser = Parser::from_str(r#"foo ("bar" . 3.14) #:baz (1 2 3)"#);
-    /// assert_eq!(parser.parse().unwrap(), Some(sexp!(foo)));
-    /// assert_eq!(parser.parse().unwrap(), Some(sexp!(("bar" . 3.14))));
-    /// assert_eq!(parser.parse().unwrap(), Some(sexp!(#:baz)));
-    /// assert_eq!(parser.parse().unwrap(), Some(sexp!((1 2 3))));
-    /// assert_eq!(parser.parse().unwrap(), None);
-    /// ```
-    pub fn parse(&mut self) -> Result<Option<Value>> {
+    fn next_value(&mut self) -> Result<Option<Value>> {
         let peek = match self.parse_whitespace()? {
             Some(b) => b,
             None => return Ok(None),
@@ -622,7 +654,7 @@ impl<'de, R: Read<'de>> Parser<R> {
             Token::Quotation(name) => {
                 // TODO: more specific error
                 let datum = self
-                    .parse()?
+                    .next_value()?
                     .ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingList))?;
                 Value::list(vec![Value::symbol(name), datum])
             }
@@ -630,14 +662,22 @@ impl<'de, R: Read<'de>> Parser<R> {
         Ok(Some(value))
     }
 
+    /// Parse a single S-expression from the input source.
+    #[deprecated(
+        since = "0.2.5",
+        note = "Use the `value_iter` method for obtaining a sequence of values"
+    )]
+    pub fn parse(&mut self) -> Result<Option<Value>> {
+        self.next_value()
+    }
+
     /// Parse a datum, failing on EOF.
     pub fn expect_datum(&mut self) -> Result<Datum> {
-        self.parse_datum()
+        self.next_datum()
             .and_then(|o| o.ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingValue)))
     }
 
-    /// Parse a syntax object.
-    pub fn parse_datum(&mut self) -> Result<Option<Datum>> {
+    fn next_datum(&mut self) -> Result<Option<Datum>> {
         let peek = match self.parse_whitespace()? {
             Some(b) => b,
             None => return Ok(None),
@@ -700,7 +740,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                 // TODO: more specific error
                 let token_end = self.read.position();
                 let quoted = self
-                    .parse_datum()?
+                    .next_datum()?
                     .ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingList))?;
                 Datum::quotation(name, quoted, Span::new(start, token_end))
             }
@@ -792,7 +832,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                             if !have_value {
                                 return Err(self.peek_error(ErrorCode::ExpectedSomeValue));
                             }
-                            pair.set_cdr(self.parse_value()?);
+                            pair.set_cdr(self.expect_value()?);
                             match self.parse_whitespace()? {
                                 Some(b')') => return Ok(Value::Cons(list)),
                                 Some(_) => {
@@ -814,7 +854,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                             pair.set_cdr(Value::from((Value::Nil, Value::Null)));
                             pair = pair.cdr_mut().as_cons_mut().unwrap();
                         }
-                        pair.set_car(self.parse_value()?);
+                        pair.set_car(self.expect_value()?);
                         have_value = true;
                     }
                 },
@@ -905,7 +945,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                         }
                         return Ok(elements);
                     }
-                    _ => elements.push(self.parse_value()?),
+                    _ => elements.push(self.expect_value()?),
                 },
                 Ok(None) => return Err(self.peek_error(ErrorCode::EofWhileParsingVector)),
             }
@@ -1299,23 +1339,21 @@ where
     R: Read<'de>,
 {
     let mut parser = Parser::with_options(read, options);
-    let value = parser.parse_value()?;
-    parser.end()?;
+    let value = parser.expect_value()?;
+    parser.expect_end()?;
 
     Ok(value)
 }
 
+#[deprecated(
+    since = "0.2.5",
+    note = "Please use the `value_iter` method to obtain an iterator"
+)]
 impl<'de, R: Read<'de>> Iterator for Parser<R> {
     type Item = Result<Value>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // TODO: This is just `Result::transpose`, which go introduced in 1.33,
-        // so update this when bumping MSRV
-        match self.parse() {
-            Ok(Some(item)) => Some(Ok(item)),
-            Ok(None) => None,
-            Err(e) => Some(Err(e)),
-        }
+        self.value_iter().next()
     }
 }
 
@@ -1434,6 +1472,46 @@ pub fn from_str(s: &str) -> Result<Value> {
 /// [`from_str_custom`]: fn.from_str_custom.html
 pub fn from_str_elisp(s: &str) -> Result<Value> {
     from_str_custom(s, Options::elisp())
+}
+
+/// Iterator over the values producedd by a parser.
+pub struct ValueIter<'a, R>(&'a mut Parser<R>);
+
+impl<'a, 'b, R> Iterator for ValueIter<'a, R>
+where
+    R: read::Read<'b>,
+{
+    type Item = Result<Value>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // TODO: This is just `Result::transpose`, which go introduced in 1.33,
+        // so update this when bumping MSRV
+        match self.0.next_value() {
+            Ok(Some(item)) => Some(Ok(item)),
+            Ok(None) => None,
+            Err(e) => Some(Err(e)),
+        }
+    }
+}
+
+/// Iterator over the datums producedd by a parser.
+pub struct DatumIter<'a, R>(&'a mut Parser<R>);
+
+impl<'a, 'b, R> Iterator for DatumIter<'a, R>
+where
+    R: read::Read<'b>,
+{
+    type Item = Result<Datum>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // TODO: This is just `Result::transpose`, which go introduced in 1.33,
+        // so update this when bumping MSRV
+        match self.0.next_datum() {
+            Ok(Some(item)) => Some(Ok(item)),
+            Ok(None) => None,
+            Err(e) => Some(Err(e)),
+        }
+    }
 }
 
 pub mod error;

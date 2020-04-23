@@ -21,9 +21,9 @@ fn test_atoms_default() {
         Value::from(-42),
         Value::from(4.5),
     ] {
-        assert_eq!(parser.parse().unwrap(), Some(value));
+        assert_eq!(parser.expect_value().unwrap(), value);
     }
-    parser.end().unwrap();
+    parser.expect_end().unwrap();
 }
 
 #[test]
@@ -536,7 +536,7 @@ fn test_atoms_location_info() {
         assert_eq!(datum.value(), &value);
         assert_eq!(datum.span(), make_span(start, end));
     }
-    parser.end().unwrap();
+    parser.expect_end().unwrap();
 }
 
 #[test]
@@ -575,7 +575,7 @@ fn test_vector_location_info() {
             assert_eq!(make_span(start, end), element.span());
         }
     }
-    parser.end().unwrap();
+    parser.expect_end().unwrap();
 }
 
 #[test]
@@ -616,14 +616,14 @@ fn test_list_location_info() {
         }
         assert!(items.is_empty());
     }
-    parser.end().unwrap();
+    parser.expect_end().unwrap();
 }
 
 #[test]
 fn test_dotted_list_location_info() {
     let mut parser = Parser::from_str("(1 2 . 3)");
     let datum = parser.expect_datum().expect("parse error");
-    parser.end().unwrap();
+    parser.expect_end().unwrap();
     assert_eq!(datum.value(), &Value::append(vec![1, 2], 3));
     assert_eq!(datum.span(), make_span((1, 0), (1, 9)));
     let mut items = datum.list_iter().unwrap();
@@ -639,7 +639,7 @@ fn test_dotted_list_location_info() {
 fn test_quoted_location_info() {
     let mut parser = Parser::from_str("`(foo ,@bar ,baz 5)");
     let datum = parser.expect_datum().expect("parse error");
-    parser.end().unwrap();
+    parser.expect_end().unwrap();
     assert_eq!(
         datum.value(),
         &Value::list(vec![

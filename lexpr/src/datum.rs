@@ -392,7 +392,7 @@ where
 {
     let mut parser = Parser::with_options(read, options);
     let datum = parser.expect_datum()?;
-    parser.end()?;
+    parser.expect_end()?;
 
     Ok(datum)
 }
