@@ -149,7 +149,7 @@ fn parse_list(tokens: TokenStream) -> Result<Value, ParseError> {
 fn parse_vector(tokens: TokenStream) -> Result<Value, ParseError> {
     let mut elements = vec![];
     let mut parser = Parser::new(tokens.into_iter().collect());
-    while let Some(_) = parser.peek() {
+    while parser.peek().is_some() {
         elements.push(parser.parse()?);
     }
     Ok(Value::Vector(elements))
