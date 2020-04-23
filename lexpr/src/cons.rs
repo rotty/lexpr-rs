@@ -23,6 +23,9 @@ use crate::Value;
 /// converting the list to a vector. To account for the possibility of
 /// dotted lists, the iterators and vector conversion functions have
 /// slightly unusual types.
+///
+/// The most natural way to traverse a singly linked list is probably by using
+/// the `list_iter` method.
 #[derive(PartialEq, Clone)]
 pub struct Cons {
     inner: Box<(Value, Value)>,
@@ -177,6 +180,15 @@ impl Cons {
         }
         unreachable!()
     }
+
+    /// Returns an iterator that returns each element (`car` field) of a singly-linked list.
+    ///
+    /// The iterator returns `None` if a terminating value is encountered. For a
+    /// dotted list, the iterator is not yet exhausted at that point, and
+    /// produces the non-`Null` terminating value next.
+    pub fn list_iter(&self) -> ListIter<'_> {
+        ListIter::cons(self)
+    }
 }
 
 impl IntoIterator for Cons {
@@ -283,6 +295,96 @@ impl Iterator for IntoIter {
                 }
             }
             None => None,
+        }
+    }
+}
+
+/// An iterator yielding the `car` field of a chain of cons cells.
+///
+/// # Improper lists
+///
+/// Since in Lisp, lists can be "improper", i.e., terminated by a value other than `Null`, this
+/// iterator type takes advantage of the fact that Rust's iterators can produce multiple sequences
+/// of values, each terminated by `None`. For an improper list, the terminating value is produced
+/// after the sequence of elements, as a singleton element, again followed by `None`.
+///
+/// For example, while the list `(1 2 3)` will produce the three expected `Some` values, followed by
+/// `None`, the list `(1 2 . 3)` will produce `Some` values for `1` and `2`, then a `None`, followed
+/// by a some value for `3`, and then the final `None`.
+#[derive(Debug, Clone)]
+pub struct ListIter<'a>(ListCursor<'a>);
+
+#[derive(Debug, Clone)]
+enum ListCursor<'a> {
+    Cons(&'a Cons),
+    Dot(&'a Value),
+    Rest(&'a Value),
+    Exhausted,
+}
+
+impl<'a> ListIter<'a> {
+    /// Returns true when the iterator is completely exhausted.
+    ///
+    /// For an improper list, true will only be returned after the terminating value has been
+    /// consumed.
+    pub fn is_empty(&self) -> bool {
+        match &self.0 {
+            ListCursor::Exhausted => true,
+            _ => false,
+        }
+    }
+
+    /// Returns a peek at the value that would be returned by a call to `next`.
+    ///
+    /// For improper lists, this implies that after the last regular element, `None` will be
+    /// returned, while `is_empty` still returns false at that point.
+    pub fn peek(&self) -> Option<&Value> {
+        match &self.0 {
+            ListCursor::Cons(cell) => Some(cell.car()),
+            ListCursor::Dot(_) => None,
+            ListCursor::Rest(value) => Some(value),
+            ListCursor::Exhausted => None,
+        }
+    }
+
+    pub(crate) fn empty() -> Self {
+        ListIter(ListCursor::Exhausted)
+    }
+
+    pub(crate) fn cons(cell: &'a Cons) -> Self {
+        ListIter(ListCursor::Cons(cell))
+    }
+}
+
+impl<'a> Iterator for ListIter<'a> {
+    type Item = &'a Value;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.0 {
+            ListCursor::Cons(cell) => {
+                let car = cell.car();
+                match cell.cdr() {
+                    Value::Cons(next) => {
+                        self.0 = ListCursor::Cons(next);
+                    }
+                    Value::Null => {
+                        self.0 = ListCursor::Exhausted;
+                    }
+                    cdr => {
+                        self.0 = ListCursor::Dot(cdr);
+                    }
+                }
+                Some(car)
+            }
+            ListCursor::Dot(value) => {
+                self.0 = ListCursor::Rest(value);
+                None
+            }
+            ListCursor::Rest(value) => {
+                self.0 = ListCursor::Exhausted;
+                Some(value)
+            }
+            ListCursor::Exhausted => None,
         }
     }
 }
