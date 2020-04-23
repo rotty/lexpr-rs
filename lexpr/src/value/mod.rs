@@ -90,7 +90,7 @@ use std::fmt;
 use std::io;
 use std::str;
 
-use crate::cons::Cons;
+use crate::cons::{self, Cons};
 use crate::number::Number;
 
 pub use self::index::Index;
@@ -850,6 +850,32 @@ impl Value {
     pub fn as_slice_mut(&mut self) -> Option<&mut [Value]> {
         match self {
             Value::Vector(elements) => Some(elements),
+            _ => None,
+        }
+    }
+
+    /// If the value is a list, return an iterator over the list elements.
+    ///
+    /// If the value is not either a cons cell or `Null`, `None` is returned.
+    ////
+    /// Note that the returned iterator has special behavior for improper lists, yielding the
+    /// element after the dot after returning `None` the first time.
+    ///
+    /// ```
+    /// use lexpr::sexp;
+    ///
+    /// let value = lexpr::from_str("(1 2 . 3)").unwrap();
+    /// let mut iter = value.list_iter().unwrap();
+    /// assert_eq!(iter.next(), Some(&sexp!(1)));
+    /// assert_eq!(iter.next(), Some(&sexp!(2)));
+    /// assert_eq!(iter.next(), None);
+    /// assert_eq!(iter.next(), Some(&sexp!(3)));
+    /// assert_eq!(iter.next(), None);
+    /// ```
+    pub fn list_iter(&self) -> Option<cons::ListIter<'_>> {
+        match self {
+            Value::Cons(cell) => Some(cons::ListIter::cons(cell)),
+            Value::Null => Some(cons::ListIter::empty()),
             _ => None,
         }
     }
