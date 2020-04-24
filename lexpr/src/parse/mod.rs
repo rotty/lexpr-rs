@@ -436,8 +436,7 @@ impl<'de, R: Read<'de>> Parser<R> {
     /// Parse a single S-expression from the input source.
     #[deprecated(since = "0.2.5", note = "Please use the `expect_value` method instead")]
     pub fn parse_value(&mut self) -> Result<Value> {
-        self.next_value()
-            .and_then(|o| o.ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingValue)))
+        self.expect_value()
     }
 
     /// Parse a single S-expression from the input source.
@@ -603,7 +602,12 @@ impl<'de, R: Read<'de>> Parser<R> {
         Ok(token)
     }
 
-    fn next_value(&mut self) -> Result<Option<Value>> {
+    /// Parse an S-expression, returning `None` on end-of-input.
+    ///
+    /// For consuming the entire sequence of parsed S-expression values, the
+    /// `value_iter` method may be more convenient than calling this method in a
+    /// loop.
+    pub fn next_value(&mut self) -> Result<Option<Value>> {
         let peek = match self.parse_whitespace()? {
             Some(b) => b,
             None => return Ok(None),
@@ -663,21 +667,26 @@ impl<'de, R: Read<'de>> Parser<R> {
     }
 
     /// Parse a single S-expression from the input source.
-    #[deprecated(
-        since = "0.2.5",
-        note = "Use the `value_iter` method for obtaining a sequence of values"
-    )]
+    #[deprecated(since = "0.2.5", note = "Please use the  `next_value` method instead")]
     pub fn parse(&mut self) -> Result<Option<Value>> {
         self.next_value()
     }
 
-    /// Parse a datum, failing on EOF.
+    /// Parse a single S-expression including location information, returning an
+    /// error on end-of-input.
     pub fn expect_datum(&mut self) -> Result<Datum> {
         self.next_datum()
             .and_then(|o| o.ok_or_else(|| self.peek_error(ErrorCode::EofWhileParsingValue)))
     }
 
-    fn next_datum(&mut self) -> Result<Option<Datum>> {
+    /// Parse a single S-expression including location information.
+    ///
+    /// When end of input is reached, `None` is returned.
+    ///
+    /// For consuming the entire sequence of parsed S-expression datums, the
+    /// `datum_iter` method may be more convenient than calling this method in a
+    /// loop.
+    pub fn next_datum(&mut self) -> Result<Option<Datum>> {
         let peek = match self.parse_whitespace()? {
             Some(b) => b,
             None => return Ok(None),
