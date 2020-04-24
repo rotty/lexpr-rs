@@ -1520,6 +1520,15 @@
 <span id="1520">1520</span>
 <span id="1521">1521</span>
 <span id="1522">1522</span>
+<span id="1523">1523</span>
+<span id="1524">1524</span>
+<span id="1525">1525</span>
+<span id="1526">1526</span>
+<span id="1527">1527</span>
+<span id="1528">1528</span>
+<span id="1529">1529</span>
+<span id="1530">1530</span>
+<span id="1531">1531</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! S-expression parser and options.</span>
 <span class="doccomment">//!</span>
@@ -1959,8 +1968,7 @@
     <span class="doccomment">/// Parse a single S-expression from the input source.</span>
     <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.5&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;Please use the `expect_value` method instead&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_value</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">next_value</span>()
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="ident">o</span>.<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">EofWhileParsingValue</span>)))
+        <span class="self">self</span>.<span class="ident">expect_value</span>()
     }
 
     <span class="doccomment">/// Parse a single S-expression from the input source.</span>
@@ -2126,7 +2134,12 @@
         <span class="prelude-val">Ok</span>(<span class="ident">token</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">next_value</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Parse an S-expression, returning `None` on end-of-input.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// For consuming the entire sequence of parsed S-expression values, the</span>
+    <span class="doccomment">/// `value_iter` method may be more convenient than calling this method in a</span>
+    <span class="doccomment">/// loop.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_value</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">peek</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">parse_whitespace</span>()<span class="question-mark">?</span> {
             <span class="prelude-val">Some</span>(<span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">b</span>,
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
@@ -2186,21 +2199,26 @@
     }
 
     <span class="doccomment">/// Parse a single S-expression from the input source.</span>
-    <span class="attribute">#[<span class="ident">deprecated</span>(
-        <span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.5&quot;</span>,
-        <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;Use the `value_iter` method for obtaining a sequence of values&quot;</span>
-    )]</span>
+    <span class="attribute">#[<span class="ident">deprecated</span>(<span class="ident">since</span> <span class="op">=</span> <span class="string">&quot;0.2.5&quot;</span>, <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;Please use the  `next_value` method instead&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">next_value</span>()
     }
 
-    <span class="doccomment">/// Parse a datum, failing on EOF.</span>
+    <span class="doccomment">/// Parse a single S-expression including location information, returning an</span>
+    <span class="doccomment">/// error on end-of-input.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expect_datum</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Datum</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">next_datum</span>()
             .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="ident">o</span>.<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">peek_error</span>(<span class="ident">ErrorCode</span>::<span class="ident">EofWhileParsingValue</span>)))
     }
 
-    <span class="kw">fn</span> <span class="ident">next_datum</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Datum</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Parse a single S-expression including location information.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// When end of input is reached, `None` is returned.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// For consuming the entire sequence of parsed S-expression datums, the</span>
+    <span class="doccomment">/// `datum_iter` method may be more convenient than calling this method in a</span>
+    <span class="doccomment">/// loop.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_datum</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Datum</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">peek</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">parse_whitespace</span>()<span class="question-mark">?</span> {
             <span class="prelude-val">Some</span>(<span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">b</span>,
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
