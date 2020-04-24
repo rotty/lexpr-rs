@@ -1027,6 +1027,32 @@
 <span id="1027">1027</span>
 <span id="1028">1028</span>
 <span id="1029">1029</span>
+<span id="1030">1030</span>
+<span id="1031">1031</span>
+<span id="1032">1032</span>
+<span id="1033">1033</span>
+<span id="1034">1034</span>
+<span id="1035">1035</span>
+<span id="1036">1036</span>
+<span id="1037">1037</span>
+<span id="1038">1038</span>
+<span id="1039">1039</span>
+<span id="1040">1040</span>
+<span id="1041">1041</span>
+<span id="1042">1042</span>
+<span id="1043">1043</span>
+<span id="1044">1044</span>
+<span id="1045">1045</span>
+<span id="1046">1046</span>
+<span id="1047">1047</span>
+<span id="1048">1048</span>
+<span id="1049">1049</span>
+<span id="1050">1050</span>
+<span id="1051">1051</span>
+<span id="1052">1052</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
+<span id="1055">1055</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! The Value enum, a dynamically typed way of representing any valid S-expression value.</span>
 <span class="doccomment">//!</span>
@@ -1120,7 +1146,7 @@
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">str</span>;
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">cons</span>::<span class="ident">Cons</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">cons</span>::{<span class="self">self</span>, <span class="ident">Cons</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">number</span>::<span class="ident">Number</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">index</span>::<span class="ident">Index</span>;
@@ -1880,6 +1906,32 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_slice_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">Value</span>]<span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">Value</span>::<span class="ident">Vector</span>(<span class="ident">elements</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">elements</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        }
+    }
+
+    <span class="doccomment">/// If the value is a list, return an iterator over the list elements.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If the value is not either a cons cell or `Null`, `None` is returned.</span>
+    <span class="comment">////</span>
+    <span class="doccomment">/// Note that the returned iterator has special behavior for improper lists, yielding the</span>
+    <span class="doccomment">/// element after the dot after returning `None` the first time.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// use lexpr::sexp;</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// let value = lexpr::from_str(&quot;(1 2 . 3)&quot;).unwrap();</span>
+    <span class="doccomment">/// let mut iter = value.list_iter().unwrap();</span>
+    <span class="doccomment">/// assert_eq!(iter.next(), Some(&amp;sexp!(1)));</span>
+    <span class="doccomment">/// assert_eq!(iter.next(), Some(&amp;sexp!(2)));</span>
+    <span class="doccomment">/// assert_eq!(iter.next(), None);</span>
+    <span class="doccomment">/// assert_eq!(iter.next(), Some(&amp;sexp!(3)));</span>
+    <span class="doccomment">/// assert_eq!(iter.next(), None);</span>
+    <span class="doccomment">/// ```</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">list_iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">cons</span>::<span class="ident">ListIter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="self">self</span> {
+            <span class="ident">Value</span>::<span class="ident">Cons</span>(<span class="ident">cell</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">cons</span>::<span class="ident">ListIter</span>::<span class="ident">cons</span>(<span class="ident">cell</span>)),
+            <span class="ident">Value</span>::<span class="ident">Null</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">cons</span>::<span class="ident">ListIter</span>::<span class="ident">empty</span>()),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
     }

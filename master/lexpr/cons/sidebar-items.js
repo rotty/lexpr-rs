@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Cons","A Lisp \"cons cell\"."],["IntoIter","An iterator consuming a chain of cons cells."],["Iter","An iterator over a chain of cons cells."]]});
+initSidebarItems({"struct":[["Cons","A Lisp \"cons cell\"."],["IntoIter","An iterator consuming a chain of cons cells."],["Iter","An iterator over a chain of cons cells."],["ListIter","An iterator yielding the `car` field of a chain of cons cells."]]});
