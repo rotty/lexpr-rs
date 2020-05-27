@@ -1,6 +1,6 @@
 use crate::value::Value;
 
-use proc_macro2::{Delimiter, Literal, TokenStream, TokenTree};
+use proc_macro2::{Delimiter, Literal, TokenStream, TokenTree, Spacing};
 
 #[derive(Debug)]
 struct Parser {
@@ -53,7 +53,11 @@ impl Parser {
                 '#' => self.parse_octothorpe(),
                 ',' => Ok(Value::Unquoted(self.token()?.clone())),
                 '-' => Ok(Value::Negated(self.parse_literal()?)),
-                c => Err(ParseError::UnexpectedChar(c)),
+                c => match punct.spacing() {
+                    Spacing::Joint => 
+                        Ok(Value::Symbol(punct.as_char().to_string() + &self.token()?.to_string())),
+                    Spacing::Alone => Ok(Value::Symbol(punct.as_char().to_string())),
+                }
             },
             TokenTree::Literal(literal) => Ok(Value::Literal(literal.clone())),
             TokenTree::Ident(ident) => Ok(Value::Symbol(ident.to_string())),
