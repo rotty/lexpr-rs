@@ -167,6 +167,12 @@ fn test_newtype_struct() {
     test_serde(&Newtype(42), &sexp!(42));
 }
 
+#[test]
+fn test_empty_struct() {
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    struct Unit{};
+    test_serde(&Unit{}, &sexp!(()));
+}
 
 #[test]
 fn test_empty_tuple_variant() {
@@ -174,6 +180,14 @@ fn test_empty_tuple_variant() {
     enum Empty { Tuplish() }
     test_serde(&Empty::Tuplish{}, &sexp!((Tuplish)));
 }
+
+#[test]
+fn test_empty_struct_variant() {
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    enum Empty { Structish{} }
+    test_serde(&Empty::Structish{}, &sexp!((Structish)));
+}
+
 #[test]
 fn test_basic_struct() {
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
