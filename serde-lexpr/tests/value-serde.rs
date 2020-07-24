@@ -7,6 +7,7 @@ use serde_derive::{Deserialize, Serialize};
 use lexpr::{sexp, Value};
 use serde_lexpr::{error::Category, from_str, from_value, to_value};
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 fn test_serde<T>(thing: &T, expected: &Value)
 where
@@ -60,6 +61,14 @@ fn test_hashmap() {
     test_serde(&hm, &sexp!(()));
     hm.insert("one".to_string(), 1);
     test_serde(&hm, &sexp!((("one" . 1))));
+}
+
+#[test]
+fn test_hashset() {
+    let mut hs: HashSet<String> = HashSet::new();
+    test_serde(&hs, &sexp!(()));
+    hs.insert("one".to_string());
+    test_serde(&hs, &sexp!(("one")));
 }
 
 #[test]
