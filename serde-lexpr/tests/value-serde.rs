@@ -6,6 +6,7 @@ use serde_derive::{Deserialize, Serialize};
 
 use lexpr::{sexp, Value};
 use serde_lexpr::{error::Category, from_str, from_value, to_value};
+use std::collections::HashMap;
 
 fn test_serde<T>(thing: &T, expected: &Value)
 where
@@ -51,6 +52,14 @@ fn test_vec() {
     let empty: Vec<u32> = vec![];
     test_serde(&empty, &sexp!(()));
     test_serde(&vec![1, 2, 3, 4], &sexp!((1 2 3 4)));
+}
+
+#[test]
+fn test_hashmap() {
+    let mut hm: HashMap<String, u32> = HashMap::new();
+    test_serde(&hm, &sexp!(()));
+    hm.insert("one".to_string(), 1);
+    test_serde(&hm, &sexp!((("one" . 1))));
 }
 
 #[test]
