@@ -218,10 +218,11 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        self.input
-            .as_cons()
-            .ok_or_else(|| invalid_value(self.input, "a list"))
-            .and_then(|cell| visitor.visit_map(MapAccess::new(cell)))
+        match self.input {
+            Value::Null => visitor.visit_map(MapAccess::new(None)),
+            Value::Cons(cell) => visitor.visit_map(MapAccess::new(Some(cell))),
+            _ => Err(invalid_value(self.input, "list")),
+        }
     }
 
     fn deserialize_struct<V>(
@@ -419,8 +420,8 @@ struct MapAccess<'a> {
 }
 
 impl<'a> MapAccess<'a> {
-    fn new(cell: &'a Cons) -> Self {
-        MapAccess { cursor: Some(cell) }
+    fn new(cell: Option<&'a Cons>) -> Self {
+        MapAccess { cursor: cell }
     }
 }
 

@@ -1,11 +1,15 @@
 //! Test serialization to the `lexpr::Value` type
 
+#![rustfmt::skip::macros(sexp)]
+
 use std::fmt::Debug;
 
 use serde_derive::{Deserialize, Serialize};
 
 use lexpr::{sexp, Value};
 use serde_lexpr::{error::Category, from_str, from_value, to_value};
+use std::collections::HashMap;
+use std::collections::HashSet;
 
 fn test_serde<T>(thing: &T, expected: &Value)
 where
@@ -51,6 +55,22 @@ fn test_vec() {
     let empty: Vec<u32> = vec![];
     test_serde(&empty, &sexp!(()));
     test_serde(&vec![1, 2, 3, 4], &sexp!((1 2 3 4)));
+}
+
+#[test]
+fn test_hashmap() {
+    let mut hm: HashMap<String, u32> = HashMap::new();
+    test_serde(&hm, &sexp!(()));
+    hm.insert("one".to_string(), 1);
+    test_serde(&hm, &sexp!((("one" . 1))));
+}
+
+#[test]
+fn test_hashset() {
+    let mut hs: HashSet<String> = HashSet::new();
+    test_serde(&hs, &sexp!(()));
+    hs.insert("one".to_string());
+    test_serde(&hs, &sexp!(("one")));
 }
 
 #[test]
@@ -154,10 +174,42 @@ fn test_unit_struct() {
 }
 
 #[test]
+fn test_empty_tuple_struct() {
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    struct Unit();
+    test_serde(&Unit(), &sexp!(#()));
+}
+
+#[test]
 fn test_newtype_struct() {
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     struct Newtype(u32);
     test_serde(&Newtype(42), &sexp!(42));
+}
+
+#[test]
+fn test_empty_struct() {
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    struct Unit {};
+    test_serde(&Unit {}, &sexp!(()));
+}
+
+#[test]
+fn test_empty_tuple_variant() {
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    enum Empty {
+        Tuplish(),
+    }
+    test_serde(&Empty::Tuplish {}, &sexp!((Tuplish)));
+}
+
+#[test]
+fn test_empty_struct_variant() {
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    enum Empty {
+        Structish {},
+    }
+    test_serde(&Empty::Structish {}, &sexp!((Structish)));
 }
 
 #[test]
