@@ -226,7 +226,8 @@ where
     {
         loop {
             match self.peek()? {
-                Some(b' ') | Some(b'\n') | Some(b'\t') | Some(b'\r') | Some(b')') | Some(b']') | None => {
+                Some(b' ') | Some(b'\n') | Some(b'\t') | Some(b'\r') | Some(b')') | Some(b']')
+                | None => {
                     if scratch == b"." {
                         return error(self, ErrorCode::InvalidSymbol);
                     }
@@ -382,7 +383,8 @@ impl<'a> SliceRead<'a> {
 
         loop {
             match self.peek_byte() {
-                None | Some(b' ') | Some(b'\n') | Some(b'\t') | Some(b'\r') | Some(b')') | Some(b']') => {
+                None | Some(b' ') | Some(b'\n') | Some(b'\t') | Some(b'\r') | Some(b')')
+                | Some(b']') => {
                     if scratch.is_empty() {
                         // Fast path: return a slice of the raw S-expression without any
                         // copying.
