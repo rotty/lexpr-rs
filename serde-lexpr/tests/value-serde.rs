@@ -1,7 +1,5 @@
 //! Test serialization to the `lexpr::Value` type
 
-#![rustfmt::skip::macros(sexp)]
-
 use std::fmt::Debug;
 
 use serde_derive::{Deserialize, Serialize};
@@ -62,6 +60,7 @@ fn test_hashmap() {
     let mut hm: HashMap<String, u32> = HashMap::new();
     test_serde(&hm, &sexp!(()));
     hm.insert("one".to_string(), 1);
+    #[rustfmt::skip] // needed to avoid mangling of the `sexp!` invokation.
     test_serde(&hm, &sexp!((("one" . 1))));
 }
 
