@@ -411,6 +411,10 @@ fn test_list_brackets() {
             "[1 2 3]",
             Value::list(vec![Value::from(1), Value::from(2), Value::from(3)]),
         ),
+        (
+            "[a b c]",
+            Value::list(vec!["a", "b", "c"].into_iter().map(Value::symbol)),
+        ),
     ] {
         assert_eq!(&from_str_custom(input, options).unwrap(), value);
     }
@@ -438,6 +442,10 @@ fn test_vector_peculiar() {
 fn test_vectors_elisp() {
     assert_eq!(from_str_elisp("[]").unwrap(), Value::Vector(vec![].into()));
     assert_eq!(from_str_elisp("[1 2]").unwrap(), Value::vector(vec![1, 2]));
+    assert_eq!(
+        from_str_elisp("[a b c]").unwrap(),
+        Value::vector(vec!["a", "b", "c"].into_iter().map(Value::symbol))
+    );
 }
 
 #[test]
