@@ -1,5 +1,10 @@
 #![deny(missing_docs)]
 #![warn(rust_2018_idioms)]
+// The `matches` macro this lint tests for is introduced with Rust 1.42, and we
+// currently support 1.32+.
+#![allow(clippy::match_like_matches_macro)]
+// The `contains` method on ranges was stabilized in 1.35.
+#![allow(clippy::manual_range_contains)]
 
 //! This crate provides facilities for parsing, printing and
 //! manipulating S-expression data. S-expressions are the format used
