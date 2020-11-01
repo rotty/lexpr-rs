@@ -1,7 +1,7 @@
-# lexpr: S-expressions for Rust [![Build Status]][travis] [![Codecov]][codecov] [![Rustc Version 1.32+]][rustc]
+# lexpr: S-expressions for Rust [![Build Status]][gh-actions] [![Codecov]][codecov] [![Rustc Version 1.32+]][rustc]
 
-[Build Status]: https://api.travis-ci.org/rotty/lexpr-rs.svg?branch=master
-[travis]: https://travis-ci.org/rotty/lexpr-rs
+[Build Status]: https://github.com/rotty/lexpr-rs/workflows/CI/badge.svg
+[gh-actions]: https://github.com/rotty/lexpr-rs/actions
 [codecov]: https://codecov.io/github/rotty/lexpr-rs/coverage.svg?branch=master
 [Rustc Version 1.32+]: https://img.shields.io/badge/rustc-1.32+-lightgray.svg
 [rustc]: https://blog.rust-lang.org/2019/01/17/Rust-1.32.0.html
