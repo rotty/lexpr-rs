@@ -6,9 +6,9 @@
 
 #![cfg_attr(tarpaulin, skip)]
 
-use quickcheck::{Arbitrary, Gen, QuickCheck, StdGen};
+use quickcheck::{Arbitrary, Gen, QuickCheck};
 use quickcheck_macros::quickcheck;
-use rand::{seq::SliceRandom, Rng};
+use rand::Rng;
 
 use std::f64;
 use std::str;
@@ -31,7 +31,7 @@ enum ValueKind {
     Vector,
 }
 
-fn gen_value<G: Gen>(g: &mut G, depth: usize) -> Value {
+fn gen_value(g: &mut Gen, depth: usize) -> Value {
     use ValueKind::*;
     let choices = if depth >= g.size() {
         &[
@@ -42,29 +42,29 @@ fn gen_value<G: Gen>(g: &mut G, depth: usize) -> Value {
             Nil, Null, Bool, Number, Char, String, Symbol, Keyword, Bytes, Cons, Vector,
         ]
     };
-    match choices.choose(g).unwrap() {
+    match g.choose(choices).unwrap() {
         Nil => Value::Nil,
         Null => Value::Null,
-        Bool => Value::Bool(g.gen()),
+        Bool => Value::Bool(Arbitrary::arbitrary(g)),
         Number => Value::Number(Arbitrary::arbitrary(g)),
         Char => Value::Char(Arbitrary::arbitrary(g)),
         String => {
             let choices = ["", "foo", "\"", "\t", "\x01"];
-            Value::string(*choices.choose(g).unwrap())
+            Value::string(*g.choose(&choices).unwrap())
         }
         Symbol => {
             let choices = [
                 "foo", "a-symbol", "$?:!", "+", "+foo", "-", "-foo", "..", ".foo",
             ];
-            Value::symbol(*choices.choose(g).unwrap())
+            Value::symbol(*g.choose(&choices).unwrap())
         }
         Keyword => {
             let choices = ["foo", "a-keyword", "$?:!"];
-            Value::keyword(*choices.choose(g).unwrap())
+            Value::keyword(*g.choose(&choices).unwrap())
         }
         Bytes => {
             let choices = [b"".as_ref(), b"\x01\x02\x03", b"Hello World\x00"];
-            Value::Bytes(choices.choose(g).map(|&bytes| bytes.into()).unwrap())
+            Value::Bytes(g.choose(&choices).map(|&bytes| bytes.into()).unwrap())
         }
         Cons => Value::from((gen_value(g, depth + 1), gen_value(g, depth + 1))),
         Vector => {
@@ -75,7 +75,7 @@ fn gen_value<G: Gen>(g: &mut G, depth: usize) -> Value {
 }
 
 impl Arbitrary for Value {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         gen_value(g, 0)
     }
     fn shrink(&self) -> Box<dyn Iterator<Item = Value>> {
@@ -92,23 +92,23 @@ enum NumberKind {
 }
 
 impl Arbitrary for Number {
-    fn arbitrary<G: Gen>(g: &mut G) -> Self {
+    fn arbitrary(g: &mut Gen) -> Self {
         use NumberKind::*;
         let choices = [I64, U64, F64];
         // We do not use the `Arbitrary` implementations for the
         // numbers, as we want to cover the whole range.
-        match choices.choose(g).unwrap() {
-            I64 => Number::from(g.gen_range(i64::min_value(), i64::max_value())),
-            U64 => Number::from(g.gen_range(0, i64::max_value())),
+        let mut rng = rand::thread_rng();
+        match g.choose(&choices).unwrap() {
+            I64 => Number::from(rng.gen::<i64>()),
+            U64 => Number::from(rng.gen::<u64>()),
             F64 => {
                 if cfg!(feature = "fast-float-parsing") {
                     Number::from(
-                        *[-9876.5e10, -1.0, 0.0, 1.0, 1.4, 123.45e10]
-                            .choose(g)
+                        *g.choose(&[-9876.5e10, -1.0, 0.0, 1.0, 1.4, 123.45e10])
                             .unwrap(),
                     )
                 } else {
-                    Number::from(g.gen_range(f64::MIN, f64::MAX))
+                    Number::from(rng.gen::<f64>())
                 }
             }
         }
@@ -141,7 +141,7 @@ fn print_parse_roundtrip_default() {
     QuickCheck::new()
         .tests(1000)
         .max_tests(2000)
-        .gen(StdGen::new(::rand::thread_rng(), 4))
+        .gen(Gen::new(4))
         .quickcheck(prop as fn(Value) -> bool);
 }
 
@@ -159,7 +159,7 @@ fn print_parse_roundtrip_custom_default() {
     QuickCheck::new()
         .tests(1000)
         .max_tests(2000)
-        .gen(StdGen::new(::rand::thread_rng(), 4))
+        .gen(Gen::new(4))
         .quickcheck(prop as fn(Value) -> bool);
 }
 
@@ -175,7 +175,7 @@ fn print_parse_roundtrip_io_default() {
     QuickCheck::new()
         .tests(1000)
         .max_tests(2000)
-        .gen(StdGen::new(::rand::thread_rng(), 4))
+        .gen(Gen::new(4))
         .quickcheck(prop as fn(Value) -> bool);
 }
 
@@ -226,7 +226,7 @@ fn parse_datum_span_sanity() {
     QuickCheck::new()
         .tests(1000)
         .max_tests(2000)
-        .gen(StdGen::new(::rand::thread_rng(), 4))
+        .gen(Gen::new(4))
         .quickcheck(prop as fn(Value) -> bool);
 }
 

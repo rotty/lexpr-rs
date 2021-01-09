@@ -23,9 +23,9 @@ lexpr-macros = { version = "0.2.0", path = "../lexpr-macros" }
 
 [dev-dependencies]
 criterion = "0.3.0"
-quickcheck = "0.9.0"
-quickcheck_macros = "0.9.1"
-rand = "0.7.0"
+quickcheck = "1.0"
+quickcheck_macros = "1.0"
+rand = "0.8.1"
 
 [[bench]]
 name = "bench"
