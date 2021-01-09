@@ -1354,10 +1354,9 @@ where
     Ok(value)
 }
 
-#[deprecated(
-    since = "0.2.5",
-    note = "Please use the `value_iter` method to obtain an iterator"
-)]
+/// This implementation is deprecated in favor of `value_iter` since version
+/// "0.2.5", but cannot be marked as such due to
+/// <https://github.com/rust-lang/rust/issues/39935>.
 impl<'de, R: Read<'de>> Iterator for Parser<R> {
     type Item = Result<Value>;
 
