@@ -13,11 +13,12 @@ use crate::{
 /// location the value was parsed from. For compound values, such as lists and
 /// vectors, that includes information for all contained values, recursively.
 ///
-/// A `Datum` can be obtained by using the [`parse_datum`] and [`expect_datum`]
-/// methods on `Parser`.
+/// A `Datum` can be obtained by using the [`next_datum`] and [`expect_datum`]
+/// methods on `Parser`, or via the iterator obtained with [`datum_iter`].
 ///
-/// [`parse_datum`]: Parser::parse_datum
+/// [`next_datum`]: Parser::next_datum
 /// [`expect_datum`]: Parser::expect_datum
+/// [`datum_iter`]: Parser::datum_iter
 #[derive(Debug, Clone, PartialEq)]
 pub struct Datum {
     value: Value,
