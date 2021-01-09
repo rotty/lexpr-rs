@@ -189,7 +189,7 @@ fn test_newtype_struct() {
 #[test]
 fn test_empty_struct() {
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
-    struct Unit {};
+    struct Unit {}
     test_serde(&Unit {}, &sexp!(()));
 }
 

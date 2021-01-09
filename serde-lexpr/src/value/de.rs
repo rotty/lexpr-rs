@@ -278,7 +278,7 @@ where
     struct Proxy<'de, V> {
         visitor: V,
         _lifetime: &'de PhantomData<()>,
-    };
+    }
     impl<'de, V> number::Visitor for Proxy<'de, V>
     where
         V: de::Visitor<'de>,
