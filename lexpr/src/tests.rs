@@ -103,7 +103,7 @@ impl Arbitrary for Number {
             F64 => {
                 if cfg!(feature = "fast-float-parsing") {
                     Number::from(
-                        *[-9876.5e10 as f64, -1.0, 0.0, 1.0, 1.4, 123.45e10]
+                        *[-9876.5e10, -1.0, 0.0, 1.0, 1.4, 123.45e10]
                             .choose(g)
                             .unwrap(),
                     )
