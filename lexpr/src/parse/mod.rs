@@ -417,6 +417,8 @@ impl<'de, R: Read<'de>> Parser<R> {
     }
 
     /// Obtain an iterator over the values produced by the parser, including location information.
+    ///
+    /// ```
     /// # use lexpr::Parser;
     /// let mut parser = Parser::from_str(r#"foo ("bar" . 3.14) #:baz (1 2 3)"#);
     /// for datum in parser.datum_iter() {
@@ -425,7 +427,7 @@ impl<'de, R: Read<'de>> Parser<R> {
     ///     let start = span.start();
     ///     let end = span.end();
     ///     println!("parsed datum at {}:{}--{}:{}: {}", start.line(), start.column(),
-    ///              end.start(), end.column(),
+    ///              end.line(), end.column(),
     ///              datum.value());
     /// }
     /// ```
