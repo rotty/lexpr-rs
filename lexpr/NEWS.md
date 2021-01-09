@@ -1,3 +1,10 @@
+# 0.2.6
+
+This is a maintenance and bugfix release:
+
+- Fix reading close square delimiter when interpreting square brackets
+  as list delimiters. Issue reported and fixed by @raffalevy.
+
 # 0.2.5
 
 New features:
