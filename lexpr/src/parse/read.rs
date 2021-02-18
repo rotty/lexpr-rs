@@ -65,7 +65,7 @@ pub trait Read<'de>: private::Sealed {
         scratch: &'s mut Vec<u8>,
     ) -> Result<ElispStrReference<'de, 's>>;
 
-    /// Parses an unescaped string until the next whitespace or list close..
+    /// Parses an unescaped string until the next whitespace or non-symbol character.
     #[doc(hidden)]
     fn parse_symbol<'s>(&'s mut self, scratch: &'s mut Vec<u8>) -> Result<Reference<'de, 's, str>>;
 
@@ -227,7 +227,7 @@ where
         loop {
             match self.peek()? {
                 Some(b' ') | Some(b'\n') | Some(b'\t') | Some(b'\r') | Some(b')') | Some(b']')
-                | None => {
+                | Some(b'(') | Some(b'[') | Some(b';') | None => {
                     if scratch == b"." {
                         return error(self, ErrorCode::InvalidSymbol);
                     }
@@ -384,7 +384,7 @@ impl<'a> SliceRead<'a> {
         loop {
             match self.peek_byte() {
                 None | Some(b' ') | Some(b'\n') | Some(b'\t') | Some(b'\r') | Some(b')')
-                | Some(b']') => {
+                | Some(b']') | Some(b'(') | Some(b'[') | Some(b';') => {
                     if scratch.is_empty() {
                         // Fast path: return a slice of the raw S-expression without any
                         // copying.
