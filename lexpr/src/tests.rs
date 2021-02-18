@@ -195,6 +195,24 @@ fn test_alist_index() {
     assert_eq!(alist["baz"], Value::from(127));
 }
 
+#[test]
+fn test_unidiomatic_space() {
+    let nested_value = Value::list(vec![
+        Value::symbol("feedback"),
+        Value::list(vec![Value::symbol("nested")]),
+    ]);
+    let value = lexpr::from_str("(feedback(nested))").expect("failed to parse");
+    assert_eq!(value, nested_value);
+    let value = lexpr::from_str("feedback; some comment").expect("failed to parse");
+    assert_eq!(value, Value::symbol("feedback"));
+
+    use std::io::Cursor;
+    let value = lexpr::from_reader(Cursor::new("(feedback(nested))")).expect("failed to parse");
+    assert_eq!(value, nested_value);
+    let value = lexpr::from_reader(Cursor::new("feedback; some comment")).expect("failed to parse");
+    assert_eq!(value, Value::symbol("feedback"));
+}
+
 /// Checks that an arbitrary S-expression value can be parsed including span
 /// information, the span information can be obtained and passes basic sanity
 /// checking.
