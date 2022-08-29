@@ -257,8 +257,6 @@
 //! [Serde]: https://crates.io/crates/serde
 //! [`serde-lexpr`]: https://docs.rs/serde-lexpr
 
-use proc_macro_hack::proc_macro_hack;
-
 /// Construct a [`Value`] using syntax similar to regular S-expressions.
 ///
 /// The macro is intended to have a feeling similiar to an implicitly
@@ -342,7 +340,6 @@ use proc_macro_hack::proc_macro_hack;
 /// ```
 ///
 /// [`Value`]: enum.Value.html
-#[proc_macro_hack]
 pub use lexpr_macros::sexp;
 
 mod syntax;

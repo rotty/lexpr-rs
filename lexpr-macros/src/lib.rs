@@ -3,19 +3,14 @@
 #![recursion_limit = "128"]
 #![warn(rust_2018_idioms)]
 
-// Silence clippy, as this is still needed on Rust 1.32.0.
-#[allow(unused_extern_crates)]
-extern crate proc_macro;
-
 mod generator;
 mod parser;
 mod value;
 
 use proc_macro2::TokenStream;
-use proc_macro_hack::proc_macro_hack;
 use quote::quote;
 
-#[proc_macro_hack]
+#[proc_macro]
 pub fn sexp(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let output = match expand(TokenStream::from(input)) {
         Err(e) => {
