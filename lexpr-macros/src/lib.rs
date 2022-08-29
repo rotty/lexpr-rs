@@ -8,10 +8,9 @@ mod parser;
 mod value;
 
 use proc_macro2::TokenStream;
-use proc_macro_hack::proc_macro_hack;
 use quote::quote;
 
-#[proc_macro_hack]
+#[proc_macro]
 pub fn sexp(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let output = match expand(TokenStream::from(input)) {
         Err(e) => {
