@@ -3,10 +3,6 @@
 #![recursion_limit = "128"]
 #![warn(rust_2018_idioms)]
 
-// Silence clippy, as this is still needed on Rust 1.32.0.
-#[allow(unused_extern_crates)]
-extern crate proc_macro;
-
 mod generator;
 mod parser;
 mod value;

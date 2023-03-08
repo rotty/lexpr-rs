@@ -1494,13 +1494,7 @@ where
     type Item = Result<Value>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // TODO: This is just `Result::transpose`, which go introduced in 1.33,
-        // so update this when bumping MSRV
-        match self.0.next_value() {
-            Ok(Some(item)) => Some(Ok(item)),
-            Ok(None) => None,
-            Err(e) => Some(Err(e)),
-        }
+        self.0.next_value().transpose()
     }
 }
 
@@ -1514,13 +1508,7 @@ where
     type Item = Result<Datum>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        // TODO: This is just `Result::transpose`, which got introduced in 1.33,
-        // so update this when bumping MSRV
-        match self.0.next_datum() {
-            Ok(Some(item)) => Some(Ok(item)),
-            Ok(None) => None,
-            Err(e) => Some(Err(e)),
-        }
+        self.0.next_datum().transpose()
     }
 }
 

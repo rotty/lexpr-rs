@@ -41,17 +41,20 @@ jobs:
           command: test
 
   msrv-check:
-    name: "MSRV (1.32.0) compile check"
+    # We require at least Rust 1.45, so we can use proc macros in
+    # expression position without resorting to the `proc-macro-hack`
+    # crate.
+    name: "MSRV (1.45.0) compile check"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
 
-      - name: Install 1.32 toolchain
+      - name: Install 1.45 toolchain
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.32.0 # uniform paths
+          toolchain: 1.45.0
           override: true
       - name: Run cargo build
         run: cargo build
