@@ -820,7 +820,7 @@ where
     W: io::Write,
 {
     let n = u32::from(c);
-    if n >= 32 && n < 127 {
+    if (32..127).contains(&n) {
         // ASCII, excluding non-printable characters
         let buf = [b'#', b'\\', n as u8];
         writer.write_all(&buf)
@@ -836,7 +836,7 @@ where
     W: io::Write,
 {
     let n = u32::from(c);
-    if n >= 32 && n < 127 {
+    if (32..127).contains(&n) {
         let c = n as u8;
         // ASCII, excluding non-printable characters
         if ELISP_ESCAPE_CHARS.contains(&c) {
