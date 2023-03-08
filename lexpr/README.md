@@ -1,9 +1,9 @@
-# lexpr: S-expressions for Rust [![Latest Version]][crates.io] [![Rustc Version 1.32+]][rustc]
+# lexpr: S-expressions for Rust [![Latest Version]][crates.io] [![Rustc Version 1.45+]][rustc]
 
 [Latest Version]: https://img.shields.io/crates/v/lexpr.svg
 [crates.io]: https://crates.io/crates/lexpr
-[Rustc Version 1.32+]: https://img.shields.io/badge/rustc-1.32+-lightgray.svg
-[rustc]: https://blog.rust-lang.org/2019/01/17/Rust-1.32.0.html
+[Rustc Version 1.45+]: https://img.shields.io/badge/rustc-1.45+-lightgray.svg
+[rustc]: https://blog.rust-lang.org/2020/07/16/Rust-1.45.0.html
 
 ```toml
 [dependencies]
@@ -59,7 +59,7 @@ document.
 
 `lexpr` is CI-tested on current stable, beta and nightly channels of
 Rust. Additionally, it is made sure that the code still compiles on
-Rust 1.32.0. However, no tests are run for that build.
+Rust 1.45.0. However, no tests are run for that build.
 
 ## Supported Lisp dialects
 
