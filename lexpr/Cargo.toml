@@ -16,7 +16,7 @@ default = ["fast-float-parsing"]
 fast-float-parsing = []
 
 [dependencies]
-itoa = "0.4.3"
+itoa = "1.0"
 ryu = "1.0.0"
 lexpr-macros = { version = "0.2.0", path = "../lexpr-macros" }
 

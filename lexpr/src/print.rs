@@ -243,10 +243,12 @@ pub trait Formatter {
                 io::Error::new(io::ErrorKind::Other, msg.into())
             }
             fn visit_u64(self, n: u64) -> io::Result<()> {
-                itoa::write(self.writer, n).map(drop)
+                let mut buffer = itoa::Buffer::new();
+                self.writer.write(buffer.format(n).as_bytes()).map(drop)
             }
             fn visit_i64(self, n: i64) -> io::Result<()> {
-                itoa::write(self.writer, n).map(drop)
+                let mut buffer = itoa::Buffer::new();
+                self.writer.write(buffer.format(n).as_bytes()).map(drop)
             }
             fn visit_f64(self, n: f64) -> io::Result<()> {
                 let mut buffer = ryu::Buffer::new();
@@ -338,7 +340,8 @@ pub trait Formatter {
         W: io::Write,
     {
         write_scheme_vector(self, writer, VectorType::Byte, bytes, |writer, &octet| {
-            itoa::write(writer, octet).map(|_| ())
+            let mut buffer = itoa::Buffer::new();
+            writer.write(buffer.format(octet).as_bytes()).map(drop)
         })
     }
 
@@ -536,7 +539,8 @@ impl Formatter for CustomizedFormatter {
         match self.options.bytes_syntax {
             BytesSyntax::R6RS | BytesSyntax::R7RS => {
                 write_scheme_vector(self, writer, VectorType::Byte, bytes, |writer, &octet| {
-                    itoa::write(writer, octet).map(|_| ())
+                    let mut buffer = itoa::Buffer::new();
+                    writer.write(buffer.format(octet).as_bytes()).map(drop)
                 })
             }
             BytesSyntax::Elisp => {

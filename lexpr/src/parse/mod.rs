@@ -1238,10 +1238,13 @@ impl<'de, R: Read<'de>> Parser<R> {
         // library. Note that this code path is more than 3 orders of
         // magnitude slower.
         self.scratch.clear();
-        itoa::write(&mut self.scratch, significand).unwrap();
+        let mut buffer = itoa::Buffer::new();
+        self.scratch
+            .extend_from_slice(buffer.format(significand).as_bytes());
         self.scratch.push(b'e');
-        itoa::write(&mut self.scratch, exponent).unwrap();
-        // Unsafe should be OK here, as `itoa::write()` should
+        self.scratch
+            .extend_from_slice(buffer.format(exponent).as_bytes());
+        // SAFETY: Unsafe should be OK here, as `itoa::Buffer::format()` should
         // never produce non-ASCII output.
         let f: f64 = unsafe { str::from_utf8_unchecked(&self.scratch) }
             .parse()
