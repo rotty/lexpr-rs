@@ -56,8 +56,11 @@ jobs:
           profile: minimal
           toolchain: 1.45.0
           override: true
+      # We use the git CLI here, since otherwise cargo fails with
+      # "error reading from the zlib stream; class=Zlib (5)", see
+      # <https://github.com/rust-lang/cargo/issues/10303>.
       - name: Run cargo build
-        run: cargo build
+        run: CARGO_NET_GIT_FETCH_WITH_CLI=true cargo build
         working-directory: ./msrv-test
 
   lints:
