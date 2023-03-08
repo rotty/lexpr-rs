@@ -895,7 +895,7 @@ fn parse_elisp_escape<'de, R: Read<'de>>(
         b'^' => {
             // Control character syntax
             let ch = next_or_eof(read)?.to_ascii_lowercase();
-            if b'a' <= ch && ch <= b'z' {
+            if (b'a'..=b'z').contains(&ch) {
                 scratch.push(ch - b'a');
             } else {
                 return error(read, ErrorCode::InvalidEscape);
@@ -1082,7 +1082,7 @@ fn decode_elisp_char_escape<'de, R: Read<'de> + ?Sized>(
         b'^' => {
             // Control character syntax
             let ch = next_or_eof_char(read)?.to_ascii_lowercase();
-            if b'a' <= ch && ch <= b'z' {
+            if (b'a'..=b'z').contains(&ch) {
                 Ok(char::from(ch - b'a'))
             } else {
                 error(read, ErrorCode::InvalidEscape)
@@ -1167,7 +1167,7 @@ fn decode_hex_val(val: u8) -> Option<u8> {
 }
 
 fn decode_octal_val(val: u8) -> Option<u8> {
-    if b'0' <= val && val <= b'7' {
+    if (b'0'..=b'7').contains(&val) {
         Some(val - b'0')
     } else {
         None
@@ -1197,7 +1197,7 @@ fn decode_utf8_sequence<'de, R: Read<'de> + ?Sized>(
     // turn these into a codepoint. If one would like to optimize
     // this, doing the complete decoding here could eliminate the
     // use of `scratch` and the calls into the standard library.
-    if initial < 0xC2 || initial > 0xF4 {
+    if !(0xC2..=0xF4).contains(&initial) {
         return error(read, ErrorCode::InvalidUnicodeCodePoint);
     }
     scratch.clear();

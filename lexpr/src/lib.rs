@@ -1,7 +1,5 @@
 #![deny(missing_docs)]
 #![warn(rust_2018_idioms)]
-// TODO: The `contains` method on ranges was stabilized in 1.35.
-#![allow(clippy::manual_range_contains)]
 
 //! This crate provides facilities for parsing, printing and
 //! manipulating S-expression data. S-expressions are the format used
