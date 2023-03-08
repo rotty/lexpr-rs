@@ -17,7 +17,7 @@ fn bench_parsing_keyword_default(c: &mut Criterion) {
 fn bench_parsing_keyword_all_styles(c: &mut Criterion) {
     use parse::KeywordSyntax::*;
     c.bench_function("keyword parsing (all styles)", |b| {
-        let options = parse::Options::default().with_keyword_syntaxes(&[
+        let options = parse::Options::default().with_keyword_syntaxes([
             ColonPrefix,
             ColonPostfix,
             Octothorpe,

@@ -20,7 +20,7 @@ pub fn from_str<T>(s: &str) -> Result<T>
 where
     T: DeserializeOwned,
 {
-    Ok(from_value(&lexpr::from_str(s)?)?)
+    from_value(&lexpr::from_str(s)?)
 }
 
 /// Deserialize an instance of type `T` from an S-expression string.
@@ -35,7 +35,7 @@ pub fn from_str_custom<T>(s: &str, options: parse::Options) -> Result<T>
 where
     T: DeserializeOwned,
 {
-    Ok(from_value(&lexpr::from_str_custom(s, options)?)?)
+    from_value(&lexpr::from_str_custom(s, options)?)
 }
 
 /// Deserialize an instance of type `T` from an S-expression byte slice, using the
@@ -51,7 +51,7 @@ pub fn from_slice<T>(s: &[u8]) -> Result<T>
 where
     T: DeserializeOwned,
 {
-    Ok(from_value(&lexpr::from_slice(s)?)?)
+    from_value(&lexpr::from_slice(s)?)
 }
 
 /// Deserialize an instance of type `T` from an S-expression byte slice, using the
@@ -67,7 +67,7 @@ pub fn from_slice_custom<T>(s: &[u8], options: parse::Options) -> Result<T>
 where
     T: DeserializeOwned,
 {
-    Ok(from_value(&lexpr::from_slice_custom(s, options)?)?)
+    from_value(&lexpr::from_slice_custom(s, options)?)
 }
 
 /// Parse a value from an input stream of S-expressions, using the
@@ -84,7 +84,7 @@ pub fn from_reader<T>(rdr: impl io::Read) -> Result<T>
 where
     T: DeserializeOwned,
 {
-    Ok(from_value(&lexpr::from_reader(rdr)?)?)
+    from_value(&lexpr::from_reader(rdr)?)
 }
 
 /// Parse a value from an input stream of S-expressions, using the
@@ -101,5 +101,5 @@ pub fn from_reader_custom<T>(rdr: impl io::Read, options: parse::Options) -> Res
 where
     T: DeserializeOwned,
 {
-    Ok(from_value(&lexpr::from_reader_custom(rdr, options)?)?)
+    from_value(&lexpr::from_reader_custom(rdr, options)?)
 }
