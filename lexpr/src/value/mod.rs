@@ -250,10 +250,9 @@ impl Value {
     pub fn is_list(&self) -> bool {
         match self {
             Value::Null => true,
-            Value::Cons(pair) => pair.iter().all(|p| match p.cdr() {
-                Value::Null | Value::Cons(_) => true,
-                _ => false,
-            }),
+            Value::Cons(pair) => pair
+                .iter()
+                .all(|p| matches!(p.cdr(), Value::Null | Value::Cons(_))),
             _ => false,
         }
     }
@@ -272,10 +271,7 @@ impl Value {
     pub fn is_dotted_list(&self) -> bool {
         match self {
             Value::Null => false,
-            Value::Cons(pair) => pair.iter().all(|p| match p.cdr() {
-                Value::Null => false,
-                _ => true,
-            }),
+            Value::Cons(pair) => pair.iter().all(|p| !matches!(p.cdr(), Value::Null)),
             _ => true,
         }
     }
@@ -778,10 +774,7 @@ impl Value {
 
     /// Returns true if the value is a cons cell. Returns `False` otherwise.
     pub fn is_cons(&self) -> bool {
-        match self {
-            Value::Cons(_) => true,
-            _ => false,
-        }
+        matches!(self, Value::Cons(_))
     }
 
     /// If the value is a cons cell, returns a reference to it. Returns `None`
@@ -817,10 +810,7 @@ impl Value {
 
     /// Returns true if the value is a vector.
     pub fn is_vector(&self) -> bool {
-        match self {
-            Value::Vector(_) => true,
-            _ => false,
-        }
+        matches!(self, Value::Vector(_))
     }
 
     /// If the value is a vector, return a reference to its elements.

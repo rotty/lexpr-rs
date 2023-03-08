@@ -308,10 +308,7 @@ impl<'a> ListIter<'a> {
     /// For an improper list, true will only be returned after the terminating value has been
     /// consumed.
     pub fn is_empty(&self) -> bool {
-        match &self.0 {
-            ListCursor::Exhausted => true,
-            _ => false,
-        }
+        matches!(&self.0, ListCursor::Exhausted)
     }
 
     /// Returns a peek at the value that would be returned by a call to `next`.
