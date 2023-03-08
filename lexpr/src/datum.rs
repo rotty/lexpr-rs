@@ -145,7 +145,7 @@ pub struct Ref<'a> {
 
 impl<'a> AsRef<Value> for Ref<'a> {
     fn as_ref(&self) -> &Value {
-        &self.value
+        self.value
     }
 }
 

@@ -604,11 +604,11 @@ where
             Value::Nil => self.formatter.write_nil(&mut self.writer),
             Value::Null => self.formatter.write_null(&mut self.writer),
             Value::Bool(b) => self.formatter.write_bool(&mut self.writer, *b),
-            Value::Number(n) => self.formatter.write_number(&mut self.writer, &n),
+            Value::Number(n) => self.formatter.write_number(&mut self.writer, n),
             Value::Char(c) => self.formatter.write_char(&mut self.writer, *c),
-            Value::Symbol(name) => self.formatter.write_symbol(&mut self.writer, &name),
-            Value::Keyword(name) => self.formatter.write_keyword(&mut self.writer, &name),
-            Value::String(s) => format_escaped_str(&mut self.writer, &mut self.formatter, &s),
+            Value::Symbol(name) => self.formatter.write_symbol(&mut self.writer, name),
+            Value::Keyword(name) => self.formatter.write_keyword(&mut self.writer, name),
+            Value::String(s) => format_escaped_str(&mut self.writer, &mut self.formatter, s),
             Value::Bytes(bytes) => self.formatter.write_bytes(&mut self.writer, bytes),
             Value::Cons(elements) => {
                 self.formatter.begin_list(&mut self.writer)?;

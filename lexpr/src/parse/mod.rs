@@ -1256,6 +1256,8 @@ impl<'de, R: Read<'de>> Parser<R> {
     fn f64_from_parts(&mut self, pos: bool, significand: u64, mut exponent: i32) -> Result<f64> {
         let mut f = significand as f64;
         loop {
+            // TODO: Use `unsigned_abs` here after bumping MSRV to 1.51+.
+            #[allow(clippy::cast_abs_to_unsigned)]
             match POW10.get(exponent.abs() as usize) {
                 Some(&pow) => {
                     if exponent >= 0 {

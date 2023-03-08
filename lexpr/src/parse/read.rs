@@ -1210,7 +1210,7 @@ fn decode_utf8_sequence<'de, R: Read<'de> + ?Sized>(
         };
         scratch.push(b);
     }
-    match str::from_utf8(&scratch) {
+    match str::from_utf8(scratch) {
         Err(_) => error(read, ErrorCode::InvalidUnicodeCodePoint),
         Ok(s) => Ok(s.chars().next().unwrap()),
     }

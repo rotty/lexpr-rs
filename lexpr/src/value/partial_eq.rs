@@ -28,7 +28,7 @@ impl PartialEq<str> for Value {
 
 impl<'a> PartialEq<&'a str> for Value {
     fn eq(&self, other: &&str) -> bool {
-        eq_str(self, *other)
+        eq_str(self, other)
     }
 }
 
@@ -40,7 +40,7 @@ impl PartialEq<Value> for str {
 
 impl<'a> PartialEq<Value> for &'a str {
     fn eq(&self, other: &Value) -> bool {
-        eq_str(other, *self)
+        eq_str(other, self)
     }
 }
 
