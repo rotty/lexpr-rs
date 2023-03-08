@@ -26,9 +26,16 @@ fn bench_parsing_keyword_all_styles(c: &mut Criterion) {
     });
 }
 
+fn bench_write_bytes(c: &mut Criterion) {
+    let bytes = lexpr::Value::bytes(vec![123u8; 1024]);
+    c.bench_function("byte vector serialization", |b| {
+        b.iter(|| black_box(lexpr::to_string(&bytes)))
+    });
+}
+
 criterion_group! {
     name = benches;
     config = Criterion::default();
-    targets = bench_float_parsing, bench_parsing_keyword_default, bench_parsing_keyword_all_styles
+    targets = bench_float_parsing, bench_parsing_keyword_default, bench_parsing_keyword_all_styles, bench_write_bytes,
 }
 criterion_main!(benches);
