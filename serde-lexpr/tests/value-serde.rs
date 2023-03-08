@@ -1,7 +1,8 @@
 //! Test serialization to the `lexpr::Value` type
 
-use std::fmt::Debug;
+use std::fmt::{self, Debug};
 
+use serde::de;
 use serde_derive::{Deserialize, Serialize};
 
 use lexpr::{sexp, Value};
@@ -240,4 +241,40 @@ fn test_parse_error_eof() {
         deser_error::<String>("\"\\x43"),
         Some((Category::Eof, Some((1, 5))))
     );
+}
+
+#[derive(Debug, Eq, PartialEq)]
+struct ConsAccessTestStruct(Vec<i32>);
+
+struct ConsAccessTestVisitor;
+
+impl<'de> de::Visitor<'de> for ConsAccessTestVisitor {
+    type Value = ConsAccessTestStruct;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(formatter, "a sequence of integers")
+    }
+
+    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+    where
+        A: de::SeqAccess<'de>,
+    {
+        let mut result = Vec::new();
+        while let Some(element) = seq.next_element()? {
+            result.push(element);
+        }
+        Ok(ConsAccessTestStruct(result))
+    }
+}
+
+impl<'de> de::Deserialize<'de> for ConsAccessTestStruct {
+    fn deserialize<D: de::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        deserializer.deserialize_any(ConsAccessTestVisitor)
+    }
+}
+
+#[test]
+fn test_deserialize_any_cons() {
+    let deserialized: ConsAccessTestStruct = from_value(&Value::cons(1, 2)).unwrap();
+    assert_eq!(deserialized, ConsAccessTestStruct(vec![1, 2]));
 }

@@ -341,8 +341,14 @@ impl<'de> de::SeqAccess<'de> for ConsAccess<'de> {
         T: de::DeserializeSeed<'de>,
     {
         let value = match self.idx {
-            0 => self.cell.car(),
-            1 => self.cell.cdr(),
+            0 => {
+                self.idx += 1;
+                self.cell.car()
+            }
+            1 => {
+                self.idx += 1;
+                self.cell.cdr()
+            }
             _ => return Ok(None),
         };
         Ok(Some(
