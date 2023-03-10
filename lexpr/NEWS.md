@@ -1,3 +1,23 @@
+# 0.2.7 (unreleased)
+
+New features:
+
+- The `sexp` macro now accepts unquoted symbols made up of Rust
+  punctuation characters, as long as they also comply with the R7RS
+  syntax.
+
+Fixes:
+
+- The parser now copes better with symbols which are delimited with a
+  non-space character (issue #40).
+
+Maintenance-related changes:
+
+- The dependency on `proc-macro-hack` is now gone; this required
+  bumping the MSRV to 1.45 (issue #78).
+- The dependency on `iota` and the dev-dependencies on `criterion`,
+  `quickcheck` and `rand` have been updated.
+
 # 0.2.6
 
 This is a maintenance and bugfix release:

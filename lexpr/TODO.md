@@ -1,9 +1,10 @@
 # Missing features
 
-- [ ] Comments (both line and R6RS multi-line comments)
+- [ ] R7RS multi-line comments
+- [ ] R7RS "datum comments"
 - [X] Proper string escape syntax, instead of using JSON's rules
 - [X] Serde support
-- [ ] Syntactic sugar for quote, quasiquote, unquote and unquote-splicing
+- [X] Syntactic sugar for quote, quasiquote, unquote and unquote-splicing
 - [X] Support for characters
 - [X] Support for vectors
 - [X] Support for byte vectors
@@ -23,7 +24,7 @@
 
 ## Numbers
 
-- [ ] Complete support for number syntax (e.g., different bases)
+- [X] Different bases
 - [ ] Scheme numeric tower (complex numbers, rationals, bignums)
 - [ ] NaNs and infinities (fixup `from` implementations vs. `from_f64`)
 
