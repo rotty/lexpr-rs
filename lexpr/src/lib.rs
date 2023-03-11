@@ -257,11 +257,32 @@
 /// The macro is intended to have a feeling similiar to an implicitly
 /// quasiquoted Scheme expression.
 ///
+/// For interpolation, use `unquote` (aka "`,`"), like this:
+///
+/// ```
+/// # use lexpr::{sexp, Value};
+/// let number = 42;
+/// let list = sexp!((41 ,number 43));
+/// assert_eq!(list.to_vec(), Some(vec![Value::from(41), Value::from(42), Value::from(43)]));
+/// ```
+///
+/// You can also provide a *Rust* expression to interpolate by using
+/// parentheses:
+///
+/// ```
+/// # use lexpr::{sexp, Value};
+/// let number = 40;
+/// let alist = sexp!(((answer . ,(number + 2))));
+/// assert_eq!(alist.get("answer"), Some(&Value::from(42)));
+/// ```
+///
+/// The interpolated variable (or expression) must yield a value that
+/// is convertible to [`Value`] using the `From` trait.
+///
 /// # Booleans
 ///
 /// ```
 /// # use lexpr::sexp;
-///
 /// let t = sexp!(#f);
 /// let f = sexp!(#t);
 /// ```
@@ -273,7 +294,6 @@
 ///
 /// ```
 /// # use lexpr::sexp;
-///
 /// let sym = sexp!(symbol);
 /// let kw = sexp!(#:keyword);
 /// assert!(sym.is_symbol());
@@ -304,7 +324,6 @@
 ///
 /// ```
 /// # use lexpr::sexp;
-///
 /// let ch = sexp!('λ');
 /// assert!(ch.is_char());
 /// assert_eq!(ch.as_char(), Some('λ'));
@@ -317,7 +336,6 @@
 ///
 /// ```
 /// # use lexpr::sexp;
-///
 /// let l1 = sexp!((1 2 3));
 /// let l2 = sexp!((1 . (2 . (3 . ()))));
 /// let l3 = sexp!((1 2 . (3 . ())));
