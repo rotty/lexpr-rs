@@ -1,7 +1,7 @@
 [package]
 name = "lexpr"
 description = "A representation for Lisp data"
-version = "0.2.6"
+version = "0.2.7"
 authors = ["Andreas Rottmann <mail@r0tty.org>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rotty/lexpr-rs"
@@ -18,7 +18,7 @@ fast-float-parsing = []
 [dependencies]
 itoa = "1.0"
 ryu = "1.0.0"
-lexpr-macros = { version = "0.2.0", path = "../lexpr-macros" }
+lexpr-macros = { version = "0.2.2", path = "../lexpr-macros" }
 
 [dev-dependencies]
 criterion = "0.4.0"
@@ -29,7 +29,3 @@ rand = "0.8.1"
 [[bench]]
 name = "bench"
 harness = false
-
-[badges]
-travis-ci = { repository = "rotty/lexpr-rs" }
-codecov = { repository = "rotty/lexpr-rs", branch = "master", service = "github" }

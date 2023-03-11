@@ -1,7 +1,7 @@
 [package]
 name = "serde-lexpr"
 description = "Serde support for Lisp S-expressions"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Andreas Rottmann <mail@r0tty.org>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rotty/lexpr-rs"
@@ -12,13 +12,9 @@ categories = ["encoding", "data-structures", "parser-implementations"]
 edition = "2018"
 
 [dependencies]
-lexpr = { version = "0.2.0", path = "../lexpr" }
+lexpr = { version = "0.2.7", path = "../lexpr" }
 serde = "1.0.89"
 
 [dev-dependencies]
 serde_derive = "1.0.89"
 serde_bytes = "0.11"
-
-[badges]
-travis-ci = { repository = "rotty/lexpr-rs" }
-codecov = { repository = "rotty/lexpr-rs", branch = "master", service = "github" }

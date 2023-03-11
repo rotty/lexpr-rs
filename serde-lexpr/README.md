@@ -5,11 +5,6 @@
 [Rustc Version 1.45+]: https://img.shields.io/badge/rustc-1.45+-lightgray.svg
 [rustc]: https://blog.rust-lang.org/2020/07/16/Rust-1.45.0.html
 
-```toml
-[dependencies]
-serde-lexpr = "0.1.0"
-```
-
 You may be looking for:
 
 - [API Documentation for master branch](https://rotty.github.io/lexpr-rs/master/serde_lexpr/)
