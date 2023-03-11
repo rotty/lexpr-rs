@@ -5,11 +5,6 @@
 [Rustc Version 1.45+]: https://img.shields.io/badge/rustc-1.45+-lightgray.svg
 [rustc]: https://blog.rust-lang.org/2020/07/16/Rust-1.45.0.html
 
-```toml
-[dependencies]
-lexpr = "0.2.5"
-```
-
 You may be looking for:
 
 - [API Documentation](https://docs.rs/crate/lexpr/)
