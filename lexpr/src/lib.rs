@@ -285,6 +285,19 @@
 /// assert!(kebab_kw.is_keyword());
 /// ```
 ///
+/// Since `lexpr` version 0.2.7, symbols following the R7RS (Scheme)
+/// syntax, which additionally consist of *only* characters that Rust
+/// considers punctuation can be written without quotation:
+///
+/// ```
+/// # use lexpr::sexp;
+/// let expr = sexp!((+ 1 2));
+/// assert!(expr.is_list());
+///
+/// let strange_symbol = sexp!(!$%&*+-./:<=>?@^~);
+/// assert_eq!(strange_symbol.as_symbol(), Some("!$%&*+-./:<=>?@^~"));
+/// ```
+///
 /// # Characters
 ///
 /// Characters can be written using Rust's character syntax:

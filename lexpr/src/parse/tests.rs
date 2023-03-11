@@ -385,7 +385,7 @@ fn test_list_peculiar() {
             Value::cons(Value::symbol("+"), Value::Vector(vec![].into())),
         ),
     ] {
-        assert_eq!(&from_str(dbg!(peculiar)).unwrap(), value);
+        assert_eq!(&from_str(peculiar).unwrap(), value);
     }
 }
 
