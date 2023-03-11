@@ -895,7 +895,7 @@ fn parse_elisp_escape<'de, R: Read<'de>>(
         b'^' => {
             // Control character syntax
             let ch = next_or_eof(read)?.to_ascii_lowercase();
-            if (b'a'..=b'z').contains(&ch) {
+            if ch.is_ascii_lowercase() {
                 scratch.push(ch - b'a');
             } else {
                 return error(read, ErrorCode::InvalidEscape);
@@ -1082,7 +1082,7 @@ fn decode_elisp_char_escape<'de, R: Read<'de> + ?Sized>(
         b'^' => {
             // Control character syntax
             let ch = next_or_eof_char(read)?.to_ascii_lowercase();
-            if (b'a'..=b'z').contains(&ch) {
+            if ch.is_ascii_lowercase() {
                 Ok(char::from(ch - b'a'))
             } else {
                 error(read, ErrorCode::InvalidEscape)
