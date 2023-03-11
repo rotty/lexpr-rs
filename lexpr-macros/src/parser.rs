@@ -1,6 +1,6 @@
 use crate::value::Value;
 
-use proc_macro2::{Delimiter, Literal, TokenStream, TokenTree};
+use proc_macro2::{Delimiter, Literal, Spacing, TokenStream, TokenTree};
 
 #[derive(Debug)]
 struct Parser {
@@ -52,7 +52,25 @@ impl Parser {
             TokenTree::Punct(punct) => match punct.as_char() {
                 '#' => self.parse_octothorpe(),
                 ',' => Ok(Value::Unquoted(self.token()?.clone())),
-                '-' => Ok(Value::Negated(self.parse_literal()?)),
+                '!' | '$' | '%' | '&' | '*' | '+' | '-' | '.' | '/' | ':' | '<' | '=' | '>'
+                | '?' | '@' | '^' | '_' | '~' => {
+                    let c = punct.as_char(); // TODO: Use `@` pattern match on MSRV bump
+                    match punct.spacing() {
+                        // TODO: A lone '.' is not an identfier
+                        Spacing::Joint => Ok(Value::Symbol(self.parse_identifier(c.to_string()))),
+                        Spacing::Alone => match c {
+                            '-' => match self.peek() {
+                                Some(TokenTree::Literal(lit)) => {
+                                    let lit = lit.clone();
+                                    self.eat_token();
+                                    Ok(Value::Negated(lit))
+                                }
+                                _ => Ok(Value::Symbol(c.to_string())),
+                            },
+                            _ => Ok(Value::Symbol(c.to_string())),
+                        },
+                    }
+                }
                 c => Err(ParseError::UnexpectedChar(c)),
             },
             TokenTree::Literal(literal) => Ok(Value::Literal(literal.clone())),
@@ -64,26 +82,51 @@ impl Parser {
         }
     }
 
-    fn parse_literal(&mut self) -> Result<proc_macro2::Literal, ParseError> {
-        match self.token()? {
-            TokenTree::Literal(literal) => Ok(literal.clone()),
-            tt => Err(ParseError::UnexpectedToken(tt.clone())),
+    fn parse_identifier(&mut self, prefix: String) -> String {
+        let mut identifier = prefix;
+        while let Some(token) = self.peek() {
+            match token {
+                TokenTree::Punct(punct) => match punct.as_char() {
+                    // This is the combination of `<special initial>`
+                    // and `<special subsequent>` from R7RS, removing
+                    // `_`, which is not a Rust punctuation character,
+                    // but (part of) an identfier.
+                    '!' | '$' | '%' | '&' | '*' | '+' | '-' | '.' | '/' | ':' | '<' | '=' | '>'
+                    | '?' | '@' | '^' | '~' => {
+                        identifier.push(punct.as_char());
+                        let spacing = punct.spacing();
+                        self.eat_token();
+                        match spacing {
+                            Spacing::Joint => {}
+                            Spacing::Alone => break,
+                        }
+                    }
+                    _ => break,
+                },
+                TokenTree::Ident(part) => {
+                    identifier.push_str(&part.to_string());
+                    self.eat_token();
+                    break;
+                }
+                _ => break,
+            }
         }
-    }
-
-    fn parse_symbol(&mut self) -> Result<String, ParseError> {
-        match self.token()? {
-            TokenTree::Literal(lit) => string_literal(lit),
-            TokenTree::Ident(ident) => Ok(ident.to_string()),
-            tt => Err(ParseError::UnexpectedToken(tt.clone())),
-        }
+        identifier
     }
 
     fn parse_octothorpe(&mut self) -> Result<Value, ParseError> {
         let token = self.token()?;
         match token {
             TokenTree::Punct(punct) => match punct.as_char() {
-                ':' => Ok(Value::Keyword(self.parse_symbol()?)),
+                ':' => match self.peek() {
+                    Some(TokenTree::Literal(lit)) => {
+                        let name = string_literal(lit)?;
+                        self.eat_token();
+                        Ok(Value::Keyword(name))
+                    }
+                    Some(_) => Ok(Value::Keyword(self.parse_identifier(String::new()))),
+                    None => Err(ParseError::UnexpectedEnd),
+                },
                 c => Err(ParseError::UnexpectedChar(c)),
             },
             TokenTree::Literal(lit) => Ok(Value::Symbol(string_literal(lit)?)),
