@@ -1489,7 +1489,7 @@ pub fn from_str_elisp(s: &str) -> Result<Value> {
     from_str_custom(s, Options::elisp())
 }
 
-/// Iterator over the values producedd by a parser.
+/// Iterator over the values produced by a parser.
 pub struct ValueIter<'a, R>(&'a mut Parser<R>);
 
 impl<'a, 'b, R> Iterator for ValueIter<'a, R>
@@ -1503,7 +1503,7 @@ where
     }
 }
 
-/// Iterator over the datums producedd by a parser.
+/// Iterator over the datums produced by a parser.
 pub struct DatumIter<'a, R>(&'a mut Parser<R>);
 
 impl<'a, 'b, R> Iterator for DatumIter<'a, R>
