@@ -49,6 +49,7 @@ pub struct Options {
     brackets: Brackets,
     string_syntax: StringSyntax,
     char_syntax: CharSyntax,
+    racket_hash_percent_symbols: bool,
 }
 
 /// Defines the treatment of the symbol `nil`.
@@ -109,6 +110,7 @@ impl Options {
             brackets: Brackets::List,
             string_syntax: StringSyntax::R6RS,
             char_syntax: CharSyntax::R6RS,
+            racket_hash_percent_symbols: false,
         }
     }
 
@@ -170,6 +172,12 @@ impl Options {
         self
     }
 
+    /// Choose to allow Racket-style #% prefixed symbols.
+    pub fn with_racket_hash_percent_symbols(mut self, allow: bool) -> Self {
+        self.racket_hash_percent_symbols = allow;
+        self
+    }
+
     /// Check wether a keyword syntax is enabled.
     #[inline]
     pub fn keyword_syntax(self, syntax: KeywordSyntax) -> bool {
@@ -200,6 +208,11 @@ impl Options {
     pub fn char_syntax(self) -> CharSyntax {
         self.char_syntax
     }
+
+    /// Query if Racket-style #% prefixed symbols are allowed.
+    pub fn racket_hash_percent_symbols(self) -> bool {
+        self.racket_hash_percent_symbols
+    }
 }
 
 impl Default for Options {
@@ -217,6 +230,7 @@ impl Default for Options {
             brackets: Brackets::List,
             string_syntax: StringSyntax::R6RS,
             char_syntax: CharSyntax::R6RS,
+            racket_hash_percent_symbols: false,
         }
     }
 }
@@ -489,6 +503,9 @@ impl<'de, R: Read<'de>> Parser<R> {
                     Some(b'd') => Token::Number(self.parse_radix_literal(10)?),
                     Some(b'x') => Token::Number(self.parse_radix_literal(16)?),
                     Some(b'\\') => Token::Char(self.read.parse_r6rs_char(&mut self.scratch)?),
+                    Some(b'%') if self.options.racket_hash_percent_symbols => {
+                        Token::Symbol(self.parse_symbol_suffix("#%")?.into())
+                    }
                     Some(_) => return Err(self.peek_error(ErrorCode::ExpectedSomeIdent)),
                     None => return Err(self.peek_error(ErrorCode::EofWhileParsingValue)),
                 }

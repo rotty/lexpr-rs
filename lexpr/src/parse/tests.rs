@@ -679,3 +679,13 @@ fn make_span(
         Position::new(end_line, end_column),
     )
 }
+
+#[test]
+fn test_racket_hash_percent_symbol() {
+    let mut parser = Parser::from_str_custom(
+        "#%symbol",
+        Options::new().with_racket_hash_percent_symbols(true),
+    );
+    assert_eq!(parser.expect_value().unwrap(), Value::symbol("#%symbol"));
+    parser.expect_end().unwrap();
+}
