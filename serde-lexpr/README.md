@@ -20,7 +20,7 @@ family of languages.
 This library does not implement an S-expression parser; it is built
 upon [`lexpr`], which provides a parser and serializer.
 
-[`lexpr`]: https://github.com/rotty/lexpr-rs/lexpr
+[`lexpr`]: https://github.com/rotty/lexpr-rs/tree/master/lexpr
 
 ## Licensing
 
