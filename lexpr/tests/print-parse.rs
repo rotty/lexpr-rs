@@ -62,6 +62,7 @@ fn test_improper_lists() {
 
 #[test]
 fn test_chars_elisp() {
+    #[allow(clippy::useless_vec)] // MSRV: 1.53
     for (value, printed) in vec![
         (sexp!('x'), "?x"),
         (sexp!('\\'), "?\\\\"),
