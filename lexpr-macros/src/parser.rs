@@ -52,9 +52,8 @@ impl Parser {
             TokenTree::Punct(punct) => match punct.as_char() {
                 '#' => self.parse_octothorpe(),
                 ',' => Ok(Value::Unquoted(self.token()?.clone())),
-                '!' | '$' | '%' | '&' | '*' | '+' | '-' | '.' | '/' | ':' | '<' | '=' | '>'
-                | '?' | '@' | '^' | '_' | '~' => {
-                    let c = punct.as_char(); // TODO: Use `@` pattern match on MSRV bump
+                c @ ('!' | '$' | '%' | '&' | '*' | '+' | '-' | '.' | '/' | ':' | '<' | '='
+                | '>' | '?' | '@' | '^' | '_' | '~') => {
                     match punct.spacing() {
                         // TODO: A lone '.' is not an identfier
                         Spacing::Joint => Ok(Value::Symbol(self.parse_identifier(c.to_string()))),

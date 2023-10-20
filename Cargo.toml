@@ -4,3 +4,4 @@ members = [
     "lexpr-macros",
     "serde-lexpr",
 ]
+resolver = "2"

@@ -62,7 +62,7 @@ fn test_improper_lists() {
 
 #[test]
 fn test_chars_elisp() {
-    for (value, printed) in vec![
+    for (value, printed) in [
         (sexp!('x'), "?x"),
         (sexp!('\\'), "?\\\\"),
         (sexp!('\u{1B}'), "?\\x1b"),
