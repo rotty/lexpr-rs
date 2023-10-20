@@ -5,7 +5,8 @@ version = "0.2.2"
 authors = ["Andreas Rottmann <mail@r0tty.org>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rotty/lexpr-rs"
-edition = "2018"
+edition = "2021"
+rust-version = "1.56"
 
 [lib]
 proc-macro = true

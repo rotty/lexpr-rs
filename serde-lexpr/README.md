@@ -1,9 +1,9 @@
-# serde-lexpr: Serde S-expressions [![Latest Version]][crates.io] [![Rustc Version 1.45+]][rustc]
+# serde-lexpr: Serde S-expressions [![Latest Version]][crates.io] [![Rustc Version 1.56+]][rustc]
 
 [Latest Version]: https://img.shields.io/crates/v/serde-lexpr.svg
 [crates.io]: https://crates.io/crates/serde-lexpr
-[Rustc Version 1.45+]: https://img.shields.io/badge/rustc-1.45+-lightgray.svg
-[rustc]: https://blog.rust-lang.org/2020/07/16/Rust-1.45.0.html
+[Rustc Version 1.56+]: https://img.shields.io/badge/rustc-1.56+-lightgray.svg
+[rustc]: https://blog.rust-lang.org/2021/10/21/Rust-1.56.0.html
 
 You may be looking for:
 

@@ -9,7 +9,8 @@ readme = "README.md"
 documentation = "https://docs.rs/lexpr/"
 keywords = ["lisp", "s-expression", "sexp", "sexpr"]
 categories = ["encoding", "data-structures", "parser-implementations"]
-edition = "2018"
+edition = "2021"
+rust-version = "1.56"
 
 [features]
 default = ["fast-float-parsing"]

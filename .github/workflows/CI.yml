@@ -29,23 +29,20 @@ jobs:
         run: cargo test --all-features --all-targets
 
   msrv-check:
-    # We require at least Rust 1.45, so we can use proc macros in
-    # expression position without resorting to the `proc-macro-hack`
-    # crate.
-    name: "MSRV (1.45.0) compile check"
+    # We require at least Rust 1.56, so we can use a current version
+    # of the `proc-macro2` crate, which has an MSRV of 1.56, as of
+    # version 1.0.69.
+    name: "MSRV (1.56) compile check"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
 
-      - name: Install 1.45 toolchain
-        uses: dtolnay/rust-toolchain@1.45.0
+      - name: Install 1.56 toolchain
+        uses: dtolnay/rust-toolchain@1.56
 
-      # We use the git CLI here, since otherwise cargo fails with
-      # "error reading from the zlib stream; class=Zlib (5)", see
-      # <https://github.com/rust-lang/cargo/issues/10303>.
       - name: Run cargo build
-        run: CARGO_NET_GIT_FETCH_WITH_CLI=true cargo build
+        run: cargo build
         working-directory: ./msrv-test
 
   lints:
