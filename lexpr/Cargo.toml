@@ -23,7 +23,7 @@ ryu = "1.0.0"
 lexpr-macros = { version = "0.2.2", path = "../lexpr-macros", optional = true }
 
 [dev-dependencies]
-criterion = "0.4.0"
+criterion = "0.5.1"
 lexpr-macros = { version = "0.2.2", path = "../lexpr-macros" }
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
