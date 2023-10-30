@@ -23,7 +23,7 @@ impl Number {
     /// guaranteed to return the integer value.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let big = i64::max_value() as u64 + 10;
     /// let v = sexp!(((a . 64) (b . ,big) (c . 256.0)));
@@ -51,7 +51,7 @@ impl Number {
     /// return the integer value.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . 64) (b . -64) (c . 256.0)));
     ///
@@ -80,8 +80,7 @@ impl Number {
     /// `is_u64` return false but this is not a guarantee in the future.
     ///
     /// ```
-    /// # use lexpr::sexp;
-    /// #
+    /// # use lexpr_macros::sexp;
     /// let v = sexp!(((a . 256.0) (b . 64) (c . -64)));
     /// assert!(v["a"].is_f64());
     ///
@@ -101,8 +100,7 @@ impl Number {
     /// None otherwise.
     ///
     /// ```
-    /// # use lexpr::sexp;
-    /// #
+    /// # use lexpr_macros::sexp;
     /// let big = i64::max_value() as u64 + 10;
     /// let v = sexp!(((a . 64) (b . ,big) (c . 256.0)));
     ///
@@ -129,8 +127,7 @@ impl Number {
     /// None otherwise.
     ///
     /// ```
-    /// # use lexpr::sexp;
-    /// #
+    /// # use lexpr_macros::sexp;
     /// let v = sexp!(((a . 64) (b . -64) (c . 256.0)));
     ///
     /// assert_eq!(v["a"].as_u64(), Some(64));
@@ -148,7 +145,7 @@ impl Number {
     /// Represents the number as f64 if possible. Returns None otherwise.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . 256.0) (b . 64) (c . -64)));
     ///

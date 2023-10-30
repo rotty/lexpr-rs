@@ -22,7 +22,7 @@ use crate::{Cons, Value};
 /// # Examples
 ///
 /// ```
-/// # use lexpr::sexp;
+/// # use lexpr_macros::sexp;
 /// #
 /// let data = sexp!(((foo 42) (bar . (1 2 3))));
 ///
@@ -159,7 +159,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let data = sexp!(((a . 42) (x . (y (z zz)))));
     ///

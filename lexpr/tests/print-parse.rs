@@ -1,4 +1,5 @@
-use lexpr::{parse, print, sexp, Value};
+use lexpr::{parse, print, Value};
+use lexpr_macros::sexp;
 
 fn check_roundtrip_default(input: Value, printed: &str) {
     let string = lexpr::to_string(&input).expect("printing failed");

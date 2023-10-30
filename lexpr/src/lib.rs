@@ -1,5 +1,6 @@
 #![deny(missing_docs)]
 #![warn(rust_2018_idioms)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 //! This crate provides facilities for parsing, printing and
 //! manipulating S-expression data. S-expressions are the format used
@@ -282,7 +283,7 @@
 /// # Booleans
 ///
 /// ```
-/// # use lexpr::sexp;
+/// # use lexpr_macros::sexp;
 /// let t = sexp!(#f);
 /// let f = sexp!(#t);
 /// ```
@@ -293,7 +294,7 @@
 /// kebab-case, you need to use the `#"..."` syntax.
 ///
 /// ```
-/// # use lexpr::sexp;
+/// # use lexpr_macros::sexp;
 /// let sym = sexp!(symbol);
 /// let kw = sexp!(#:keyword);
 /// assert!(sym.is_symbol());
@@ -310,7 +311,7 @@
 /// considers punctuation can be written without quotation:
 ///
 /// ```
-/// # use lexpr::sexp;
+/// # use lexpr_macros::sexp;
 /// let expr = sexp!((+ 1 2));
 /// assert!(expr.is_list());
 ///
@@ -323,7 +324,7 @@
 /// Characters can be written using Rust's character syntax:
 ///
 /// ```
-/// # use lexpr::sexp;
+/// # use lexpr_macros::sexp;
 /// let ch = sexp!('λ');
 /// assert!(ch.is_char());
 /// assert_eq!(ch.as_char(), Some('λ'));
@@ -335,7 +336,7 @@
 /// notation.
 ///
 /// ```
-/// # use lexpr::sexp;
+/// # use lexpr_macros::sexp;
 /// let l1 = sexp!((1 2 3));
 /// let l2 = sexp!((1 . (2 . (3 . ()))));
 /// let l3 = sexp!((1 2 . (3 . ())));
@@ -346,7 +347,7 @@
 /// Improper (aka dotted) lists are supported as well:
 ///
 /// ```
-/// # use lexpr::sexp;
+/// # use lexpr_macros::sexp;
 /// let dotted = sexp!((1 2 . three));
 /// assert!(dotted.is_dotted_list());
 /// let tail = dotted.as_cons().unwrap().cdr();
@@ -359,13 +360,15 @@
 /// Vectors can be written using Scheme notation, e.g.:
 ///
 /// ```
-/// # use lexpr::sexp;
+/// # use lexpr_macros::sexp;
 /// let v = sexp!(#(1 2 "three"));
 /// assert!(v.is_vector());
 /// assert_eq!(v[2], sexp!("three"));
 /// ```
 ///
 /// [`Value`]: enum.Value.html
+#[cfg(feature = "sexp-macro")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sexp-macro")))]
 pub use lexpr_macros::sexp;
 
 mod syntax;

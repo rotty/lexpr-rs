@@ -462,7 +462,8 @@ impl<'de, R: Read<'de>> Parser<R> {
     /// `Parser::value_iter()` if you need to handle end of input gracefully.
     ///
     /// ```
-    /// # use lexpr::{sexp, parse, Parser};
+    /// # use lexpr::{parse, Parser};
+    /// # use lexpr_macros::sexp;
     /// let mut parser = Parser::from_str(r#"foo ("bar" . 3.14) #:baz (1 2 3)"#);
     /// assert_eq!(parser.expect_value().unwrap(), sexp!(foo));
     /// assert_eq!(parser.expect_value().unwrap(), sexp!(("bar" . 3.14)));

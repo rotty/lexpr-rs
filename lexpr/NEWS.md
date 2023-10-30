@@ -1,3 +1,21 @@
+# 0.3.0 (unreleased)
+
+New features:
+
+- New parser option `racket_hash_percent_symbols`, implemented in PR
+  #90 by @andrew-pa.
+
+Changes:
+
+- The `sexp!` macro is now only included when specifying the
+  non-default feature `sexp-macro`. This makes the crate a bit more
+  lightweight for users who don't need that macro.
+
+Maintenance-related changes:
+
+- The MSRV is now 1.56 and specified in `Cargo.toml` and the Rust
+  edition has been updated to "2021".
+
 # 0.2.7
 
 New features:

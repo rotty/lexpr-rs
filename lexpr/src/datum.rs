@@ -57,7 +57,7 @@ impl Datum {
     /// element after the dot after returning `None` the first time.
     ///
     /// ```
-    /// use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     ///
     /// let datum = lexpr::datum::from_str("(1 2 . 3)").unwrap();
     /// let mut iter = datum.list_iter().unwrap();
