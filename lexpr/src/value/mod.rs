@@ -6,7 +6,7 @@
 //! objects with very natural S-expression syntax.
 //!
 //! ```
-//! use lexpr::sexp;
+//! # use lexpr_macros::sexp;
 //!
 //! // The type of `john` is `lexpr::Value`
 //! let john = sexp!((
@@ -35,7 +35,7 @@
 //! or surrounded by round or curly braces.
 //!
 //! ```
-//! # use lexpr::sexp;
+//! # use lexpr_macros::sexp;
 //! #
 //! # fn random_phone() -> u16 { 0 }
 //! #
@@ -59,7 +59,7 @@
 //! the `lexpr` default behavior.
 //!
 //! ```
-//! use lexpr::{sexp, parse::Error, Value};
+//! # use lexpr::{parse::Error, Value};
 //!
 //! # fn main() -> Result<(), Error> {
 //! // Some S-expression input data as a &str. Maybe this comes from the user.
@@ -153,7 +153,7 @@ pub enum Value {
     ///
     /// Cons cells are often used to form singly-linked lists.
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// let v = sexp!((a list 1 2 3));
     /// assert!(v.is_cons());
     /// assert_eq!(v[4], sexp!(3));
@@ -235,7 +235,8 @@ impl Value {
     /// Create a list value from elements convertible into `Value`.
     ///
     /// ```
-    /// # use lexpr::{sexp, Value};
+    /// # use lexpr::Value;
+    /// # use lexpr_macros::sexp;
     /// assert_eq!(Value::list(vec![1, 2, 3]), sexp!((1 2 3)));
     /// ```
     pub fn list<I>(elements: I) -> Self
@@ -262,7 +263,8 @@ impl Value {
     /// Note that all values that are not pairs are considered dotted lists.
     ///
     /// ```
-    /// # use lexpr::{sexp, Value};
+    /// # use lexpr::Value;
+    /// # use lexpr_macros::sexp;
     /// let list = sexp!((1 2 3));
     /// assert!(!list.is_dotted_list());
     /// let dotted = sexp!((1 2 . 3));
@@ -280,7 +282,8 @@ impl Value {
     /// given value as a tail.
     ///
     /// ```
-    /// # use lexpr::{sexp, Value};
+    /// # use lexpr::Value;
+    /// # use lexpr_macros::sexp;
     /// assert_eq!(Value::append(vec![1u32, 2], 3), sexp!((1 2 . 3)));
     /// assert_eq!(Value::append(vec![1u32, 2, 3], sexp!((4 5))), sexp!((1 2 3 4 5)));
     /// ```
@@ -312,7 +315,8 @@ impl Value {
     /// Create a vector value from elements convertible into `Value`.
     ///
     /// ```
-    /// # use lexpr::{sexp, Value};
+    /// # use lexpr::Value;
+    /// # use lexpr_macros::sexp;
     /// assert_eq!(Value::vector(vec![1u32, 2, 3]), sexp!(#(1 2 3)));
     /// ```
     pub fn vector<I>(elements: I) -> Self
@@ -330,7 +334,7 @@ impl Value {
     /// to return the string slice.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . "some string") (b . #f)));
     ///
@@ -347,7 +351,7 @@ impl Value {
     /// otherwise.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . "some string") (b . #f)));
     ///
@@ -379,7 +383,7 @@ impl Value {
     /// to return the string slice.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!((#:foo bar "baz"));
     ///
@@ -397,7 +401,7 @@ impl Value {
     /// otherwise.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(foo);
     ///
@@ -416,7 +420,7 @@ impl Value {
     /// to return the string slice.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!((#:foo bar "baz"));
     ///
@@ -434,7 +438,7 @@ impl Value {
     /// otherwise.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(#:foo);
     ///
@@ -453,7 +457,7 @@ impl Value {
     /// equivalently in some context.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let kw = sexp!(#:foo);
     /// assert_eq!(kw.as_name(), Some("foo"));
@@ -479,7 +483,7 @@ impl Value {
     /// to return the byte slice.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . ,(b"some bytes" as &[u8])) (b . "string")));
     ///
@@ -496,7 +500,7 @@ impl Value {
     /// slice. Returns `None` otherwise.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . ,(b"some bytes" as &[u8])) (b . "string")));
     ///
@@ -533,7 +537,7 @@ impl Value {
     /// return the integer value.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let big = i64::max_value() as u64 + 10;
     /// let v = sexp!(((a . 64) (b . ,big) (c . 256.0)));
@@ -559,7 +563,7 @@ impl Value {
     /// return the integer value.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . 64) (b . -64) (c . 256.0)));
     ///
@@ -587,7 +591,7 @@ impl Value {
     /// `is_u64` return false but this is not a guarantee in the future.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . 256.0) (b . 64) (c . -64)));
     ///
@@ -609,7 +613,7 @@ impl Value {
     /// None otherwise.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let big = i64::max_value() as u64 + 10;
     /// let v = sexp!(((a . 64) (b . ,big) (c . 256.0)));
@@ -627,7 +631,7 @@ impl Value {
     /// None otherwise.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . 64) (b . -64) (c . 256.0)));
     ///
@@ -643,7 +647,7 @@ impl Value {
     /// None otherwise.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . 256.0) (b . 64) (c . -64)));
     ///
@@ -661,7 +665,7 @@ impl Value {
     /// guaranteed to return the boolean value.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . #f) (b . #nil)));
     ///
@@ -678,7 +682,7 @@ impl Value {
     /// otherwise.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . #f) (b . "false")));
     ///
@@ -703,7 +707,7 @@ impl Value {
     /// otherwise.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . 'c') (b . "c")));
     ///
@@ -725,7 +729,7 @@ impl Value {
     /// to return `Some(())`.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . #nil) (b . #f)));
     ///
@@ -741,7 +745,7 @@ impl Value {
     /// If the value is `Nil`, returns `()`. Returns `None` otherwise.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let v = sexp!(((a . #nil) (b . #f) (c . ())));
     ///
@@ -799,7 +803,7 @@ impl Value {
     /// fields.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// let cell = sexp!((foo . bar));
     /// assert_eq!(cell.as_pair(), Some((&sexp!(foo), &sexp!(bar))));
     /// assert_eq!(sexp!("not-a-pair").as_pair(), None);
@@ -816,7 +820,8 @@ impl Value {
     /// If the value is a vector, return a reference to its elements.
     ///
     /// ```
-    /// # use lexpr::{sexp, Value};
+    /// # use lexpr::Value;
+    /// # use lexpr_macros::sexp;
     /// let v = sexp!(#(1 2 "three"));
     /// let slice: &[Value] = &[sexp!(1), sexp!(2), sexp!("three")];
     /// assert_eq!(v.as_slice(), Some(slice));
@@ -831,7 +836,8 @@ impl Value {
     /// If the value is a vector, return a mutable reference to its elements.
     ///
     /// ```
-    /// # use lexpr::{sexp, Value};
+    /// # use lexpr::Value;
+    /// # use lexpr_macros::sexp;
     /// let mut v = sexp!(#(1 2 "three"));
     /// v.as_slice_mut().unwrap()[2] = sexp!(3);
     /// let slice: &[Value] = &[sexp!(1), sexp!(2), sexp!(3)];
@@ -852,8 +858,7 @@ impl Value {
     /// element after the dot after returning `None` the first time.
     ///
     /// ```
-    /// use lexpr::sexp;
-    ///
+    /// # use lexpr_macros::sexp;
     /// let value = lexpr::from_str("(1 2 . 3)").unwrap();
     /// let mut iter = value.list_iter().unwrap();
     /// assert_eq!(iter.next(), Some(&sexp!(1)));
@@ -877,7 +882,8 @@ impl Value {
     /// [`as_cons`] and the [`Cons::to_vec`] method.
     ///
     /// ```
-    /// # use lexpr::{sexp, Value};
+    /// # use lexpr::Value;
+    /// # use lexpr_macros::sexp;
     /// assert_eq!(sexp!((1 2 3)).to_vec(), Some(vec![sexp!(1), sexp!(2), sexp!(3)]));
     /// assert_eq!(sexp!(()).to_vec(), Some(vec![]));
     /// assert_eq!(sexp!((1 2 . 3)).to_vec(), None);
@@ -905,7 +911,8 @@ impl Value {
     /// combine [`as_cons`] and the [`Cons::to_ref_vec`] method.
     ///
     /// ```
-    /// # use lexpr::{sexp, Value};
+    /// # use lexpr::Value;
+    /// # use lexpr_macros::sexp;
     /// assert_eq!(sexp!((1 2 3)).to_ref_vec(), Some(vec![&sexp!(1), &sexp!(2), &sexp!(3)]));
     /// assert_eq!(sexp!(()).to_ref_vec(), Some(vec![]));
     /// assert_eq!(sexp!((1 2 . 3)).to_ref_vec(), None);
@@ -947,7 +954,7 @@ impl Value {
     /// `Value` value containing that number.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let alist = sexp!((("A" . 65) (B . 66) (#:C . 67) (42 . "The answer")));
     /// assert_eq!(alist.get("A").unwrap(), &sexp!(65));
@@ -966,7 +973,7 @@ impl Value {
     /// `get` would have returned `None`. See [`Index`] for details.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let alist = sexp!((
     ///     ("A" . ("a" "á" "à"))
@@ -1011,7 +1018,7 @@ impl fmt::Display for Value {
     /// Display an S-expression value as a string.
     ///
     /// ```
-    /// # use lexpr::sexp;
+    /// # use lexpr_macros::sexp;
     /// #
     /// let value = sexp!(((city "London") (street "10 Downing Street")));
     ///

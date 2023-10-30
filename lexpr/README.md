@@ -26,6 +26,19 @@ family of languages. `lexpr` aims to provide the tools to:
   let address = sexp!(((name . "Jane Doe") (street . "4026 Poe Lane")));
   ```
 
+  As the `sexp` macro is implemented as a proc-macro, and may not be
+  needed in all cases, it is needs to be enabled explicitly using the
+  `sexp-macro` feature flag since `lexpr` version 0.3.0:
+
+  ```toml
+  [dependencies]
+  lexpr = { version = "0.3", features = ["sexp-macro"] }
+  ```
+
+  Note that many of the documentation examples make use of the `sexp`
+  macro, without hinting that the feature needs to be enabled
+  explicitly.
+
 - Construct and destructure S-expression data using a full-featured
   API:
 

@@ -1,4 +1,5 @@
-use lexpr::{sexp, Value};
+use lexpr::Value;
+use lexpr_macros::sexp;
 
 #[test]
 fn test_numbers() {

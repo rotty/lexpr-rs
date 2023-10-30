@@ -5,6 +5,6 @@ authors = ["Andreas Rottmann <a.rottmann@gmx.at>"]
 edition = "2021"
 
 [dependencies]
-lexpr = { path = "../lexpr" }
+lexpr = { path = "../lexpr", features = ["sexp-macro"] }
 
 [workspace]

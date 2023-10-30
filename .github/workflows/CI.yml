@@ -25,7 +25,10 @@ jobs:
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Run cargo test
+      - name: Run cargo test (default features)
+        run: cargo test --all-targets
+
+      - name: Run cargo test (all features)
         run: cargo test --all-features --all-targets
 
   msrv-check:
