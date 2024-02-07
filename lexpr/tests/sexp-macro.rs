@@ -19,6 +19,8 @@ fn test_symbols() {
 fn test_keywords() {
     assert_eq!(sexp!(#:foo), Value::keyword("foo"));
     assert_eq!(sexp!(#:"a-keyword"), Value::keyword("a-keyword"));
+    assert_eq!(sexp!(:foo), Value::keyword("foo"));
+    assert_eq!(sexp!(:"a-keyword"), Value::keyword("a-keyword"));
 }
 
 #[test]
@@ -35,6 +37,14 @@ fn test_cons() {
     assert_eq!(
         sexp! {((a . 256.0))},
         Value::list(vec![Value::cons(Value::symbol("a"), Value::from(256.0))])
+    );
+    assert_eq!(
+        sexp!((#:foo)),
+        Value::cons(Value::keyword("foo"), Value::Null)
+    );
+    assert_eq!(
+        sexp!((:foo)),
+        Value::cons(Value::keyword("foo"), Value::Null)
     );
 }
 
@@ -68,6 +78,7 @@ fn test_special_tokens() {
     assert_eq!(sexp!(...), Value::symbol("..."));
     assert_eq!(sexp!(.++), Value::symbol(".++"));
     assert_eq!(sexp!(!$%&*+-./:<=>?@^~), Value::symbol("!$%&*+-./:<=>?@^~"));
+    assert_eq!(sexp!(:!$%&*+-./<=>?@^~), Value::symbol(":!$%&*+-./<=>?@^~"));
     assert_eq!(
         sexp!((+ 1 2)),
         Value::list(vec![Value::symbol("+"), 1.into(), 2.into()])
