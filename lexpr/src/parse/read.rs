@@ -1197,12 +1197,13 @@ fn decode_utf8_sequence<'de, R: Read<'de> + ?Sized>(
     // turn these into a codepoint. If one would like to optimize
     // this, doing the complete decoding here could eliminate the
     // use of `scratch` and the calls into the standard library.
-    if !(0xC2..=0xF4).contains(&initial) {
-        return error(read, ErrorCode::InvalidUnicodeCodePoint);
-    }
+    let len = match initial {
+        0b1100_0000..=0b1101_1111 => 1,
+        0b1110_0000..=0b1111_0111 => (initial - 0b1100_0000) >> 4,
+        _ => return error(read, ErrorCode::InvalidUnicodeCodePoint),
+    };
     scratch.clear();
     scratch.push(initial);
-    let len = (initial - 0xC0) >> 4;
     for _ in 0..len {
         let b = match read.next()? {
             Some(c) => c,
