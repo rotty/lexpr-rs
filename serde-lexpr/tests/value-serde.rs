@@ -232,6 +232,28 @@ fn test_basic_struct() {
 }
 
 #[test]
+fn test_char_keyed_hashmap() {
+    #[derive(Serialize, Deserialize, PartialEq, Debug)]
+    struct Frequencies {
+        distribution: HashMap<char, usize>,
+    }
+    let distribution = [('ﬁ', 504), ('ā', 30), ('ł', 2), ('ﬂ', 126)];
+    let thing = Frequencies {
+        distribution: distribution.into_iter().collect(),
+    };
+    let distribution_alist = Value::list(
+        distribution
+            .into_iter()
+            .map(|(c, n)| Value::cons(c, n as u32)),
+    );
+    let value = sexp!(((distribution . ,distribution_alist)));
+    // We cannot perform a check in the other direction, as `HashMap`
+    // has unspecified ordering.
+    let deserialized: Frequencies = from_value(&value).unwrap();
+    assert_eq!(&deserialized, &thing);
+}
+
+#[test]
 fn test_parse_error_eof() {
     assert_eq!(
         deser_error::<String>("\""),
