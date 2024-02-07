@@ -372,6 +372,8 @@ impl ser::SerializeStructVariant for SerializeStructVariant {
 /// let val = serde_lexpr::to_value("s").unwrap();
 /// assert_eq!(val, Value::string("s"));
 /// ```
+// Taking by value is more friendly to iterator adapters, option and result
+// consumers, etc. See <https://github.com/serde-rs/json/pull/149>.
 pub fn to_value<T>(value: T) -> Result<Value>
 where
     T: ser::Serialize,
