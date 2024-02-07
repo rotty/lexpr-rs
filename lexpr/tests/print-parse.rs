@@ -62,6 +62,14 @@ fn test_improper_lists() {
 }
 
 #[test]
+fn test_unicode_chars() {
+    for c in ['ﬁ', 'ā', 'ł', 'ﬂ'] {
+        check_roundtrip_default(Value::Char(c), &format!("#\\x{:x}", u32::from(c)));
+        assert_eq!(lexpr::from_str(&format!("#\\{c}")).unwrap(), Value::Char(c));
+    }
+}
+
+#[test]
 fn test_chars_elisp() {
     for (value, printed) in [
         (sexp!('x'), "?x"),
