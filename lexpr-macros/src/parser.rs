@@ -66,6 +66,7 @@ impl Parser {
                                 }
                                 _ => Ok(Value::Symbol(c.to_string())),
                             },
+                            ':' => Ok(Value::Keyword(self.parse_identifier(String::new()))),
                             _ => Ok(Value::Symbol(c.to_string())),
                         },
                     }
