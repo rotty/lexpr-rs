@@ -291,7 +291,8 @@
 /// # Symbols and keywords
 ///
 /// Due to syntactic restrictions of Rust's macro system, to use
-/// kebab-case, you need to use the `#"..."` syntax.
+/// kebab-case, you need to use the `#"..."` (or `#:"...", for
+/// keywords) syntax.
 ///
 /// ```
 /// # use lexpr_macros::sexp;
@@ -306,9 +307,22 @@
 /// assert!(kebab_kw.is_keyword());
 /// ```
 ///
+/// For convenience, since `lexpr` version 0.3.0, keywords can also be
+/// written using the Emacs Lisp (or Common Lisp) syntax, leaving off
+/// the Scheme-ish octothorpe:
+///
+/// ```
+/// # use lexpr_macros::sexp;
+/// let kw = sexp!(:keyword);
+/// assert!(kw.is_keyword());
+///
+/// let kebab_kw = sexp!(#:"kebab-keyword");
+/// assert!(kebab_kw.is_keyword());
+/// ```
+///
 /// Since `lexpr` version 0.2.7, symbols following the R7RS (Scheme)
 /// syntax, which additionally consist of *only* characters that Rust
-/// considers punctuation can be written without quotation:
+/// considers punctuation can be written without double quotes:
 ///
 /// ```
 /// # use lexpr_macros::sexp;

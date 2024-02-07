@@ -10,6 +10,10 @@ Changes:
 - The `sexp!` macro is now only included when specifying the
   non-default feature `sexp-macro`. This makes the crate a bit more
   lightweight for users who don't need that macro.
+- The `sexp!` macro now recognizes keywords without a leading
+  octothorpe, as in Emacs Lisp and Common Lisp, allowing for a
+  less-noisy spelling; e.g.: `:foo` instead of `#:foo`. Feature
+  request (#99) and initial implementation (#96) by @samuel-jimenez.
 
 Maintenance-related changes:
 
