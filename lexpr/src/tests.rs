@@ -180,6 +180,19 @@ fn print_parse_roundtrip_io_default() {
 }
 
 #[test]
+fn char_parsing_default() {
+    fn prop(input: char) -> bool {
+        let value = lexpr::from_str(&format!("#\\{input}")).expect("parsing failed");
+        value == Value::Char(input)
+    }
+    QuickCheck::new()
+        .tests(1000)
+        .max_tests(2000)
+        .gen(Gen::new(4))
+        .quickcheck(prop as fn(char) -> bool);
+}
+
+#[test]
 fn test_list_index() {
     let list = Value::list(vec![23, 24, 25]);
     assert_eq!(list[0], Value::from(23));
