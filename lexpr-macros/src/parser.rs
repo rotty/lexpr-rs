@@ -75,7 +75,6 @@ impl Parser {
                                 Some(TokenTree::Ident(ident)) => Ok(Value::Keyword(ident.to_string())),
                                 _ => Ok(Value::Symbol(c.to_string())),
                             },
-                            ':' => Ok(Value::Keyword(self.parse_identifier(String::new()))),
                             _ => Ok(Value::Symbol(c.to_string())),
                         },
                     }
