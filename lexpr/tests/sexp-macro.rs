@@ -18,6 +18,7 @@ fn test_symbols() {
 #[test]
 fn test_keywords() {
     assert_eq!(sexp!(#:foo), Value::keyword("foo"));
+    assert_eq!(sexp!(:foo), Value::keyword("foo"));
     assert_eq!(sexp!(#:"a-keyword"), Value::keyword("a-keyword"));
 }
 

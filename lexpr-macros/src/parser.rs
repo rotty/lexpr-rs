@@ -66,6 +66,15 @@ impl Parser {
                                 }
                                 _ => Ok(Value::Symbol(c.to_string())),
                             },
+                            ':' => match self.peek() {
+                                Some(TokenTree::Literal(lit)) => {
+                                    let name = string_literal(lit)?;
+                                    self.eat_token();
+                                    Ok(Value::Keyword(name))
+                                },
+                                Some(TokenTree::Ident(ident)) => Ok(Value::Keyword(ident.to_string())),
+                                _ => Ok(Value::Symbol(c.to_string())),
+                            },
                             ':' => Ok(Value::Keyword(self.parse_identifier(String::new()))),
                             _ => Ok(Value::Symbol(c.to_string())),
                         },
