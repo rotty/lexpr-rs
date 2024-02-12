@@ -703,45 +703,69 @@ where
     F: Formatter + ?Sized,
 {
     formatter.begin_string(writer)?;
-    format_escaped_str_contents(writer, formatter, value)?;
+    for segment in StringSegments::new(value) {
+        match segment {
+            StringSegment::Fragment(s) => formatter.write_string_fragment(writer, s)?,
+            StringSegment::CharEscape(escape) => formatter.write_char_escape(writer, escape)?,
+        }
+    }
     formatter.end_string(writer)?;
     Ok(())
 }
 
-fn format_escaped_str_contents<W, F>(
-    writer: &mut W,
-    formatter: &mut F,
-    value: &str,
-) -> io::Result<()>
-where
-    W: io::Write + ?Sized,
-    F: Formatter + ?Sized,
-{
-    let bytes = value.as_bytes();
+enum StringSegment<'a> {
+    Fragment(&'a str),
+    CharEscape(CharEscape),
+}
 
-    let mut start = 0;
+struct StringSegments<'a> {
+    remainder: &'a str,
+    escape: Option<CharEscape>,
+}
 
-    for (i, &byte) in bytes.iter().enumerate() {
-        let escape = ESCAPE[byte as usize];
-        if escape == 0 {
-            continue;
+impl<'a> StringSegments<'a> {
+    fn new(s: &'a str) -> Self {
+        Self {
+            remainder: s,
+            escape: None,
+        }
+    }
+}
+
+impl<'a> Iterator for StringSegments<'a> {
+    type Item = StringSegment<'a>;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(escape) = self.escape.take() {
+            return Some(StringSegment::CharEscape(escape));
+        }
+        let bytes = self.remainder.as_bytes();
+        for (i, &byte) in bytes.iter().enumerate() {
+            let escape = ESCAPE[byte as usize];
+            if escape == 0 {
+                continue;
+            }
+
+            let char_escape = CharEscape::from_escape_table(escape, byte);
+            if i > 0 {
+                let (fragment, remainder) = self.remainder.split_at(i);
+                self.remainder = &remainder[1..];
+                self.escape = Some(char_escape);
+                return Some(StringSegment::Fragment(fragment));
+            } else {
+                self.remainder = &self.remainder[1..];
+                return Some(StringSegment::CharEscape(char_escape));
+            }
         }
 
-        if start < i {
-            formatter.write_string_fragment(writer, &value[start..i])?;
+        if !self.remainder.is_empty() {
+            let fragment = self.remainder;
+            self.remainder = "";
+            return Some(StringSegment::Fragment(fragment));
         }
-
-        let char_escape = CharEscape::from_escape_table(escape, byte);
-        formatter.write_char_escape(writer, char_escape)?;
-
-        start = i + 1;
+        None
     }
-
-    if start != bytes.len() {
-        formatter.write_string_fragment(writer, &value[start..])?;
-    }
-
-    Ok(())
 }
 
 fn write_r6rs_char_escape<W>(writer: &mut W, char_escape: CharEscape) -> io::Result<()>
