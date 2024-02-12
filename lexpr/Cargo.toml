@@ -15,12 +15,15 @@ rust-version = "1.56"
 [features]
 default = ["fast-float-parsing"]
 fast-float-parsing = []
-sexp-macro = ["lexpr-macros"] # MSRV 1.60+: use the `dep:` prefix here
+sexp-macro = ["dep:lexpr-macros"] # MSRV 1.60+: use the `dep:` prefix here
+pretty = ["dep:pretty", "dep:bumpalo"] # MSRV 1.60+: use the `dep:` prefix here
 
 [dependencies]
 itoa = "1.0"
 ryu = "1.0.0"
 lexpr-macros = { version = "0.2.4", path = "../lexpr-macros", optional = true }
+pretty = { version = "0.12.3", optional = true }
+bumpalo = { version = "3.14.0", optional = true }
 
 [dev-dependencies]
 criterion = "0.5.1"
