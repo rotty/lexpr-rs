@@ -37,6 +37,8 @@ fn test_cons() {
         sexp! {((a . 256.0))},
         Value::list(vec![Value::cons(Value::symbol("a"), Value::from(256.0))])
     );
+    assert_eq!(sexp!((#:foo)), Value::cons(Value::keyword("foo"), Value::Null));
+    assert_eq!(sexp!((:foo)), Value::cons(Value::keyword("foo"), Value::Null));
 }
 
 #[test]

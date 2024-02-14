@@ -72,7 +72,11 @@ impl Parser {
                                     self.eat_token();
                                     Ok(Value::Keyword(name))
                                 },
-                                Some(TokenTree::Ident(ident)) => Ok(Value::Keyword(ident.to_string())),
+                                Some(TokenTree::Ident(ident)) => {
+                                    let name = ident.to_string();
+                                    self.eat_token();
+                                    Ok(Value::Keyword(name))
+                                },
                                 _ => Ok(Value::Symbol(c.to_string())),
                             },
                             _ => Ok(Value::Symbol(c.to_string())),
