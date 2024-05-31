@@ -205,7 +205,7 @@ pub trait Formatter {
         writer.write_all(b"#nil")
     }
 
-    /// Writes a representation of the special nil value to the specified writer.
+    /// Writes a representation of the null (end-of list) value to the specified writer.
     #[inline]
     fn write_null<W>(&mut self, writer: &mut W) -> io::Result<()>
     where
