@@ -532,7 +532,7 @@ impl Formatter for CustomizedFormatter {
             BytesSyntax::R6RS | BytesSyntax::R7RS => {
                 write_scheme_vector(self, writer, VectorType::Byte, bytes, |writer, &octet| {
                     let mut buffer = itoa::Buffer::new();
-                    writer.write(buffer.format(octet).as_bytes()).map(drop)
+                    writer.write_all(buffer.format(octet).as_bytes())
                 })
             }
             BytesSyntax::Elisp => {
