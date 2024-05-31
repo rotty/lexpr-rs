@@ -198,18 +198,18 @@ pub enum VectorType {
 pub trait Formatter {
     /// Writes a representation of the special nil value to the specified writer.
     #[inline]
-    fn write_nil<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    fn write_nil<W>(&mut self, writer: &mut W) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         writer.write_all(b"#nil")
     }
 
     /// Writes a representation of the special nil value to the specified writer.
     #[inline]
-    fn write_null<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    fn write_null<W>(&mut self, writer: &mut W) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         writer.write_all(b"()")
     }
@@ -219,18 +219,18 @@ pub trait Formatter {
     /// The implementation provided by the trait will use the Scheme notation
     /// (`#t` and `#f`).
     #[inline]
-    fn write_bool<W: ?Sized>(&mut self, writer: &mut W, value: bool) -> io::Result<()>
+    fn write_bool<W>(&mut self, writer: &mut W, value: bool) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         writer.write_all(if value { b"#t" } else { b"#f" })
     }
 
     /// Writes an integer value like `-123` to the specified writer.
     #[inline]
-    fn write_number<W: ?Sized>(&mut self, writer: &mut W, value: &Number) -> io::Result<()>
+    fn write_number<W>(&mut self, writer: &mut W, value: &Number) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         struct Write<'a, W: io::Write + ?Sized> {
             writer: &'a mut W,
@@ -263,9 +263,9 @@ pub trait Formatter {
     ///
     /// The implementation provided by the trait will use Scheme notation
     /// (`#\C`).
-    fn write_char<W: ?Sized>(&mut self, writer: &mut W, c: char) -> io::Result<()>
+    fn write_char<W>(&mut self, writer: &mut W, c: char) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         write_scheme_char(writer, c)
     }
@@ -273,9 +273,9 @@ pub trait Formatter {
     /// Called before each series of `write_string_fragment` and
     /// `write_char_escape`.  Writes a `"` to the specified writer.
     #[inline]
-    fn begin_string<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    fn begin_string<W>(&mut self, writer: &mut W) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         writer.write_all(b"\"")
     }
@@ -283,9 +283,9 @@ pub trait Formatter {
     /// Called after each series of `write_string_fragment` and
     /// `write_char_escape`.  Writes a `"` to the specified writer.
     #[inline]
-    fn end_string<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    fn end_string<W>(&mut self, writer: &mut W) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         writer.write_all(b"\"")
     }
@@ -293,31 +293,27 @@ pub trait Formatter {
     /// Writes a string fragment that doesn't need any escaping to the specified
     /// writer.
     #[inline]
-    fn write_string_fragment<W: ?Sized>(&mut self, writer: &mut W, fragment: &str) -> io::Result<()>
+    fn write_string_fragment<W>(&mut self, writer: &mut W, fragment: &str) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         writer.write_all(fragment.as_bytes())
     }
 
     /// Writes a character escape code to the specified writer.
     #[inline]
-    fn write_char_escape<W: ?Sized>(
-        &mut self,
-        writer: &mut W,
-        char_escape: CharEscape,
-    ) -> io::Result<()>
+    fn write_char_escape<W>(&mut self, writer: &mut W, char_escape: CharEscape) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         write_r6rs_char_escape(writer, char_escape)
     }
 
     /// Writes a symbol to the specified writer.
     #[inline]
-    fn write_symbol<W: ?Sized>(&mut self, writer: &mut W, name: &str) -> io::Result<()>
+    fn write_symbol<W>(&mut self, writer: &mut W, name: &str) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         // TODO: We might need to escape and/or use pipe notation.
         writer.write_all(name.as_bytes())
@@ -325,9 +321,9 @@ pub trait Formatter {
 
     /// Writes a keyword to the specified writer.
     #[inline]
-    fn write_keyword<W: ?Sized>(&mut self, writer: &mut W, name: &str) -> io::Result<()>
+    fn write_keyword<W>(&mut self, writer: &mut W, name: &str) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         writer.write_all(b"#:")?;
         writer.write_all(name.as_bytes())
@@ -335,9 +331,9 @@ pub trait Formatter {
 
     /// Writes a byte vector to the specified writer.
     #[inline]
-    fn write_bytes<W: ?Sized>(&mut self, writer: &mut W, bytes: &[u8]) -> io::Result<()>
+    fn write_bytes<W>(&mut self, writer: &mut W, bytes: &[u8]) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         write_scheme_vector(self, writer, VectorType::Byte, bytes, |writer, &octet| {
             let mut buffer = itoa::Buffer::new();
@@ -348,9 +344,9 @@ pub trait Formatter {
     /// Called before any list elements.  Writes a `(` to the specified
     /// writer.
     #[inline]
-    fn begin_list<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    fn begin_list<W>(&mut self, writer: &mut W) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         writer.write_all(b"(")
     }
@@ -358,9 +354,9 @@ pub trait Formatter {
     /// Called after all list elements have been written.  Writes a `)` to the
     /// specified writer.
     #[inline]
-    fn end_list<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    fn end_list<W>(&mut self, writer: &mut W) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         writer.write_all(b")")
     }
@@ -368,9 +364,9 @@ pub trait Formatter {
     /// Called before starting to write a list or vector element. Writes a space
     /// to the specified writer, if needed.
     #[inline]
-    fn begin_seq_element<W: ?Sized>(&mut self, writer: &mut W, first: bool) -> io::Result<()>
+    fn begin_seq_element<W>(&mut self, writer: &mut W, first: bool) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         if first {
             Ok(())
@@ -381,9 +377,9 @@ pub trait Formatter {
 
     /// Called after every list or vector element.
     #[inline]
-    fn end_seq_element<W: ?Sized>(&mut self, _writer: &mut W) -> io::Result<()>
+    fn end_seq_element<W>(&mut self, _writer: &mut W) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         Ok(())
     }
@@ -391,9 +387,9 @@ pub trait Formatter {
     /// Called before any vector elements.  Will write `#(` for generic vectors,
     /// or `#u8(` for byte vectors, to the specified writer.
     #[inline]
-    fn begin_vector<W: ?Sized>(&mut self, kind: VectorType, writer: &mut W) -> io::Result<()>
+    fn begin_vector<W>(&mut self, kind: VectorType, writer: &mut W) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         match kind {
             VectorType::Generic => writer.write_all(b"#("),
@@ -404,9 +400,9 @@ pub trait Formatter {
     /// Called after all vector elements have been written.  Writes a `)` to the
     /// specified writer.
     #[inline]
-    fn end_vector<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    fn end_vector<W>(&mut self, writer: &mut W) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         writer.write_all(b")")
     }
@@ -415,9 +411,9 @@ pub trait Formatter {
     /// generally, the `cdr` field of a cons cell.  Writes a `.` to
     /// the specified writer.
     #[inline]
-    fn write_dot<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    fn write_dot<W>(&mut self, writer: &mut W) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         writer.write_all(b".")
     }
@@ -437,9 +433,9 @@ pub struct CustomizedFormatter {
 }
 
 impl Formatter for CustomizedFormatter {
-    fn write_nil<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    fn write_nil<W>(&mut self, writer: &mut W) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         match self.options.nil_syntax {
             NilSyntax::EmptyList => writer.write_all(b"()"),
@@ -449,9 +445,9 @@ impl Formatter for CustomizedFormatter {
         }
     }
 
-    fn write_bool<W: ?Sized>(&mut self, writer: &mut W, value: bool) -> io::Result<()>
+    fn write_bool<W>(&mut self, writer: &mut W, value: bool) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         match self.options.bool_syntax {
             BoolSyntax::Symbol => writer.write_all(if value { b"t" } else { b"nil" }),
@@ -459,9 +455,9 @@ impl Formatter for CustomizedFormatter {
         }
     }
 
-    fn write_keyword<W: ?Sized>(&mut self, writer: &mut W, name: &str) -> io::Result<()>
+    fn write_keyword<W>(&mut self, writer: &mut W, name: &str) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         match self.options.keyword_syntax {
             KeywordSyntax::ColonPostfix => {
@@ -479,9 +475,9 @@ impl Formatter for CustomizedFormatter {
         }
     }
 
-    fn begin_vector<W: ?Sized>(&mut self, kind: VectorType, writer: &mut W) -> io::Result<()>
+    fn begin_vector<W>(&mut self, kind: VectorType, writer: &mut W) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         match self.options.vector_syntax {
             VectorSyntax::Brackets => writer.write_all(b"["),
@@ -496,9 +492,9 @@ impl Formatter for CustomizedFormatter {
         }
     }
 
-    fn end_vector<W: ?Sized>(&mut self, writer: &mut W) -> io::Result<()>
+    fn end_vector<W>(&mut self, writer: &mut W) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         match self.options.vector_syntax {
             VectorSyntax::Brackets => writer.write_all(b"]"),
@@ -506,9 +502,9 @@ impl Formatter for CustomizedFormatter {
         }
     }
 
-    fn write_char<W: ?Sized>(&mut self, writer: &mut W, c: char) -> io::Result<()>
+    fn write_char<W>(&mut self, writer: &mut W, c: char) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         match self.options.char_syntax {
             CharSyntax::R6RS => write_scheme_char(writer, c),
@@ -518,13 +514,9 @@ impl Formatter for CustomizedFormatter {
 
     /// Writes a character escape code to the specified writer.
     #[inline]
-    fn write_char_escape<W: ?Sized>(
-        &mut self,
-        writer: &mut W,
-        char_escape: CharEscape,
-    ) -> io::Result<()>
+    fn write_char_escape<W>(&mut self, writer: &mut W, char_escape: CharEscape) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         match self.options.string_syntax {
             StringSyntax::R6RS => write_r6rs_char_escape(writer, char_escape),
@@ -532,9 +524,9 @@ impl Formatter for CustomizedFormatter {
         }
     }
 
-    fn write_bytes<W: ?Sized>(&mut self, writer: &mut W, bytes: &[u8]) -> io::Result<()>
+    fn write_bytes<W>(&mut self, writer: &mut W, bytes: &[u8]) -> io::Result<()>
     where
-        W: io::Write,
+        W: io::Write + ?Sized,
     {
         match self.options.bytes_syntax {
             BytesSyntax::R6RS | BytesSyntax::R7RS => {
@@ -657,7 +649,7 @@ where
     }
 }
 
-fn write_scheme_vector<F: ?Sized, W: ?Sized, I, O>(
+fn write_scheme_vector<F, W, I, O>(
     fmt: &mut F,
     writer: &mut W,
     kind: VectorType,
@@ -665,8 +657,8 @@ fn write_scheme_vector<F: ?Sized, W: ?Sized, I, O>(
     mut output: O,
 ) -> io::Result<()>
 where
-    F: Formatter,
-    W: io::Write,
+    F: Formatter + ?Sized,
+    W: io::Write + ?Sized,
     I: IntoIterator,
     O: FnMut(&mut W, I::Item) -> io::Result<()>,
 {
@@ -705,14 +697,10 @@ where
     }
 }
 
-fn format_escaped_str<W: ?Sized, F: ?Sized>(
-    writer: &mut W,
-    formatter: &mut F,
-    value: &str,
-) -> io::Result<()>
+fn format_escaped_str<W, F>(writer: &mut W, formatter: &mut F, value: &str) -> io::Result<()>
 where
-    W: io::Write,
-    F: Formatter,
+    W: io::Write + ?Sized,
+    F: Formatter + ?Sized,
 {
     formatter.begin_string(writer)?;
     format_escaped_str_contents(writer, formatter, value)?;
@@ -720,14 +708,14 @@ where
     Ok(())
 }
 
-fn format_escaped_str_contents<W: ?Sized, F: ?Sized>(
+fn format_escaped_str_contents<W, F>(
     writer: &mut W,
     formatter: &mut F,
     value: &str,
 ) -> io::Result<()>
 where
-    W: io::Write,
-    F: Formatter,
+    W: io::Write + ?Sized,
+    F: Formatter + ?Sized,
 {
     let bytes = value.as_bytes();
 
@@ -756,9 +744,9 @@ where
     Ok(())
 }
 
-fn write_r6rs_char_escape<W: ?Sized>(writer: &mut W, char_escape: CharEscape) -> io::Result<()>
+fn write_r6rs_char_escape<W>(writer: &mut W, char_escape: CharEscape) -> io::Result<()>
 where
-    W: io::Write,
+    W: io::Write + ?Sized,
 {
     use self::CharEscape::*;
 
@@ -786,9 +774,9 @@ where
     writer.write_all(s)
 }
 
-fn write_elisp_char_escape<W: ?Sized>(writer: &mut W, char_escape: CharEscape) -> io::Result<()>
+fn write_elisp_char_escape<W>(writer: &mut W, char_escape: CharEscape) -> io::Result<()>
 where
-    W: io::Write,
+    W: io::Write + ?Sized,
 {
     use self::CharEscape::*;
 
@@ -819,9 +807,9 @@ where
     writer.write_all(s)
 }
 
-fn write_scheme_char<W: ?Sized>(writer: &mut W, c: char) -> io::Result<()>
+fn write_scheme_char<W>(writer: &mut W, c: char) -> io::Result<()>
 where
-    W: io::Write,
+    W: io::Write + ?Sized,
 {
     let n = u32::from(c);
     if (32..127).contains(&n) {
@@ -835,9 +823,9 @@ where
     }
 }
 
-fn write_elisp_char<W: ?Sized>(writer: &mut W, c: char) -> io::Result<()>
+fn write_elisp_char<W>(writer: &mut W, c: char) -> io::Result<()>
 where
-    W: io::Write,
+    W: io::Write + ?Sized,
 {
     let n = u32::from(c);
     if (32..127).contains(&n) {
