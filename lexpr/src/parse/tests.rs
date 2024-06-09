@@ -689,3 +689,23 @@ fn test_racket_hash_percent_symbol() {
     assert_eq!(parser.expect_value().unwrap(), Value::symbol("#%symbol"));
     parser.expect_end().unwrap();
 }
+
+fn parser_recognizes_digit_symbols(options: Options) {
+    let mut parser = Parser::from_str_custom("55033ea4-52b5-46f6-b909-193ee90f64f8 1234", options);
+    assert_eq!(
+        parser.expect_value().unwrap(),
+        Value::symbol("55033ea4-52b5-46f6-b909-193ee90f64f8")
+    );
+    assert_eq!(parser.expect_value().unwrap(), Value::from(1234));
+    parser.expect_end().unwrap();
+}
+
+#[test]
+fn test_digit_symbols() {
+    parser_recognizes_digit_symbols(Options::new().with_leading_digit_symbols(true));
+}
+
+#[test]
+fn test_digit_symbols_elisp() {
+    parser_recognizes_digit_symbols(Options::elisp());
+}

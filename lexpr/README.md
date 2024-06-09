@@ -98,6 +98,12 @@ a feature that is not yet listed here, please [file an issue]!.
 - Integer literals with an arbitrary base (radix), are not yet
   supported.
 
+### KiCad
+
+- Since version 0.3.0, reading and writing S-expression files produced
+  by recent versions of KiCad should be supported given the new
+  `with_leading_digit_symbols` parser option.
+
 ## Licensing
 
 The code and documentation in the `lexpr` crate is [free
