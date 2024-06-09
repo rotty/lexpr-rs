@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "lexpr",
-    "lexpr-macros",
+    "lexpr-macros", "lexpr-utils",
     "serde-lexpr",
 ]
 resolver = "2"
