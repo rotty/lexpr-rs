@@ -4,6 +4,9 @@ New features:
 
 - New parser option `racket_hash_percent_symbols`, implemented in PR
   #90 by @andrew-pa.
+- New parser option `leading_digit_symbols` (PR #106). This should now
+  allow parsing files produced by recent KiCad versions, thus closing
+  #64.
 
 Changes:
 
@@ -14,9 +17,9 @@ Changes:
   octothorpe, as in Emacs Lisp and Common Lisp, allowing for a
   less-noisy spelling; e.g.: `:foo` instead of `#:foo`. Feature
   request (#99) and initial implementation (#96) by @samuel-jimenez.
-- The errors produced by the `sexp!` macro now are a bit more
-  human-oriented, as the `lexpr-macros` `ParseError` type gained a
-  `Display` implementation.
+- The `parser::Options::elisp` constructor now enables the
+  `leading_digit_symbols` option, as that's what's appropriate for
+  Emacs Lisp.
 
 Maintenance-related changes:
 

@@ -49,6 +49,7 @@ pub struct Options {
     string_syntax: StringSyntax,
     char_syntax: CharSyntax,
     racket_hash_percent_symbols: bool,
+    leading_digit_symbols: bool,
 }
 
 /// Defines the treatment of the symbol `nil`.
@@ -110,6 +111,7 @@ impl Options {
             string_syntax: StringSyntax::R6RS,
             char_syntax: CharSyntax::R6RS,
             racket_hash_percent_symbols: false,
+            leading_digit_symbols: false,
         }
     }
 
@@ -121,6 +123,7 @@ impl Options {
             .with_brackets(Brackets::Vector)
             .with_string_syntax(StringSyntax::Elisp)
             .with_char_syntax(CharSyntax::Elisp)
+            .with_leading_digit_symbols(true)
     }
 
     /// Add `syntax` to the recognized keyword syntaxes.
@@ -177,6 +180,12 @@ impl Options {
         self
     }
 
+    /// Choose whether to allow symbols with leading digits.
+    pub fn with_leading_digit_symbols(mut self, allow: bool) -> Self {
+        self.leading_digit_symbols = allow;
+        self
+    }
+
     /// Check wether a keyword syntax is enabled.
     #[inline]
     pub fn keyword_syntax(self, syntax: KeywordSyntax) -> bool {
@@ -212,6 +221,11 @@ impl Options {
     pub fn racket_hash_percent_symbols(self) -> bool {
         self.racket_hash_percent_symbols
     }
+
+    /// Query if symbols with leading digits are allowd.
+    pub fn leading_digit_symbols(self) -> bool {
+        self.leading_digit_symbols
+    }
 }
 
 impl Default for Options {
@@ -230,6 +244,7 @@ impl Default for Options {
             string_syntax: StringSyntax::R6RS,
             char_syntax: CharSyntax::R6RS,
             racket_hash_percent_symbols: false,
+            leading_digit_symbols: false,
         }
     }
 }
@@ -528,7 +543,18 @@ impl<'de, R: Read<'de>> Parser<R> {
                     Token::Number(self.parse_num_literal(10, true)?)
                 }
             }
-            b'0'..=b'9' => Token::Number(self.parse_num_literal(10, true)?),
+            b'0'..=b'9' => {
+                if self.options.leading_digit_symbols {
+                    let symbol = self.parse_symbol()?;
+                    let mut num_parser = Parser::from_slice_custom(symbol.as_bytes(), self.options);
+                    match num_parser.parse_num_literal(10, true) {
+                        Ok(token) => Token::Number(token),
+                        Err(_) => Token::Symbol(symbol.into()),
+                    }
+                } else {
+                    Token::Number(self.parse_num_literal(10, true)?)
+                }
+            }
             b'"' => {
                 self.eat_char();
                 self.scratch.clear();
