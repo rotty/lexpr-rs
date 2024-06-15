@@ -63,7 +63,7 @@ fn test_unquote() {
     assert_eq!(sexp!((1 2 ,three)), Value::list(vec![1, 2, 3]));
     assert_eq!(sexp!((1 2 . ,three)), Value::append(vec![1, 2], 3));
 
-    let big = i64::max_value();
+    let big = i64::MAX;
     assert_eq!(
         sexp!((b . ,big)),
         Value::cons(Value::symbol("b"), Value::from(big))
