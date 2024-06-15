@@ -20,11 +20,11 @@ sexp-macro = ["lexpr-macros"] # MSRV 1.60+: use the `dep:` prefix here
 [dependencies]
 itoa = "1.0"
 ryu = "1.0.0"
-lexpr-macros = { version = "0.2.2", path = "../lexpr-macros", optional = true }
+lexpr-macros = { version = "0.2.4", path = "../lexpr-macros", optional = true }
 
 [dev-dependencies]
 criterion = "0.5.1"
-lexpr-macros = { version = "0.2.2", path = "../lexpr-macros" }
+lexpr-macros = { version = "0.2.4", path = "../lexpr-macros" }
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
 rand = "0.8.1"
