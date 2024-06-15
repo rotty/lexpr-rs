@@ -14,7 +14,7 @@ use quote::quote;
 pub fn sexp(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let output = match expand(TokenStream::from(input)) {
         Err(e) => {
-            let msg = format!("could not parse s-expression: {:?}", e);
+            let msg = format!("could not parse s-expression: {}", e);
             quote! { compile_error!(#msg) }
         }
         Ok(output) => output,

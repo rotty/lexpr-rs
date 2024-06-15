@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::value::Value;
 
 use proc_macro2::{Delimiter, Literal, Spacing, TokenStream, TokenTree};
@@ -15,6 +17,28 @@ pub enum ParseError {
     UnexpectedChar(char),
     UnexpectedDelimiter(Delimiter),
     UnexpectedEnd,
+}
+
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::ExpectedStringLiteral(literal) => {
+                write!(f, "expected string literal `{}`", literal)
+            }
+            Self::UnexpectedToken(tt) => write!(f, "unexpected token `{}`", tt),
+            Self::UnexpectedChar(c) => write!(f, "unexpected character `{}`", c),
+            Self::UnexpectedDelimiter(delim) => {
+                let delim = match delim {
+                    Delimiter::Brace => "brace",
+                    Delimiter::Bracket => "bracket",
+                    Delimiter::Parenthesis => "parenthesis",
+                    Delimiter::None => "non",
+                };
+                write!(f, "unexpected {}-delimited expression", delim)
+            }
+            Self::UnexpectedEnd => write!(f, "unexpected end of input"),
+        }
+    }
 }
 
 impl Parser {

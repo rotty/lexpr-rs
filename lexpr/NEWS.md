@@ -14,6 +14,9 @@ Changes:
   octothorpe, as in Emacs Lisp and Common Lisp, allowing for a
   less-noisy spelling; e.g.: `:foo` instead of `#:foo`. Feature
   request (#99) and initial implementation (#96) by @samuel-jimenez.
+- The errors produced by the `sexp!` macro now are a bit more
+  human-oriented, as the `lexpr-macros` `ParseError` type gained a
+  `Display` implementation.
 
 Maintenance-related changes:
 
