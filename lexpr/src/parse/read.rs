@@ -1,5 +1,5 @@
 use std::ops::Deref;
-use std::{char, cmp, io, str, u32};
+use std::{char, cmp, io, str};
 
 use super::error::{Error, ErrorCode, Result};
 use super::iter::LineColIterator;

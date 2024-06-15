@@ -9,7 +9,6 @@
 use std::borrow::Borrow;
 use std::io;
 use std::str;
-use std::u64;
 
 use error::ErrorCode;
 use read::{ElispStr, Reference};
@@ -1209,7 +1208,7 @@ impl<'de, R: Read<'de>> Parser<R> {
             self.eat_char();
             let digit = i32::from(c - b'0');
 
-            if overflow!(exp * 10 + digit, i32::max_value()) {
+            if overflow!(exp * 10 + digit, i32::MAX) {
                 return self.parse_exponent_overflow(positive, significand, positive_exp);
             }
 
