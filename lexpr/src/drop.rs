@@ -48,7 +48,19 @@ impl DeepSafeDrop<Self> for Value {
     fn take_next_child_at_pos_index(&mut self) -> Option<Self> {
         match self {
             Value::Cons(cons) => take_branch_node(cons.cdr_mut()),
-            Value::Vector(vector) => vector.get_mut(1..).and_then(vector_take_branch_node),
+            Value::Vector(vector) => loop {
+                // Must not pop at index 0.
+                if vector.len() >= 2 {
+                    let next = vector.pop().expect("non-empty vec");
+                    if is_branch_node(&next) {
+                        break Some(next);
+                    } else {
+                        continue;
+                    }
+                } else {
+                    break None;
+                }
+            },
             Value::Nil
             | Value::Null
             | Value::Bool(_)
@@ -94,8 +106,16 @@ fn take_branch_node(value: &mut Value) -> Option<Value> {
 
 fn replace_branch_node(dest: &mut Value, src: Value) -> Option<Value> {
     let prev = replace(dest, src);
-    match &prev {
-        Value::Cons(_) | Value::Vector(_) => Some(prev),
+    if is_branch_node(&prev) {
+        Some(prev)
+    } else {
+        None
+    }
+}
+
+fn is_branch_node(value: &Value) -> bool {
+    match value {
+        Value::Cons(_) | Value::Vector(_) => true,
         Value::Nil
         | Value::Null
         | Value::Bool(_)
@@ -104,10 +124,6 @@ fn replace_branch_node(dest: &mut Value, src: Value) -> Option<Value> {
         | Value::String(_)
         | Value::Symbol(_)
         | Value::Keyword(_)
-        | Value::Bytes(_) => None,
+        | Value::Bytes(_) => false,
     }
-}
-
-fn vector_take_branch_node(vector: &mut [Value]) -> Option<Value> {
-    vector.iter_mut().find_map(take_branch_node)
 }
