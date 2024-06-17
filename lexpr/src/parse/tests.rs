@@ -378,11 +378,11 @@ fn test_list_peculiar() {
         ),
         (
             "(- . #())",
-            Value::cons(Value::symbol("-"), Value::Vector(vec![].into())),
+            Value::cons(Value::symbol("-"), Value::Vector(vec![])),
         ),
         (
             "(+ . #())",
-            Value::cons(Value::symbol("+"), Value::Vector(vec![].into())),
+            Value::cons(Value::symbol("+"), Value::Vector(vec![])),
         ),
     ] {
         assert_eq!(&from_str(peculiar).unwrap(), value);
@@ -422,7 +422,7 @@ fn test_list_brackets() {
 
 #[test]
 fn test_vectors_default() {
-    assert_eq!(from_str("#()").unwrap(), Value::Vector(vec![].into()));
+    assert_eq!(from_str("#()").unwrap(), Value::Vector(vec![]));
     assert_eq!(from_str("#(1 2)").unwrap(), Value::vector(vec![1, 2]));
 }
 
@@ -440,7 +440,7 @@ fn test_vector_peculiar() {
 
 #[test]
 fn test_vectors_elisp() {
-    assert_eq!(from_str_elisp("[]").unwrap(), Value::Vector(vec![].into()));
+    assert_eq!(from_str_elisp("[]").unwrap(), Value::Vector(vec![]));
     assert_eq!(from_str_elisp("[1 2]").unwrap(), Value::vector(vec![1, 2]));
     assert_eq!(
         from_str_elisp("[a b c]").unwrap(),
@@ -574,7 +574,7 @@ fn test_vector_location_info() {
             (2, 6),
             vec![((2, 2), (2, 3)), ((2, 4), (2, 5))],
         ),
-        (Value::Vector(vec![].into()), (2, 7), (2, 10), vec![]),
+        (Value::Vector(vec![]), (2, 7), (2, 10), vec![]),
     ] {
         let datum = parser.expect_datum().expect("parse error");
         assert_eq!(datum.value(), &value);

@@ -95,7 +95,7 @@ impl Datum {
         end: Position,
     ) -> Self {
         Datum {
-            value: Value::Vector(elements.into()),
+            value: Value::Vector(elements),
             info: SpanInfo::Vec(Span { start, end }, element_info),
         }
     }

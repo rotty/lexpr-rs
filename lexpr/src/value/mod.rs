@@ -161,7 +161,7 @@ pub enum Value {
     Cons(Cons),
 
     /// A Lisp vector.
-    Vector(Box<[Value]>),
+    Vector(Vec<Value>),
 }
 
 impl Value {
@@ -324,8 +324,9 @@ impl Value {
         I: IntoIterator,
         I::Item: Into<Value>,
     {
-        let v: Vec<_> = elements.into_iter().map(Into::into).collect();
-        Value::Vector(v.into_boxed_slice())
+        let mut v: Vec<_> = elements.into_iter().map(Into::into).collect();
+        v.shrink_to_fit();
+        Value::Vector(v)
     }
 
     /// Returns true if the value is a String. Returns false otherwise.

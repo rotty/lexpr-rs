@@ -244,7 +244,7 @@ impl ser::SerializeTuple for SerializeVector {
     }
 
     fn end(self) -> Result<Value> {
-        Ok(Value::Vector(self.items.into()))
+        Ok(Value::Vector(self.items))
     }
 }
 
