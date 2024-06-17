@@ -8,6 +8,12 @@ New features:
   allow parsing files produced by recent KiCad versions, thus closing
   #64.
 
+Fixes:
+
+- The `Cons` type now has a custom `Drop` implementation which avoids
+  recursion on the "cdr" field. This allows for dropping long lists
+  without overflowing the stack (#104).
+
 Changes:
 
 - The `sexp!` macro is now only included when specifying the

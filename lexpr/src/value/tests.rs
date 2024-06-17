@@ -1,5 +1,7 @@
 #![cfg_attr(tarpaulin, skip)]
 
+use std::iter;
+
 use crate::{Cons, Number, Value};
 
 type Predicate = fn(&Value) -> bool;
@@ -135,4 +137,9 @@ fn test_vectors() {
         check_type_predicates(&v, "vector");
         assert_eq!(v.as_slice(), Some(elts.as_slice()));
     }
+}
+
+#[test]
+fn drop_long_list() {
+    let _long = Value::list(iter::repeat(Value::from(42)).take(1_000_000));
 }
