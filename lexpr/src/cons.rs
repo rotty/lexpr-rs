@@ -101,8 +101,18 @@ impl Cons {
     /// assert_eq!(car, "a");
     /// assert_eq!(cdr, 42);
     /// ```
-    pub fn into_pair(self) -> (Value, Value) {
-        (self.inner.0, self.inner.1)
+    pub fn into_pair(mut self) -> (Value, Value) {
+        (
+            std::mem::replace(&mut self.inner.0, Value::Nil),
+            std::mem::replace(&mut self.inner.1, Value::Nil),
+        )
+    }
+
+    fn take(&mut self) -> Cons {
+        Self::new(
+            std::mem::replace(&mut self.inner.0, Value::Nil),
+            std::mem::replace(&mut self.inner.1, Value::Nil),
+        )
     }
 
     /// Obtains an iterator yielding references to all the cons cells in this
@@ -211,6 +221,19 @@ impl IntoIterator for Cons {
     /// ```
     fn into_iter(self) -> IntoIter {
         IntoIter { cursor: Some(self) }
+    }
+}
+
+impl Drop for Cons {
+    fn drop(&mut self) {
+        match self.cdr() {
+            Value::Cons(cell) if cell.cdr().is_cons() => {}
+            _ => return,
+        }
+        let mut cell = self.take();
+        while let Some(cdr) = cell.cdr_mut().as_cons_mut() {
+            cell = cdr.take();
+        }
     }
 }
 
