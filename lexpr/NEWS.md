@@ -9,12 +9,19 @@ New features:
   #64.
 - Accept symbols starting with an alphabetical unicode codepoint,
   fixing #112.
+- With the newly-added `deep-safe-drop` crate feature, you can use the
+  `DeepSafeValueDropper` type to dispose of deeply-nested data
+  structures without encountering stack overflows. This feature has
+  been contributed by @DerickEddington.
 
 Fixes:
 
 - The `Cons` type now has a custom `Drop` implementation which avoids
   recursion on the "cdr" field. This allows for dropping long lists
-  without overflowing the stack (#104).
+  without overflowing the stack (#104). Note that stack overflows on
+  `drop` are still possible for other deeply-nested data
+  structures. If that is a concern for your use-case, consider
+  enabling the `deep-safe-drop` feature and using `DeepValueDropper`.
 
 Changes:
 
