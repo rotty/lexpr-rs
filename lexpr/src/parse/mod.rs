@@ -689,7 +689,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                 self.remaining_depth += 1;
 
                 match (ret, self.end_seq(close)) {
-                    (Ok(elements), Ok(())) => Value::Vector(elements.into()),
+                    (Ok(elements), Ok(())) => Value::Vector(elements),
                     (Err(err), _) | (_, Err(err)) => return Err(err),
                 }
             }

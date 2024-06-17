@@ -106,12 +106,12 @@ impl From<Cons> for Value {
 
 impl From<Vec<Value>> for Value {
     fn from(elts: Vec<Value>) -> Self {
-        Value::Vector(elts.into())
+        Value::Vector(elts)
     }
 }
 
 impl From<Box<[Value]>> for Value {
     fn from(elts: Box<[Value]>) -> Self {
-        Value::Vector(elts)
+        Value::Vector(elts.into_vec())
     }
 }
