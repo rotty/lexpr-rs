@@ -394,6 +394,9 @@ pub mod parse;
 pub mod print;
 pub mod value;
 
+#[cfg(feature = "deep-safe-drop")]
+mod drop;
+
 #[doc(inline)]
 pub use self::parse::{
     from_reader, from_reader_custom, from_slice, from_slice_custom, from_str, from_str_custom,
@@ -419,6 +422,10 @@ pub use value::Index;
 
 #[doc(inline)]
 pub use number::Number;
+
+#[cfg(feature = "deep-safe-drop")]
+#[doc(inline)]
+pub use drop::DeepSafeValueDropper;
 
 #[cfg(test)]
 mod tests;

@@ -143,3 +143,53 @@ fn test_vectors() {
 fn drop_long_list() {
     let _long = Value::list(iter::repeat(Value::from(42)).take(1_000_000));
 }
+
+fn with_deep_tree_on_small_stack(name: &str, func: impl FnOnce(Value) + Send + 'static) {
+    // This needs to be large enough to cause stack overflow with a call stack of size
+    // `STACK_SIZE`, on all platforms.
+    const DEPTH: usize = 20_000;
+    // This needs to be small enough to cause stack overflow when dropping a depth of `DEPTH`, on
+    // all platforms.  Windows sometimes (usually?) has a default stack size of 1 MB for the main
+    // thread, so we choose that.
+    const STACK_SIZE: usize = 2_usize.pow(20);
+
+    // Call `func` in a new thread so we can control its stack size.
+    let thread = std::thread::Builder::new()
+        .name(format!("{}--{}", name, STACK_SIZE))
+        .stack_size(STACK_SIZE)
+        .spawn(|| {
+            let mut deep_tree = Value::Nil;
+            for i in 0..DEPTH {
+                let mut v = [1, 2, 3].map(Value::from);
+                v[i % v.len()] = deep_tree;
+                deep_tree = Value::vector(v);
+            }
+            func(deep_tree);
+        })
+        .expect("spawn should succeed");
+
+    // Make the test thread block until `func` finishes.
+    thread.join().expect("join should succeed");
+}
+
+// Expected to crash the test program due to stack overflow in the compiler-added dropping of fields
+// via recursive calls.  Exists to demonstrate the problem, when you choose to not ignore this
+// test. Unfortunately, we cannot use the `should_panic` attribute instead of `ignore` here, as
+// running the test leads to an abort due to stack overflow, instead of a regular panic.
+#[test]
+#[ignore]
+fn test_drop_cause_stack_overflow() {
+    with_deep_tree_on_small_stack("test_drop_cause_stack_overflow", drop);
+    unreachable!(); // The other thread is expected to crash the program before here.
+}
+
+#[cfg(feature = "deep-safe-drop")]
+#[test]
+fn test_drop_prevent_stack_overflow() {
+    use crate::DeepSafeValueDropper;
+
+    with_deep_tree_on_small_stack("test_drop_prevent_stack_overflow", |deep_tree| {
+        let wrapped = DeepSafeValueDropper(deep_tree);
+        drop(wrapped);
+    });
+}
