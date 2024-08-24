@@ -54,12 +54,12 @@ fn gen_value(g: &mut Gen, depth: usize) -> Value {
         }
         Symbol => {
             let choices = [
-                "foo", "a-symbol", "$?:!", "+", "+foo", "-", "-foo", "..", ".foo",
+                "foo", "a-symbol", "$?:!", "+", "+foo", "-", "-foo", "..", ".foo", "λ-1",
             ];
             Value::symbol(*g.choose(&choices).unwrap())
         }
         Keyword => {
-            let choices = ["foo", "a-keyword", "$?:!"];
+            let choices = ["foo", "a-keyword", "$?:!", "λ-2"];
             Value::keyword(*g.choose(&choices).unwrap())
         }
         Bytes => {

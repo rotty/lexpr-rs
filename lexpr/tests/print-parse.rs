@@ -70,6 +70,11 @@ fn test_unicode_chars() {
 }
 
 #[test]
+fn test_leading_unicode_symbols() {
+    check_roundtrip_default(Value::Symbol("λ-test-ω".into()), "λ-test-ω");
+}
+
+#[test]
 fn test_chars_elisp() {
     for (value, printed) in [
         (sexp!('x'), "?x"),
