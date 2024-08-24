@@ -7,6 +7,8 @@ New features:
 - New parser option `leading_digit_symbols` (PR #106). This should now
   allow parsing files produced by recent KiCad versions, thus closing
   #64.
+- Accept symbols starting with an alphabetical unicode codepoint,
+  fixing #112.
 
 Fixes:
 

@@ -11,7 +11,7 @@ use std::io;
 use std::str;
 
 use error::ErrorCode;
-use read::{ElispStr, Reference};
+use read::{decode_utf8_sequence, ElispStr, Reference};
 
 use crate::{datum::SpanInfo, Cons, Number, Value};
 
@@ -636,6 +636,14 @@ impl<'de, R: Read<'de>> Parser<R> {
                     _ => Token::Quotation("unquote"),
                 }
             }
+            c if c > 127 => {
+                self.eat_char();
+                let c = decode_utf8_sequence(&mut self.read, &mut self.scratch, c)?;
+                if !c.is_alphabetic() {
+                    return Err(self.peek_error(ErrorCode::ExpectedSomeValue));
+                }
+                Token::Symbol(self.parse_symbol_scratch_suffix()?.into())
+            }
             _ => {
                 if SYMBOL_EXTENDED.contains(&peek) {
                     Token::Symbol(self.parse_symbol()?.into())
@@ -804,15 +812,16 @@ impl<'de, R: Read<'de>> Parser<R> {
 
     fn parse_symbol(&mut self) -> Result<String> {
         self.scratch.clear();
-        match self.read.parse_symbol(&mut self.scratch)? {
-            Reference::Borrowed(s) => Ok(s.into()),
-            Reference::Copied(s) => Ok(s.into()),
-        }
+        self.parse_symbol_scratch_suffix()
     }
 
     fn parse_symbol_suffix(&mut self, prefix: &str) -> Result<String> {
         self.scratch.clear();
         self.scratch.extend(prefix.as_bytes());
+        self.parse_symbol_scratch_suffix()
+    }
+
+    fn parse_symbol_scratch_suffix(&mut self) -> Result<String> {
         match self.read.parse_symbol(&mut self.scratch)? {
             Reference::Borrowed(s) => Ok(s.into()),
             Reference::Copied(s) => Ok(s.into()),

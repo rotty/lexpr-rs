@@ -1185,7 +1185,7 @@ static DELIMITER: [u8; 12] = [
 
 /// Decode a UTF8 multibyte sequence starting with `initial` and return the
 /// decoded codepoint.
-fn decode_utf8_sequence<'de, R: Read<'de> + ?Sized>(
+pub(crate) fn decode_utf8_sequence<'de, R: Read<'de> + ?Sized>(
     read: &mut R,
     scratch: &mut Vec<u8>,
     initial: u8,
