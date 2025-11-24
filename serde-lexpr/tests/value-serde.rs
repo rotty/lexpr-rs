@@ -79,6 +79,7 @@ fn test_unit() {
 }
 
 #[test]
+#[cfg(not(any(feature = "tuple_as_list", feature = "bool_as_tnil")))]
 fn test_tuples() {
     let tuple = (1, "Hello".to_string(), true);
     test_serde(&tuple, &sexp!(#(1 "Hello" #t)));
@@ -104,6 +105,7 @@ fn test_option() {
 }
 
 #[test]
+#[cfg(not(feature = "sym_as_lower"))]
 fn test_basic_enum() {
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     enum Animal {
@@ -117,6 +119,7 @@ fn test_basic_enum() {
 }
 
 #[test]
+#[cfg(not(feature = "sym_as_lower"))]
 fn test_tuple_enum() {
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     enum Greeting {
@@ -138,6 +141,7 @@ fn test_tuple_enum() {
 }
 
 #[test]
+#[cfg(not(feature = "tuple_as_list"))]
 fn test_complex_enum() {
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     enum Complex {
@@ -174,6 +178,7 @@ fn test_unit_struct() {
 }
 
 #[test]
+#[cfg(not(feature = "tuple_as_list"))]
 fn test_empty_tuple_struct() {
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     struct Unit();
@@ -195,6 +200,7 @@ fn test_empty_struct() {
 }
 
 #[test]
+#[cfg(not(feature = "sym_as_lower"))]
 fn test_empty_tuple_variant() {
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     enum Empty {
@@ -204,6 +210,7 @@ fn test_empty_tuple_variant() {
 }
 
 #[test]
+#[cfg(not(feature = "sym_as_lower"))]
 fn test_empty_struct_variant() {
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     enum Empty {
@@ -213,6 +220,7 @@ fn test_empty_struct_variant() {
 }
 
 #[test]
+#[cfg(not(feature = "bool_as_tnil"))]
 fn test_basic_struct() {
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     struct Basic {
