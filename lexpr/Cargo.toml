@@ -10,12 +10,12 @@ documentation = "https://docs.rs/lexpr/"
 keywords = ["lisp", "s-expression", "sexp", "sexpr"]
 categories = ["encoding", "data-structures", "parser-implementations"]
 edition = "2021"
-rust-version = "1.56"
+rust-version = "1.71" # MSRV: due to `lexpr-macros`
 
 [features]
 default = ["fast-float-parsing"]
 fast-float-parsing = []
-sexp-macro = ["lexpr-macros"] # MSRV 1.60+: use the `dep:` prefix here
+sexp-macro = ["dep:lexpr-macros"]
 
 [dependencies]
 itoa = "1.0"

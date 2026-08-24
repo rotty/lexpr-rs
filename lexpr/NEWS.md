@@ -31,7 +31,7 @@ Changes:
 
 Maintenance-related changes:
 
-- The MSRV is now 1.56 and specified in `Cargo.toml` and the Rust
+- The MSRV is now 1.71 and specified in `Cargo.toml` and the Rust
   edition has been updated to "2021".
 
 # 0.2.7

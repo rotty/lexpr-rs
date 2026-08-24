@@ -32,17 +32,17 @@ jobs:
         run: cargo test --all-features --all-targets
 
   msrv-check:
-    # We require at least Rust 1.56, so we can use a current version
-    # of the `proc-macro2` crate, which has an MSRV of 1.56, as of
-    # version 1.0.69.
-    name: "MSRV (1.56) compile check"
+    # We require at least Rust 1.71, so we can use a current version
+    # of the `proc-macro2` crate, which has an MSRV of 1.71, as of
+    # version 1.0.107.
+    name: "MSRV (1.71) compile check"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
 
-      - name: Install 1.56 toolchain
-        uses: dtolnay/rust-toolchain@1.56
+      - name: Install 1.71 toolchain
+        uses: dtolnay/rust-toolchain@1.71
 
       - name: Run cargo build
         run: cargo build

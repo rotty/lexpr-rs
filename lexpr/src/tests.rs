@@ -141,7 +141,7 @@ fn print_parse_roundtrip_default() {
     QuickCheck::new()
         .tests(1000)
         .max_tests(2000)
-        .gen(Gen::new(4))
+        .rng(Gen::new(4))
         .quickcheck(prop as fn(Value) -> bool);
 }
 
@@ -159,7 +159,7 @@ fn print_parse_roundtrip_custom_default() {
     QuickCheck::new()
         .tests(1000)
         .max_tests(2000)
-        .gen(Gen::new(4))
+        .rng(Gen::new(4))
         .quickcheck(prop as fn(Value) -> bool);
 }
 
@@ -175,7 +175,7 @@ fn print_parse_roundtrip_io_default() {
     QuickCheck::new()
         .tests(1000)
         .max_tests(2000)
-        .gen(Gen::new(4))
+        .rng(Gen::new(4))
         .quickcheck(prop as fn(Value) -> bool);
 }
 
@@ -188,7 +188,7 @@ fn char_parsing_default() {
     QuickCheck::new()
         .tests(1000)
         .max_tests(2000)
-        .gen(Gen::new(4))
+        .rng(Gen::new(4))
         .quickcheck(prop as fn(char) -> bool);
 }
 
@@ -239,7 +239,7 @@ fn parse_datum_span_sanity() {
     QuickCheck::new()
         .tests(1000)
         .max_tests(2000)
-        .gen(Gen::new(4))
+        .rng(Gen::new(4))
         .quickcheck(prop as fn(Value) -> bool);
 }
 

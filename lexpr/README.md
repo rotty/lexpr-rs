@@ -67,7 +67,7 @@ document.
 
 `lexpr` is CI-tested on current stable, beta and nightly channels of
 Rust. Additionally, it is made sure that the code still compiles on
-Rust 1.56.0. However, no tests are run for that build.
+Rust 1.71. However, no tests are run for that build.
 
 ## Supported Lisp dialects
 
