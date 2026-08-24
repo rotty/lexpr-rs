@@ -1352,9 +1352,7 @@ impl<'de, R: Read<'de>> Parser<R> {
 }
 
 // This could probably profit from being a `u8 -> bool` LUT instead.
-static SYMBOL_EXTENDED: [u8; 16] = [
-    b'!', b'$', b'%', b'&', b'*', b'.', b'/', b':', b'<', b'=', b'>', b'?', b'@', b'^', b'_', b'~',
-];
+static SYMBOL_EXTENDED: [u8; 16] = *b"!$%&*./:<=>?@^_~";
 
 fn is_delimiter(c: u8) -> bool {
     c.is_ascii_whitespace() || b"|()\"".contains(&c)

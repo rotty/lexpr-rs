@@ -555,7 +555,7 @@ fn test_vector_location_info() {
          #(a b) #()",
     );
 
-    for (value, start, end, inner) in vec![
+    for (value, start, end, inner) in [
         (
             Value::vector(vec![1, 2, 3]),
             (1, 0),
@@ -594,7 +594,7 @@ fn test_list_location_info() {
          (a b) ()",
     );
 
-    for (value, start, end, inner) in vec![
+    for (value, start, end, inner) in [
         (
             Value::list(vec![1, 2, 3]),
             (1, 0),

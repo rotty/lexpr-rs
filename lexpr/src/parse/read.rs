@@ -180,8 +180,14 @@ where
     R: io::Read,
 {
     /// Create a S-expression input source to read from a std::io input stream.
+    ///
+    /// Note that passing a [`std::io::File`], or another type that does no
+    /// internal buffering, will be quite inefficient. See
+    /// [`std::io::Read::bytes`].
     pub fn new(reader: R) -> Self {
         IoRead {
+            // MSRV: turn into `expect` when bumping MSRV to 1.81.
+            #[allow(clippy::unbuffered_bytes)]
             iter: LineColIterator::new(reader.bytes()),
             ch: None,
         }

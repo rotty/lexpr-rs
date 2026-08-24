@@ -46,7 +46,7 @@ mod private {
     impl Sealed for usize {}
     impl Sealed for str {}
     impl Sealed for String {}
-    impl<'a, T: ?Sized> Sealed for &'a T where T: Sealed {}
+    impl<T: ?Sized> Sealed for &T where T: Sealed {}
     impl Sealed for super::Value {}
 }
 
@@ -91,7 +91,7 @@ impl Index for String {
     }
 }
 
-impl<'a, T: ?Sized> Index for &'a T
+impl<T: ?Sized> Index for &T
 where
     T: Index,
 {
