@@ -9,7 +9,7 @@
 This repository hosts the following crates:
 
 - [`lexpr`](./lexpr), providing the `lexpr::Value` type for
-  representing S-expression data, the `sexp` macro to embed
+  representing S-expression data, the (optional) `sexp` macro to embed
   S-expression values into Rust code, as well as a parser and printer
   for S-expressions. Please refer to crate's
   [`README`](./lexpr/README.md) for more information.
@@ -21,7 +21,7 @@ This repository hosts the following crates:
 - [`lexpr-macros`](./lexpr-macros), an internal crate actually
   implementing the `sexp` macro. This crate should be considered an
   implementation detail, and not be used directly, only via the
-  `lexpr` crate.
+  `lexpr` crate, by enabling its `sexp-macro` feature.
 
 ## Licensing
 
