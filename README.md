@@ -1,10 +1,10 @@
-# lexpr: S-expressions for Rust [![Build Status]][gh-actions] [![Codecov]][codecov] [![Rustc Version 1.56+]][rustc]
+# lexpr: S-expressions for Rust [![Build Status]][gh-actions] [![Codecov]][codecov] [![Rustc Version 1.71+]][rustc]
 
 [Build Status]: https://github.com/rotty/lexpr-rs/workflows/CI/badge.svg
 [gh-actions]: https://github.com/rotty/lexpr-rs/actions
 [codecov]: https://codecov.io/github/rotty/lexpr-rs/coverage.svg?branch=master
-[Rustc Version 1.56+]: https://img.shields.io/badge/rustc-1.56+-lightgray.svg
-[rustc]: https://blog.rust-lang.org/2021/10/21/Rust-1.56.0.html
+[Rustc Version 1.71+]: https://img.shields.io/badge/rustc-1.71+-lightgray.svg
+[rustc]: https://blog.rust-lang.org/2023/07/13/Rust-1.71.0/
 
 This repository hosts the following crates:
 

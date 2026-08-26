@@ -10,7 +10,7 @@ documentation = "https://docs.rs/serde-lexpr/"
 keywords = ["lisp", "s-expression", "sexp", "sexpr", "serde"]
 categories = ["encoding", "data-structures", "parser-implementations"]
 edition = "2021"
-rust-version = "1.56"
+rust-version = "1.71"
 
 [dependencies]
 lexpr = { version = "0.3.0", path = "../lexpr" }
