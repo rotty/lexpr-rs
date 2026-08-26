@@ -74,3 +74,16 @@ jobs:
 
       - name: Run cargo clippy
         run: cargo clippy --all-targets -- -D warnings
+
+  docs:
+    name: Rustdoc
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v7
+
+      - name: Install nightly toolchain
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Run cargo doc on nightly
+        run: RUSTDOCFLAGS="--cfg docsrs" cargo doc --all-features --config 'build.warnings="deny"'
