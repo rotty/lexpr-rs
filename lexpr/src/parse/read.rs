@@ -181,7 +181,7 @@ where
 {
     /// Create a S-expression input source to read from a std::io input stream.
     ///
-    /// Note that passing a [`std::io::File`], or another type that does no
+    /// Note that passing a [`std::fs::File`], or another type that does no
     /// internal buffering, will be quite inefficient. See
     /// [`std::io::Read::bytes`].
     pub fn new(reader: R) -> Self {
