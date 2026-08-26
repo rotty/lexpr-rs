@@ -13,7 +13,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Run cargo check
-        run: cargo check --all-features --all-targets
+        run: cargo check --all-features --all-targets --config 'build.warnings="deny"'
 
   test:
     name: Test Suite
@@ -62,4 +62,4 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Run cargo clippy
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
