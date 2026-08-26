@@ -8,7 +8,7 @@
 
 use quickcheck::{Arbitrary, Gen, QuickCheck};
 use quickcheck_macros::quickcheck;
-use rand::Rng;
+use rand::RngExt;
 
 use std::f64;
 use std::str;
@@ -97,10 +97,10 @@ impl Arbitrary for Number {
         let choices = [I64, U64, F64];
         // We do not use the `Arbitrary` implementations for the
         // numbers, as we want to cover the whole range.
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         match g.choose(&choices).unwrap() {
-            I64 => Number::from(rng.gen::<i64>()),
-            U64 => Number::from(rng.gen::<u64>()),
+            I64 => Number::from(rng.random::<i64>()),
+            U64 => Number::from(rng.random::<u64>()),
             F64 => {
                 if cfg!(feature = "fast-float-parsing") {
                     Number::from(
@@ -108,7 +108,7 @@ impl Arbitrary for Number {
                             .unwrap(),
                     )
                 } else {
-                    Number::from(rng.gen::<f64>())
+                    Number::from(rng.random::<f64>())
                 }
             }
         }

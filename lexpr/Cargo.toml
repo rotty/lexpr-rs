@@ -27,7 +27,7 @@ criterion = "0.5.1"
 lexpr-macros = { version = "0.2.3", path = "../lexpr-macros" }
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
-rand = "0.8.1"
+rand = "0.10.2"
 
 [[bench]]
 name = "bench"
