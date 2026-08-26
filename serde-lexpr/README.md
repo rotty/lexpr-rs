@@ -24,8 +24,8 @@ upon [`lexpr`], which provides a parser and serializer.
 
 ## Licensing
 
-The code and documentation in the `lexpr` crate is [free software],
-dual-licensed under the [MIT](./LICENSE-MIT) or
+The code and documentation in the `serde-lexpr` crate is [free
+software], dual-licensed under the [MIT](./LICENSE-MIT) or
 [Apache-2.0](./LICENSE-APACHE) license, at your choosing.
 
 [free software]: https://www.gnu.org/philosophy/free-sw.html
