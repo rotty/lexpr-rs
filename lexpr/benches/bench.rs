@@ -1,4 +1,6 @@
-use criterion::*;
+use std::hint::black_box;
+
+use criterion::{criterion_group, criterion_main, Criterion};
 
 use lexpr::{from_str, from_str_custom, parse};
 
