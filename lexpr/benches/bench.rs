@@ -2,7 +2,7 @@ use std::hint::black_box;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 
-use lexpr::{from_str, from_str_custom, parse};
+use lexpr::{from_str, from_str_custom, parse, Value};
 
 fn bench_float_parsing(c: &mut Criterion) {
     c.bench_function("float parsing", |b| {
@@ -32,6 +32,19 @@ fn bench_parsing_keyword_all_styles(c: &mut Criterion) {
     });
 }
 
+fn bench_parse_long_list(c: &mut Criterion) {
+    let value = Value::list((0..1000u32).map(|i| match i % 3 {
+        0 => Value::from(i),
+        1 => Value::Bool(i % 2 == 0),
+        2 => Value::Symbol("a".repeat((i as usize % 30) + 1)),
+        _ => unreachable!(),
+    }));
+    let text = value.to_string();
+    c.bench_function("parse long, non-nested list", |b| {
+        b.iter(|| from_str(black_box(&text)))
+    });
+}
+
 fn bench_write_bytes(c: &mut Criterion) {
     let bytes = lexpr::Value::bytes(vec![123u8; 1024]);
     c.bench_function("byte vector serialization", |b| {
@@ -49,7 +62,10 @@ fn bench_write_string(c: &mut Criterion) {
 criterion_group! {
     name = parse_benches;
     config = Criterion::default();
-    targets = bench_float_parsing, bench_parsing_keyword_default, bench_parsing_keyword_all_styles,
+    targets =
+        bench_float_parsing,
+        bench_parsing_keyword_default, bench_parsing_keyword_all_styles,
+        bench_parse_long_list,
 }
 criterion_group! {
     name = write_benches;
