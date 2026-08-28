@@ -259,7 +259,7 @@ enum Token {
     Symbol(Box<str>),
     Keyword(Box<str>),
     String(Box<str>),
-    Bytes(Box<[u8]>),
+    Bytes(Vec<u8>),
     ListOpen(u8),
     Quotation(&'static str),
     VecOpen(u8),
@@ -675,9 +675,7 @@ impl<'de, R: Read<'de>> Parser<R> {
             Token::Keyword(name) => Value::Keyword(name),
             Token::String(s) => Value::String(s),
             Token::Bytes(b) => Value::Bytes(b),
-            Token::ByteVecOpen(close) => {
-                Value::Bytes(self.parse_byte_list(close)?.into_boxed_slice())
-            }
+            Token::ByteVecOpen(close) => Value::Bytes(self.parse_byte_list(close)?),
             Token::VecOpen(close) => {
                 self.remaining_depth -= 1;
                 if self.remaining_depth == 0 {
@@ -757,10 +755,9 @@ impl<'de, R: Read<'de>> Parser<R> {
             Token::Keyword(name) => primitive(Value::Keyword(name), self),
             Token::String(s) => primitive(Value::String(s), self),
             Token::Bytes(b) => primitive(Value::Bytes(b), self),
-            Token::ByteVecOpen(close) => primitive(
-                Value::Bytes(self.parse_byte_list(close)?.into_boxed_slice()),
-                self,
-            ),
+            Token::ByteVecOpen(close) => {
+                primitive(Value::Bytes(self.parse_byte_list(close)?), self)
+            }
             Token::VecOpen(close) => {
                 self.remaining_depth -= 1;
                 if self.remaining_depth == 0 {

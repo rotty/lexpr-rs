@@ -147,7 +147,7 @@ pub enum Value {
     Keyword(Box<str>),
 
     /// A byte vector.
-    Bytes(Box<[u8]>),
+    Bytes(Vec<u8>),
 
     /// Represents a Lisp "cons cell".
     ///
@@ -202,7 +202,7 @@ impl Value {
     /// assert!(value.is_bytes());
     /// assert_eq!(value.as_bytes().unwrap(), b"foo");
     /// ```
-    pub fn bytes(bv: impl Into<Box<[u8]>>) -> Self {
+    pub fn bytes(bv: impl Into<Vec<u8>>) -> Self {
         Value::Bytes(bv.into())
     }
 
