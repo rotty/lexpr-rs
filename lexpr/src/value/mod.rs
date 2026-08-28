@@ -138,13 +138,13 @@ pub enum Value {
     Char(char),
 
     /// A string.
-    String(Box<str>),
+    String(String),
 
     /// A symbol.
-    Symbol(Box<str>),
+    Symbol(String),
 
     /// A keyword.
-    Keyword(Box<str>),
+    Keyword(String),
 
     /// A byte vector.
     Bytes(Vec<u8>),
@@ -166,7 +166,7 @@ pub enum Value {
 
 impl Value {
     /// Construct a symbol, given its name.
-    pub fn symbol(name: impl Into<Box<str>>) -> Self {
+    pub fn symbol(name: impl Into<String>) -> Self {
         Value::Symbol(name.into())
     }
 
@@ -178,7 +178,7 @@ impl Value {
     /// assert!(value.is_keyword());
     /// assert_eq!(value.as_keyword().unwrap(), "foo");
     /// ```
-    pub fn keyword(name: impl Into<Box<str>>) -> Self {
+    pub fn keyword(name: impl Into<String>) -> Self {
         Value::Keyword(name.into())
     }
 
@@ -190,7 +190,7 @@ impl Value {
     /// assert!(value.is_string());
     /// assert_eq!(value.as_str().unwrap(), "foo");
     /// ```
-    pub fn string(s: impl Into<Box<str>>) -> Self {
+    pub fn string(s: impl Into<String>) -> Self {
         Value::String(s.into())
     }
 

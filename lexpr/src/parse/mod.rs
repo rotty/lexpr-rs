@@ -256,9 +256,9 @@ enum Token {
     Bool(bool),
     Char(char),
     Number(Number),
-    Symbol(Box<str>),
-    Keyword(Box<str>),
-    String(Box<str>),
+    Symbol(String),
+    Keyword(String),
+    String(String),
     Bytes(Vec<u8>),
     ListOpen(u8),
     Quotation(&'static str),
@@ -503,7 +503,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                     }
                     Some(b'(') => Token::VecOpen(b')'),
                     Some(b':') if self.options.keyword_syntax(KeywordSyntax::Octothorpe) => {
-                        Token::Keyword(self.parse_symbol()?.into())
+                        Token::Keyword(self.parse_symbol()?)
                     }
                     Some(b'v') => {
                         self.expect_ident(b"u8")?;
@@ -519,7 +519,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                     Some(b'x') => Token::Number(self.parse_radix_literal(16)?),
                     Some(b'\\') => Token::Char(self.read.parse_r6rs_char(&mut self.scratch)?),
                     Some(b'%') if self.options.racket_hash_percent_symbols => {
-                        Token::Symbol(self.parse_symbol_suffix("#%")?.into())
+                        Token::Symbol(self.parse_symbol_suffix("#%")?)
                     }
                     Some(_) => return Err(self.peek_error(ErrorCode::ExpectedSomeIdent)),
                     None => return Err(self.peek_error(ErrorCode::EofWhileParsingValue)),
@@ -529,7 +529,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                 self.eat_char();
                 let next = self.peek_or_null()?;
                 if next == 0 || is_delimiter(next) || is_sign_subsequent(next) {
-                    Token::Symbol(self.parse_symbol_suffix("-")?.into())
+                    Token::Symbol(self.parse_symbol_suffix("-")?)
                 } else {
                     Token::Number(self.parse_num_literal(10, false)?)
                 }
@@ -538,7 +538,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                 self.eat_char();
                 let next = self.peek_or_null()?;
                 if next == 0 || is_delimiter(next) || is_sign_subsequent(next) {
-                    Token::Symbol(self.parse_symbol_suffix("+")?.into())
+                    Token::Symbol(self.parse_symbol_suffix("+")?)
                 } else {
                     Token::Number(self.parse_num_literal(10, true)?)
                 }
@@ -549,7 +549,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                     let mut num_parser = Parser::from_slice_custom(symbol.as_bytes(), self.options);
                     match num_parser.parse_num_literal(10, true) {
                         Ok(token) => Token::Number(token),
-                        Err(_) => Token::Symbol(symbol.into()),
+                        Err(_) => Token::Symbol(symbol),
                     }
                 } else {
                     Token::Number(self.parse_num_literal(10, true)?)
@@ -589,16 +589,16 @@ impl<'de, R: Read<'de>> Parser<R> {
             b':' => {
                 if self.options.keyword_syntax(KeywordSyntax::ColonPrefix) {
                     self.eat_char();
-                    Token::Keyword(self.parse_symbol()?.into())
+                    Token::Keyword(self.parse_symbol()?)
                 } else {
-                    Token::Symbol(self.parse_symbol()?.into())
+                    Token::Symbol(self.parse_symbol()?)
                 }
             }
             b'a'..=b'z' | b'A'..=b'Z' => {
                 let mut name = self.parse_symbol()?;
                 if self.options.keyword_syntax(KeywordSyntax::ColonPostfix) && name.ends_with(':') {
                     name.pop();
-                    Token::Keyword(name.into())
+                    Token::Keyword(name)
                 } else if self.options.nil_symbol() != NilSymbol::Default && name == "nil" {
                     match self.options.nil_symbol() {
                         NilSymbol::EmptyList => Token::Null,
@@ -611,7 +611,7 @@ impl<'de, R: Read<'de>> Parser<R> {
                         TSymbol::Default => unreachable!(),
                     }
                 } else {
-                    Token::Symbol(name.into())
+                    Token::Symbol(name)
                 }
             }
             b'?' if self.options.char_syntax == CharSyntax::Elisp => {
@@ -642,11 +642,11 @@ impl<'de, R: Read<'de>> Parser<R> {
                 if !c.is_alphabetic() {
                     return Err(self.peek_error(ErrorCode::ExpectedSomeValue));
                 }
-                Token::Symbol(self.parse_symbol_scratch_suffix()?.into())
+                Token::Symbol(self.parse_symbol_scratch_suffix()?)
             }
             _ => {
                 if SYMBOL_EXTENDED.contains(&peek) {
-                    Token::Symbol(self.parse_symbol()?.into())
+                    Token::Symbol(self.parse_symbol()?)
                 } else {
                     return Err(self.peek_error(ErrorCode::ExpectedSomeValue));
                 }

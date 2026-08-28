@@ -35,7 +35,7 @@ static SPECIAL_INITIALS: &str = "!$%&*/:<=>?@^_~";
 fn test_special_symbols() {
     for initial in SPECIAL_INITIALS.chars() {
         let s = initial.to_string();
-        check_roundtrip_default(Value::symbol(s.as_ref()), &s);
+        check_roundtrip_default(Value::Symbol(s.clone()), &s);
     }
 }
 
