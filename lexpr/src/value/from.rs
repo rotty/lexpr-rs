@@ -71,14 +71,14 @@ impl From<&[u8]> for Value {
 impl From<Box<[u8]>> for Value {
     #[inline]
     fn from(bytes: Box<[u8]>) -> Self {
-        Value::Bytes(bytes)
+        Value::Bytes(bytes.to_vec())
     }
 }
 
 impl From<Vec<u8>> for Value {
     #[inline]
     fn from(bytes: Vec<u8>) -> Self {
-        Value::Bytes(bytes.into_boxed_slice())
+        Value::Bytes(bytes)
     }
 }
 
