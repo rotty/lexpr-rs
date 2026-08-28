@@ -540,7 +540,7 @@ impl Value {
     /// ```
     /// # use lexpr_macros::sexp;
     /// #
-    /// let big = i64::max_value() as u64 + 10;
+    /// let big = i64::MAX as u64 + 10;
     /// let v = sexp!(((a . 64) (b . ,big) (c . 256.0)));
     ///
     /// assert!(v["a"].is_i64());
@@ -616,7 +616,7 @@ impl Value {
     /// ```
     /// # use lexpr_macros::sexp;
     /// #
-    /// let big = i64::max_value() as u64 + 10;
+    /// let big = i64::MAX as u64 + 10;
     /// let v = sexp!(((a . 64) (b . ,big) (c . 256.0)));
     ///
     /// assert_eq!(v["a"].as_i64(), Some(64));
