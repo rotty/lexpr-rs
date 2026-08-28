@@ -35,8 +35,15 @@ Changes:
 - The `parser::Options::elisp` constructor now enables the
   `leading_digit_symbols` option, as that's what's appropriate for
   Emacs Lisp.
-- The `Value::Vector` variant now holds a `Vec` instead of a boxed
-  slice.
+- To make the API slightly simpler and more flexible, the `Value` type
+  now holds a `Vec` for several variants that previously held boxed
+  slices:
+  - The `Value::Vector` variant now holds a `Vec` instead of a boxed
+    slice.
+  - The `Value` variants `Symbol`, `Keyword` and `String` now hold a
+    `String` instead of a `Box<str>`.
+  - The `Value::Bytes` variant now holds a `Vec<u8>` instead of a
+    `Box<[u8]>`.
 
 Maintenance-related changes:
 
