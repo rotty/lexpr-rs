@@ -43,14 +43,14 @@ impl<'a> From<Cow<'a, str>> for Value {
 impl From<Box<str>> for Value {
     #[inline]
     fn from(s: Box<str>) -> Self {
-        Value::String(s)
+        Value::String(s.into())
     }
 }
 
 impl From<String> for Value {
     #[inline]
     fn from(s: String) -> Self {
-        Value::String(s.into_boxed_str())
+        Value::String(s)
     }
 }
 
