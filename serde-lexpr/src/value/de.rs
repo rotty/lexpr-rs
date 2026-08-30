@@ -95,6 +95,8 @@ impl<'de> de::Deserializer<'de> for &mut Deserializer<'de> {
     deserialize_prim_number!(deserialize_u16);
     deserialize_prim_number!(deserialize_u32);
     deserialize_prim_number!(deserialize_u64);
+    deserialize_prim_number!(deserialize_i128);
+    deserialize_prim_number!(deserialize_u128);
     deserialize_prim_number!(deserialize_f32);
     deserialize_prim_number!(deserialize_f64);
 
@@ -297,6 +299,12 @@ where
         }
         fn visit_f64(self, n: f64) -> Result<V::Value> {
             self.visitor.visit_f64(n)
+        }
+        fn visit_i128(self, n: i128) -> Result<V::Value> {
+            self.visitor.visit_i128(n)
+        }
+        fn visit_u128(self, n: u128) -> Result<V::Value> {
+            self.visitor.visit_u128(n)
         }
     }
     n.visit(Proxy {

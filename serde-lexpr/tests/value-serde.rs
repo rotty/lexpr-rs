@@ -36,6 +36,20 @@ fn test_int() {
 }
 
 #[test]
+fn test_i128() {
+    for n in [i128::MIN, -23, 0, 42, i128::MAX] {
+        test_serde(&n, &Value::from(n));
+    }
+}
+
+#[test]
+fn test_u128() {
+    for n in [0, 23, 42, u128::MAX] {
+        test_serde(&n, &Value::from(n));
+    }
+}
+
+#[test]
 fn test_char() {
     test_serde(&'c', &sexp!('c'));
 }

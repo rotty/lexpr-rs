@@ -55,6 +55,14 @@ impl ser::Serializer for Serializer {
         Ok(Value::from(v))
     }
 
+    fn serialize_i128(self, v: i128) -> Result<Value> {
+        Ok(Value::from(v))
+    }
+
+    fn serialize_u128(self, v: u128) -> Result<Value> {
+        Ok(Value::from(v))
+    }
+
     fn serialize_f32(self, v: f32) -> Result<Value> {
         self.serialize_f64(f64::from(v))
     }
