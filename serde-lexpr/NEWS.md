@@ -1,6 +1,6 @@
 # 0.2.0 (unreleased)
 
-Based on `lexpr` v0.3.0.
+Based on `lexpr` v0.3.0; also supports 128-bit integers.
 
 # 0.1.3
 
