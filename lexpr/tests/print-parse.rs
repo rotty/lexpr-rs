@@ -16,7 +16,17 @@ fn check_roundtrip_elisp(input: Value, printed: &str) {
 }
 
 #[test]
-fn test_number() {
+fn test_int_numbers() {
+    check_roundtrip_default(Value::from(u64::MAX), &u64::MAX.to_string());
+    check_roundtrip_default(Value::from(u128::MAX), &u128::MAX.to_string());
+    check_roundtrip_default(Value::from(i64::MAX), &i64::MAX.to_string());
+    check_roundtrip_default(Value::from(i64::MIN), &i64::MIN.to_string());
+    check_roundtrip_default(Value::from(i128::MAX), &i128::MAX.to_string());
+    check_roundtrip_default(Value::from(i128::MIN), &i128::MIN.to_string());
+}
+
+#[test]
+fn test_float_numbers() {
     check_roundtrip_default(sexp!(1.5), "1.5");
     if !cfg!(feature = "fast-float-parsing") {
         check_roundtrip_default(sexp!(-1.0015065576612683), "-1.0015065576612683");

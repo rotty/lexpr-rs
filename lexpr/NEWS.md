@@ -2,6 +2,8 @@
 
 New features:
 
+- The `Value` type now supports storing 128-bit integers (`i128` and
+  `u128`).
 - New parser option `racket_hash_percent_symbols`, implemented in PR
   #90 by @andrew-pa.
 - New parser option `leading_digit_symbols` (PR #106). This should now
@@ -44,6 +46,13 @@ Changes:
     `String` instead of a `Box<str>`.
   - The `Value::Bytes` variant now holds a `Vec<u8>` instead of a
     `Box<[u8]>`.
+- When parsing large numbers no longer being representable as
+  integers, they would previously be implicitly and silently be parsed
+  as `f64`, discarding excess digits. Now such numbers will result in
+  parse error. Note that due to 128-bit support also introduced in
+  this release, the changes of that happening are now restricted to
+  exceeding the range of `u128` (for positive numbers) or `i128` (for
+  negative numbers).
 
 Maintenance-related changes:
 

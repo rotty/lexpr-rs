@@ -86,6 +86,50 @@ fn test_oct_numbers() {
 }
 
 #[test]
+fn test_large_integers() {
+    assert_eq!(
+        from_str("18446744073709551616").unwrap(),
+        Value::from(2u128.pow(64))
+    );
+    assert_eq!(
+        from_str("340282366920938463463374607431768211455").unwrap(),
+        Value::from(u128::MAX)
+    );
+}
+
+#[test]
+fn test_large_negative_integers() {
+    assert_eq!(
+        from_str("-18446744073709551616").unwrap(),
+        Value::from(-2i128.pow(64))
+    );
+    assert_eq!(
+        from_str("-9223372036854775809").unwrap(),
+        Value::from(-(2i128.pow(63) + 1))
+    );
+    assert_eq!(
+        from_str("-170141183460469231731687303715884105728").unwrap(),
+        Value::from(i128::MIN)
+    );
+}
+
+#[test]
+fn test_out_of_range_integers() {
+    assert_eq!(
+        from_str("340282366920938463463374607431768211456") // u128::MAX + 1
+            .err()
+            .map(|e| e.classify()),
+        Some(Category::Syntax)
+    );
+    assert_eq!(
+        from_str("-170141183460469231731687303715884105729") // i128::MIN - 1
+            .err()
+            .map(|e| e.classify()),
+        Some(Category::Syntax)
+    );
+}
+
+#[test]
 fn test_chars_default() {
     for &c in &['x', 'y', 'z', '\u{203D}', ' '] {
         assert_eq!(from_str(&format!("#\\{}", c)).unwrap(), Value::Char(c));
