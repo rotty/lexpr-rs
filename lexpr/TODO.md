@@ -26,7 +26,11 @@
 
 - [X] Different bases
 - [ ] Scheme numeric tower (complex numbers, rationals, bignums)
-- [ ] NaNs and infinities (fixup `from` implementations vs. `from_f64`)
+- NaNs and infinities
+  - Parser and serializer support for:
+    - [ ] Scheme
+    - [ ] Emacs Lisp
+    - [ ] Common Lisp
 
 ## Architectural considerations
 

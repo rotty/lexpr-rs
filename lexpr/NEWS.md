@@ -53,6 +53,9 @@ Changes:
   this release, the changes of that happening are now restricted to
   exceeding the range of `u128` (for positive numbers) or `i128` (for
   negative numbers).
+- The `Value::from_f64` method has been removed; the data model allows
+  for infinities and NaNs, even if they are currently not supported by
+  the parser or serializer.
 
 Maintenance-related changes:
 

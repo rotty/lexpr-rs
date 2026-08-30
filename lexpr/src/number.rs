@@ -232,27 +232,6 @@ impl Number {
         }
     }
 
-    /// Converts a finite `f64` to a `Number`. Infinite or NaN values
-    /// are not S-expression numbers.
-    ///
-    /// ```
-    /// # use std::f64;
-    /// #
-    /// # use lexpr::Number;
-    /// #
-    /// assert!(Number::from_f64(256.0).is_some());
-    ///
-    /// assert!(Number::from_f64(f64::NAN).is_none());
-    /// ```
-    #[inline]
-    pub fn from_f64(f: f64) -> Option<Number> {
-        if f.is_finite() {
-            Some(Number { n: N::Float(f) })
-        } else {
-            None
-        }
-    }
-
     /// Dispatch based on the type of the contained value.
     ///
     /// Depending on the stored value, one of the functions of the
