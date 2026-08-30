@@ -583,6 +583,31 @@ impl Value {
         }
     }
 
+    /// Returns true if the value is an integer between zero and `u128::MAX`.
+    ///
+    /// For any Value on which `is_u128` returns true, `as_u128` is guaranteed to
+    /// return the integer value.
+    ///
+    /// ```
+    /// # use lexpr_macros::sexp;
+    /// #
+    /// let v = sexp!(((a . 64) (b . -64) (c . 256.0)));
+    ///
+    /// assert!(v["a"].is_u128());
+    ///
+    /// // Negative integer.
+    /// assert!(!v["b"].is_u128());
+    ///
+    /// // Numbers with a decimal point are not considered integers.
+    /// assert!(!v["c"].is_u64());
+    /// ```
+    pub fn is_u128(&self) -> bool {
+        match self.as_number() {
+            Some(n) => n.is_u128(),
+            _ => false,
+        }
+    }
+
     /// Returns true if the value is a number that can be represented by f64.
     ///
     /// For any Value on which `is_f64` returns true, `as_f64` is guaranteed to
@@ -642,6 +667,40 @@ impl Value {
     /// ```
     pub fn as_u64(&self) -> Option<u64> {
         self.as_number().and_then(Number::as_u64)
+    }
+
+    /// If the value is an integer, represent it as i128 if possible. Returns
+    /// None otherwise.
+    ///
+    /// ```
+    /// # use lexpr_macros::sexp;
+    /// #
+    /// let big = i128::MAX as u128 + 10;
+    /// let v = sexp!(((a . 64) (b . ,big) (c . 256.0)));
+    ///
+    /// assert_eq!(v["a"].as_i128(), Some(64));
+    /// assert_eq!(v["b"].as_i128(), None);
+    /// assert_eq!(v["c"].as_i128(), None);
+    /// ```
+    #[inline]
+    pub fn as_i128(&self) -> Option<i128> {
+        self.as_number().and_then(Number::as_i128)
+    }
+
+    /// If the value is an integer, represent it as u128 if possible. Returns
+    /// None otherwise.
+    ///
+    /// ```
+    /// # use lexpr_macros::sexp;
+    /// #
+    /// let v = sexp!(((a . 64) (b . -64) (c . 256.0)));
+    ///
+    /// assert_eq!(v["a"].as_u128(), Some(64));
+    /// assert_eq!(v["b"].as_u128(), None);
+    /// assert_eq!(v["c"].as_u128(), None);
+    /// ```
+    pub fn as_u128(&self) -> Option<u128> {
+        self.as_number().and_then(Number::as_u128)
     }
 
     /// If the value is a number, represent it as f64 if possible. Returns

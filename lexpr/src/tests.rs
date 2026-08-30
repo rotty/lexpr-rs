@@ -87,20 +87,24 @@ impl Arbitrary for Value {
 
 enum NumberKind {
     I64,
+    I128,
     U64,
+    U128,
     F64,
 }
 
 impl Arbitrary for Number {
     fn arbitrary(g: &mut Gen) -> Self {
         use NumberKind::*;
-        let choices = [I64, U64, F64];
+        let choices = [I64, I128, U64, U128, F64];
         // We do not use the `Arbitrary` implementations for the
         // numbers, as we want to cover the whole range.
         let mut rng = rand::rng();
         match g.choose(&choices).unwrap() {
             I64 => Number::from(rng.random::<i64>()),
+            I128 => Number::from(rng.random::<i128>()),
             U64 => Number::from(rng.random::<u64>()),
+            U128 => Number::from(rng.random::<u128>()),
             F64 => {
                 if cfg!(feature = "fast-float-parsing") {
                     Number::from(

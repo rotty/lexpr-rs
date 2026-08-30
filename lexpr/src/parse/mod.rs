@@ -1094,54 +1094,49 @@ impl<'de, R: Read<'de>> Parser<R> {
             }
             self.eat_char();
             let digit = u64::from(digit);
-            // We need to be careful with overflow. If we can, try to keep the
-            // number as a `u64` until we grow too large. At that point, switch to
-            // parsing the value as a `f64`.
+            // If we overflow, let's continue with 128-bit numbers.
             if overflow!(res * r + digit, u64::MAX) {
-                return Ok(Number::from(self.parse_long_integer(
-                    radix, pos, res, 1, // res * 10^1
-                )?));
+                return self.parse_long_integer(
+                    radix,
+                    pos,
+                    u128::from(res) * u128::from(r) + u128::from(digit),
+                );
             }
             res = res * r + digit;
         }
     }
 
-    // Parse an over-long integer as a f64.
-    fn parse_long_integer(
-        &mut self,
-        radix: u8,
-        pos: bool,
-        significand: u64,
-        mut exponent: i32,
-    ) -> Result<f64> {
+    // Parse an over-long integer as a 128-bit number.
+    fn parse_long_integer(&mut self, radix: u8, pos: bool, significand: u128) -> Result<Number> {
+        let mut res = significand;
+        let r = u128::from(radix);
         loop {
             let digit = match self.peek_or_null()? {
                 c @ b'0'..=b'9' => c - b'0',
                 c @ b'a'..=b'f' if radix >= 10 => 10 + (c - b'a'),
                 c @ b'A'..=b'F' if radix >= 10 => 10 + (c - b'A'),
-                b'.' => {
-                    if radix != 10 {
-                        return Err(self.peek_error(ErrorCode::InvalidNumber));
-                    }
-                    return self.parse_decimal(pos, significand, exponent);
-                }
-                b'e' | b'E' => {
-                    if radix != 10 {
-                        return Err(self.peek_error(ErrorCode::InvalidNumber));
-                    }
-                    return self.parse_exponent(pos, significand, exponent);
-                }
                 _ => {
-                    return self.f64_from_parts(pos, significand, exponent);
+                    if pos {
+                        return Ok(Number::from(res));
+                    } else {
+                        let neg = (res as i128).wrapping_neg();
+                        if neg > 0 {
+                            return Err(self.error(ErrorCode::NumberOutOfRange));
+                        } else {
+                            return Ok(Number::from(neg));
+                        }
+                    }
                 }
             };
             if digit >= radix {
                 return Err(self.peek_error(ErrorCode::InvalidNumber));
             }
             self.eat_char();
-            // This could overflow... if your integer is gigabytes long.
-            // Ignore that possibility.
-            exponent += 1;
+            let digit = u128::from(digit);
+            if overflow!(res * r + digit, u128::MAX) {
+                return Err(self.error(ErrorCode::NumberOutOfRange));
+            }
+            res = res * r + digit;
         }
     }
 
@@ -1165,9 +1160,8 @@ impl<'de, R: Read<'de>> Parser<R> {
                 } else {
                     let neg = (significand as i64).wrapping_neg();
 
-                    // Convert into a float if we underflow.
                     if neg > 0 {
-                        Number::from(-(significand as f64))
+                        Number::from(-(significand as i128))
                     } else {
                         Number::from(neg)
                     }

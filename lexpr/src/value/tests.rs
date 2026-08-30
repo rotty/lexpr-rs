@@ -79,6 +79,12 @@ fn test_numbers() {
         Number::from(0),
         Number::from(1),
         Number::from(1001),
+        Number::from(u64::MAX),
+        Number::from(i64::MAX),
+        Number::from(i64::MIN),
+        Number::from(u128::MAX),
+        Number::from(i128::MAX),
+        Number::from(i128::MIN),
     ] {
         let n_value = Value::from(n.clone());
         check_type_predicates(&n_value, "number");

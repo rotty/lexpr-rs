@@ -246,7 +246,15 @@ pub trait Formatter {
                 let mut buffer = itoa::Buffer::new();
                 self.writer.write(buffer.format(n).as_bytes()).map(drop)
             }
+            fn visit_u128(self, n: u128) -> io::Result<()> {
+                let mut buffer = itoa::Buffer::new();
+                self.writer.write(buffer.format(n).as_bytes()).map(drop)
+            }
             fn visit_i64(self, n: i64) -> io::Result<()> {
+                let mut buffer = itoa::Buffer::new();
+                self.writer.write(buffer.format(n).as_bytes()).map(drop)
+            }
+            fn visit_i128(self, n: i128) -> io::Result<()> {
                 let mut buffer = itoa::Buffer::new();
                 self.writer.write(buffer.format(n).as_bytes()).map(drop)
             }
