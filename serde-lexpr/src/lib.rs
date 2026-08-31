@@ -147,9 +147,9 @@
 //! [Serde]: https://crates.io/crates/serde
 //! [`lexpr::Value`]: https://docs.rs/lexpr/*/lexpr/enum.Value.html
 
-mod de;
-mod ser;
-mod value;
+pub mod de;
+pub mod ser;
+pub mod value;
 
 pub mod error;
 pub use de::{

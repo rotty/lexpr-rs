@@ -1,3 +1,5 @@
+//! Internal deserialization code
+
 use std::marker::PhantomData;
 
 use serde::de::{self, Error as SerdeError, Visitor};
@@ -8,11 +10,14 @@ use lexpr::{number, Cons, Number};
 use crate::error::{Error, Result};
 use crate::Value;
 
+/// lexpr deserializer
+#[derive(Copy, Clone, Debug)]
 pub struct Deserializer<'de> {
     input: &'de Value,
 }
 
 impl<'de> Deserializer<'de> {
+    /// Create new deserializer from a value
     pub fn from_value(input: &'de Value) -> Self {
         Deserializer { input }
     }

@@ -1,3 +1,5 @@
+//! Serialize lexprs
+
 use serde::Serialize;
 
 use lexpr::print;
