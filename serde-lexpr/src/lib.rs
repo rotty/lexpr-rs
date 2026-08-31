@@ -51,20 +51,27 @@
 //!
 //! ## Tuples and tuple structs
 //!
-//! Tuples and tuple structs are serialized as S-expression vectors.
+//! Tuples and tuple structs are serialized as S-expression vectors by default,
+//! or as lists when the `tuple_as_list` feature is enabled.
 //!
 //! ```
 //! use serde_lexpr::{from_str, to_string};
 //! use serde_derive::{Serialize, Deserialize};
 //!
+//! # #[cfg(not(feature = "tuple_as_list"))]
 //! assert_eq!(to_string(&(1, "two", 3)).unwrap(), "#(1 \"two\" 3)".to_string());
+//! # #[cfg(feature = "tuple_as_list")]
+//! # assert_eq!(to_string(&(1, "two", 3)).unwrap(), "(1 \"two\" 3)".to_string());
 //! let tuple: (u8, String, u64) = from_str("(1 \"two\" 3)").unwrap();
 //! assert_eq!(tuple, (1, "two".to_string(), 3));
 //!
 //! #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 //! struct Person(String, u8);
 //!
+//! # #[cfg(not(feature = "tuple_as_list"))]
 //! assert_eq!(to_string(&Person("Billy".into(), 42)).unwrap(), "#(\"Billy\" 42)".to_string());
+//! # #[cfg(feature = "tuple_as_list")]
+//! # assert_eq!(to_string(&Person("Billy".into(), 42)).unwrap(), "(\"Billy\" 42)".to_string());
 //! let joanne: Person = from_str("#(\"Joanne\" 23)").unwrap();
 //! assert_eq!(joanne, Person("Joanne".into(), 23));
 //! ```

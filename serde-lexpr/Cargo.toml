@@ -12,6 +12,17 @@ categories = ["encoding", "data-structures", "parser-implementations"]
 edition = "2021"
 rust-version = "1.71"
 
+[features]
+default = []
+# Convert tuples to lists `(...)` instead of vectors `#(...)`
+tuple_as_list = []
+
+# Convert booleans to `t`/`nil` instead of `#t`/`#f`
+bool_as_tnil = []
+
+# Normalize all symbols to lowercase for case-insensitive comparison (serde rename feature(to lowercase) required for enums)
+sym_as_lower = []
+
 [dependencies]
 lexpr = { version = "0.3.0", path = "../lexpr" }
 serde = "1.0.89"

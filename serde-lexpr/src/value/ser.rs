@@ -12,14 +12,34 @@ impl ser::Serializer for Serializer {
     type Error = Error;
 
     type SerializeSeq = SerializeList;
+
+    #[cfg(feature = "tuple_as_list")]
+    type SerializeTuple = SerializeList;
+    #[cfg(not(feature = "tuple_as_list"))]
     type SerializeTuple = SerializeVector;
+
+    #[cfg(feature = "tuple_as_list")]
+    type SerializeTupleStruct = SerializeList;
+    #[cfg(not(feature = "tuple_as_list"))]
     type SerializeTupleStruct = SerializeVector;
+
     type SerializeTupleVariant = SerializeTupleVariant;
     type SerializeMap = SerializeMap;
     type SerializeStruct = SerializeStruct;
     type SerializeStructVariant = SerializeStructVariant;
 
+    #[cfg(feature = "bool_as_tnil")]
     fn serialize_bool(self, v: bool) -> Result<Value> {
+        if v {
+            Ok(Value::symbol("t"))
+        } else {
+            Ok(Value::symbol("nil"))
+        }
+    }
+
+    #[cfg(not(feature = "bool_as_tnil"))]
+    fn serialize_bool(self, v: bool) -> Result<Value> {
+        // Scheme: #t / #f
         Ok(Value::Bool(v))
     }
 
@@ -131,12 +151,28 @@ impl ser::Serializer for Serializer {
         })
     }
 
+    #[cfg(feature = "tuple_as_list")]
+    fn serialize_tuple(self, len: usize) -> Result<SerializeList> {
+        Ok(SerializeList {
+            items: Vec::with_capacity(len),
+        })
+    }
+
+    #[cfg(not(feature = "tuple_as_list"))]
     fn serialize_tuple(self, len: usize) -> Result<SerializeVector> {
         Ok(SerializeVector {
             items: Vec::with_capacity(len),
         })
     }
 
+    #[cfg(feature = "tuple_as_list")]
+    fn serialize_tuple_struct(self, _name: &'static str, len: usize) -> Result<SerializeList> {
+        Ok(SerializeList {
+            items: Vec::with_capacity(len),
+        })
+    }
+
+    #[cfg(not(feature = "tuple_as_list"))]
     fn serialize_tuple_struct(self, _name: &'static str, len: usize) -> Result<SerializeVector> {
         self.serialize_tuple(len)
     }
@@ -231,6 +267,45 @@ impl ser::SerializeSeq for SerializeList {
     }
 }
 
+// When tuple_as_list feature is enabled: SerializeList implements SerializeTuple
+#[cfg(feature = "tuple_as_list")]
+impl ser::SerializeTuple for SerializeList {
+    type Ok = Value;
+    type Error = Error;
+
+    fn serialize_element<V>(&mut self, value: &V) -> Result<()>
+    where
+        V: ser::Serialize + ?Sized,
+    {
+        self.items.push(to_value(value)?);
+        Ok(())
+    }
+
+    fn end(self) -> Result<Value> {
+        Ok(Value::list(self.items))
+    }
+}
+
+// When tuple_as_list feature is enabled: SerializeList implements SerializeTupleStruct
+#[cfg(feature = "tuple_as_list")]
+impl ser::SerializeTupleStruct for SerializeList {
+    type Ok = Value;
+    type Error = Error;
+
+    fn serialize_field<V>(&mut self, value: &V) -> Result<()>
+    where
+        V: ser::Serialize + ?Sized,
+    {
+        ser::SerializeTuple::serialize_element(self, value)
+    }
+
+    fn end(self) -> Result<Value> {
+        ser::SerializeTuple::end(self)
+    }
+}
+
+// When tuple_as_list feature is disabled: SerializeVector implements SerializeTuple
+#[cfg(not(feature = "tuple_as_list"))]
 impl ser::SerializeTuple for SerializeVector {
     type Ok = Value;
     type Error = Error;
@@ -248,6 +323,7 @@ impl ser::SerializeTuple for SerializeVector {
     }
 }
 
+#[cfg(not(feature = "tuple_as_list"))]
 impl ser::SerializeTupleStruct for SerializeVector {
     type Ok = Value;
     type Error = Error;

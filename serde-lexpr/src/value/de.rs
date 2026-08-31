@@ -81,9 +81,34 @@ impl<'de> de::Deserializer<'de> for &mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        match self.input {
-            Value::Bool(b) => visitor.visit_bool(*b),
-            _ => Err(invalid_value(self.input, "boolean")),
+        #[cfg(feature = "bool_as_tnil")]
+        {
+            match self.input {
+                Value::Bool(b) => visitor.visit_bool(*b),
+                Value::Symbol(s) => {
+                    #[cfg(feature = "sym_as_lower")]
+                    let s_cmp = s.as_ref().to_lowercase();
+                    #[cfg(not(feature = "sym_as_lower"))]
+                    let s_cmp = s.as_ref().to_string();
+                    
+                    if s_cmp == "t" {
+                        visitor.visit_bool(true)
+                    } else if s_cmp == "nil" {
+                        visitor.visit_bool(false)
+                    } else {
+                        Err(invalid_value(self.input, "boolean (t or nil)"))
+                    }
+                }
+                Value::Null => visitor.visit_bool(false),
+                _ => Err(invalid_value(self.input, "boolean")),
+            }
+        }
+        #[cfg(not(feature = "bool_as_tnil"))]
+        {
+            match self.input {
+                Value::Bool(b) => visitor.visit_bool(*b),
+                _ => Err(invalid_value(self.input, "boolean")),
+            }
         }
     }
 
@@ -257,10 +282,18 @@ impl<'de> de::Deserializer<'de> for &mut Deserializer<'de> {
     where
         V: de::Visitor<'de>,
     {
-        self.input
+        let symbol = self.input
             .as_symbol()
-            .ok_or_else(|| invalid_value(self.input, "symbol"))
-            .and_then(|s| visitor.visit_borrowed_str(s))
+            .ok_or_else(|| invalid_value(self.input, "symbol"))?;
+        
+        #[cfg(feature = "sym_as_lower")]
+        {
+            visitor.visit_string(symbol.to_lowercase())
+        }
+        #[cfg(not(feature = "sym_as_lower"))]
+        {
+            visitor.visit_borrowed_str(symbol)
+        }
     }
 
     fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value>
