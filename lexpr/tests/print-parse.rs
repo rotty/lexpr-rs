@@ -15,6 +15,17 @@ fn check_roundtrip_elisp(input: Value, printed: &str) {
     assert_eq!(input, output);
 }
 
+fn check_roundtrip_with_leading_digit_symbols(input: Value, printed: &str) {
+    let string = lexpr::to_string(&input).expect("printing failed");
+    assert_eq!(&string, printed);
+    let output = lexpr::from_str_custom(
+        &string,
+        parse::Options::default().with_leading_digit_symbols(true),
+    )
+    .expect("parsing failed");
+    assert_eq!(input, output);
+}
+
 #[test]
 fn test_number() {
     check_roundtrip_default(sexp!(1.5), "1.5");
@@ -27,6 +38,7 @@ fn test_number() {
 #[test]
 fn test_symbol() {
     check_roundtrip_default(sexp!(#"$?:!"), "$?:!");
+    check_roundtrip_with_leading_digit_symbols(sexp!(#"127.0.0.1"), "127.0.0.1");
 }
 
 static SPECIAL_INITIALS: &str = "!$%&*/:<=>?@^_~";
