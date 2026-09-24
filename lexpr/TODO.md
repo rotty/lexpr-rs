@@ -1,7 +1,5 @@
 # Missing features
 
-- [ ] R7RS multi-line comments
-- [ ] R7RS "datum comments"
 - [X] Proper string escape syntax, instead of using JSON's rules
 - [X] Serde support
 - [X] Syntactic sugar for quote, quasiquote, unquote and unquote-splicing
@@ -9,6 +7,7 @@
 - [X] Support for vectors
 - [X] Support for byte vectors
 - [ ] Pretty-printing
+- [ ] Implement `VectorSyntax::Parens` (see #116).
 
 ## The `sexp` Macro
 
@@ -18,19 +17,40 @@
 
 ## Lisp dialects
 
-- [ ] Scheme (R6RS, R7RS, Guile/Racket extensions)
-- [ ] Emacs Lisp
-- [ ] Common Lisp
+The aim of `lexpr` is to provide functionality making S-expressions
+usable for domain-specific languages (including configuration files),
+data storage, and data exchange with Lisp implementations (in this
+order of priority). As such, it does not aim to fully and faithfully
+capture the formal syntax of any Lisp dialect in the world, but
+instead provide a customizable parser that can consume a large-enough
+subset of a given (supported) Lisp dialect to be useful for data
+exchange, or parsing configuration files that can (optionally) also be
+consumed by a targeted Lisp dialect.
 
-## Numbers
+### Scheme (R6RS, R7RS, Guile/Racket extensions)
 
-- [X] Different bases
+Partially supported, see the documentation for details.
+
+- [X] Different numeric bases
+- [ ] NaNs and infinities
 - [ ] Scheme numeric tower (complex numbers, rationals, bignums)
-- NaNs and infinities
-  - Parser and serializer support for:
-    - [ ] Scheme
-    - [ ] Emacs Lisp
-    - [ ] Common Lisp
+- [ ] R7RS multi-line comments
+- [ ] R7RS "datum comments"
+
+### Emacs Lisp
+
+Partially supported.
+
+- [ ] Trailing dot for integers
+- [ ] Arbitrary radixes (`#RADIXrINTEGER`)
+- [ ] NaNs and infinities
+
+### Common Lisp
+
+Very minimal support, but the most basic stuff should work, mostly as
+a result of Emacs Lisp and Common Lisp having a common subset.
+
+- [ ] Options to enable case conversion
 
 ## Architectural considerations
 
