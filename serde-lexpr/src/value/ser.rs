@@ -5,6 +5,7 @@ use serde::ser;
 use crate::error::{Error, Result};
 use crate::Value;
 
+/// Value serializer
 pub struct Serializer;
 
 impl ser::Serializer for Serializer {

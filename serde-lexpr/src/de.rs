@@ -1,3 +1,5 @@
+//! Deserialize lexprs
+
 use std::io;
 
 use serde::de::DeserializeOwned;
