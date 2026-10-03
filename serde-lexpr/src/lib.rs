@@ -8,7 +8,7 @@
 //! # About representations
 //!
 //! The guiding principle for choosing the S-expression representation of Rust
-//! types is that it should look "natural" (or ideomatic) to a Lisp programmer,
+//! types is that it should look "natural" (or idiomatic) to a Lisp programmer,
 //! without introducing ambiguities.
 //!
 //! ## Sequences
@@ -17,7 +17,7 @@
 //! considered a sequence, so it will be, perhaps counterintuitevely, be
 //! represented by an S-expression list, instead of an S-expression
 //! vector. While it would be possible to serialize all sequences as
-//! S-expression vectors instead, this would lead to unideomatic (noisy)
+//! S-expression vectors instead, this would lead to unidiomatic (noisy)
 //! S-expressions. When deserializing, both vectors and (proper) lists are
 //! accepted when a Serde sequence is expected.
 //!
@@ -97,7 +97,7 @@
 //! are serialized as a list starting with the variant name as a symbol,
 //! followed by the values. This representation is chosen over using a vector to
 //! keep the emitted S-expressions less noisy and hopefully a bit more
-//! ideomatic. Struct variants are serialized like structs (i.e. as association
+//! idiomatic. Struct variants are serialized like structs (i.e. as association
 //! lists), but have the variant name prepended as a symbol.
 //!
 //! ```
