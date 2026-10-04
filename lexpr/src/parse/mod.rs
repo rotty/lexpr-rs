@@ -1198,6 +1198,7 @@ impl<'de, R: Read<'de>> Parser<R> {
 
         match self.peek_or_null()? {
             b'e' | b'E' => self.parse_exponent(pos, significand, exponent),
+            b'.' => Err(self.peek_error(ErrorCode::InvalidNumber)),
             _ => self.f64_from_parts(pos, significand, exponent),
         }
     }
